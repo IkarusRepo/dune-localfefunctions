@@ -5,7 +5,7 @@
 #pragma once
 
 #include "localFunctionInterface.hh"
-namespace Ikarus {
+namespace Dune {
 
   /** Helper to evaluate the local basis ansatz function and gradient with an integration point index or coordinate
    * vector*/

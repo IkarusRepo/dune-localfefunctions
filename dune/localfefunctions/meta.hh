@@ -8,8 +8,8 @@
 #include <dune/istl/multitypeblockvector.hh>
 #include <dune/typetree/typetree.hh>
 
-#include <ikarus/utils/traits.hh>
-namespace Ikarus {
+#include <dune/localfefunctions/helper.hh>
+namespace Dune {
 
   template <typename... Args_>
   struct Wrt {
@@ -136,10 +136,10 @@ namespace Ikarus {
     consteval ConstExprCounter countDerivativesType() {
       ConstExprCounter counter{};
       using Tuple               = typename WrtType::Args;
-      counter.singleCoeffDerivs = Ikarus::Std::countTypeSpecialization<SingleCoeff, Tuple>();
-      counter.twoCoeffDerivs    = Ikarus::Std::countTypeSpecialization<TwoCoeff, Tuple>();
-      counter.spatialDerivs     = Ikarus::Std::countType<Tuple, SpatialPartial>();
-      counter.spatialAllCounter = Ikarus::Std::countType<Tuple, SpatialAll>();
+      counter.singleCoeffDerivs = Dune::Std::countTypeSpecialization<SingleCoeff, Tuple>();
+      counter.twoCoeffDerivs    = Dune::Std::countTypeSpecialization<TwoCoeff, Tuple>();
+      counter.spatialDerivs     = Dune::Std::countType<Tuple, SpatialPartial>();
+      counter.spatialAllCounter = Dune::Std::countType<Tuple, SpatialAll>();
       return counter;
     }
 

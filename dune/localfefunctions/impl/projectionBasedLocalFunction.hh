@@ -12,30 +12,30 @@
 #include <Eigen/Dense>
 
 #include <ikarus/localBasis/localBasis.hh>
-#include <ikarus/localFunctions/localFunctionHelper.hh>
-#include <ikarus/localFunctions/localFunctionInterface.hh>
-#include <ikarus/utils/linearAlgebraHelper.hh>
+#include <dune/localfefunctions/localFunctionHelper.hh>
+#include <dune/localfefunctions/localFunctionInterface.hh>
+#include <dune/localfefunctions/helper.hh>
 
 namespace Ikarus {
 
   template <typename DuneBasis, typename CoeffContainer, std::size_t ID = 0>
-  class ProjectionBasedLocalFunction
-      : public LocalFunctionInterface<ProjectionBasedLocalFunction<DuneBasis, CoeffContainer, ID>>,
-        public ClonableLocalFunction<ProjectionBasedLocalFunction<DuneBasis, CoeffContainer, ID>> {
-    using Interface = LocalFunctionInterface<ProjectionBasedLocalFunction<DuneBasis, CoeffContainer, ID>>;
+  class ProjectionBasedLocalFEFunction
+      : public LocalFunctionInterface<ProjectionBasedLocalFEFunction<DuneBasis, CoeffContainer, ID>>,
+        public ClonableLocalFunction<ProjectionBasedLocalFEFunction<DuneBasis, CoeffContainer, ID>> {
+    using Interface = LocalFunctionInterface<ProjectionBasedLocalFEFunction<DuneBasis, CoeffContainer, ID>>;
 
     template <size_t ID_ = 0>
     static constexpr int orderID = ID_ == ID ? nonLinear : constant;
 
   public:
     friend Interface;
-    friend ClonableLocalFunction<ProjectionBasedLocalFunction>;
-    constexpr ProjectionBasedLocalFunction(
+    friend ClonableLocalFunction<ProjectionBasedLocalFEFunction>;
+    constexpr ProjectionBasedLocalFEFunction(
         const Ikarus::LocalBasis<DuneBasis>& p_basis, const CoeffContainer& coeffs_,
         Dune::template index_constant<ID> = Dune::template index_constant<std::size_t(0)>{})
         : basis_{p_basis}, coeffs{coeffs_}, coeffsAsMat{Ikarus::viewAsEigenMatrixFixedDyn(coeffs)} {}
 
-    using Traits = LocalFunctionTraits<ProjectionBasedLocalFunction>;
+    using Traits = LocalFunctionTraits<ProjectionBasedLocalFEFunction>;
 
     static constexpr bool isLeaf = true;
     using Ids                    = Dune::index_constant<ID>;
@@ -318,7 +318,7 @@ namespace Ikarus {
   };
 
   template <typename DuneBasis, typename CoeffContainer, std::size_t ID>
-  struct LocalFunctionTraits<ProjectionBasedLocalFunction<DuneBasis, CoeffContainer, ID>> {
+  struct LocalFunctionTraits<ProjectionBasedLocalFEFunction<DuneBasis, CoeffContainer, ID>> {
     /** \brief Type used for coordinates */
     using ctype = typename CoeffContainer::value_type::ctype;
     /** \brief Dimension of the coeffs */

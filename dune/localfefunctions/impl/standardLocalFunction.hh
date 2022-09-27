@@ -18,19 +18,19 @@
 #include <ikarus/localFunctions/localFunctionInterface.hh>
 #include <ikarus/utils/linearAlgebraHelper.hh>
 
-namespace Ikarus {
+namespace Dune {
 
   template <typename DuneBasis, typename CoeffContainer, std::size_t ID = 0>
-  class StandardLocalFunction : public LocalFunctionInterface<StandardLocalFunction<DuneBasis, CoeffContainer, ID>>,
-                                public ClonableLocalFunction<StandardLocalFunction<DuneBasis, CoeffContainer, ID>> {
-    using Interface = LocalFunctionInterface<StandardLocalFunction<DuneBasis, CoeffContainer, ID>>;
+  class StandardLocalFEFunction : public LocalFunctionInterface<StandardLocalFEFunction<DuneBasis, CoeffContainer, ID>>,
+                                  public ClonableLocalFunction<StandardLocalFEFunction<DuneBasis, CoeffContainer, ID>> {
+    using Interface = LocalFunctionInterface<StandardLocalFEFunction<DuneBasis, CoeffContainer, ID>>;
 
   public:
     friend Interface;
-    friend ClonableLocalFunction<StandardLocalFunction>;
+    friend ClonableLocalFunction<StandardLocalFEFunction>;
 
-    constexpr StandardLocalFunction(const Ikarus::LocalBasis<DuneBasis>& p_basis, const CoeffContainer& coeffs_,
-                                    Dune::template index_constant<ID> = Dune::template index_constant<std::size_t(0)>{})
+    constexpr StandardLocalFEFunction(const Ikarus::LocalBasis<DuneBasis>& p_basis, const CoeffContainer& coeffs_,
+                                      Dune::template index_constant<ID> = Dune::template index_constant<std::size_t(0)>{})
         : basis_{p_basis}, coeffs{coeffs_}, coeffsAsMat{Ikarus::viewAsEigenMatrixFixedDyn(coeffs)} {}
 
     static constexpr bool isLeaf = true;
@@ -47,7 +47,7 @@ namespace Ikarus {
     friend auto evaluateFunctionImpl(const LocalFunctionInterface<LocalFunctionImpl_>& f,
                                      const LocalFunctionEvaluationArgs_& localFunctionArgs);
 
-    using Traits = LocalFunctionTraits<StandardLocalFunction<DuneBasis, CoeffContainer, ID>>;
+    using Traits = LocalFunctionTraits<StandardLocalFEFunction<DuneBasis, CoeffContainer, ID>>;
     /** \brief Type used for coordinates */
     using ctype = typename Traits::ctype;
     //    /** \brief Dimension of the coeffs */
@@ -78,7 +78,7 @@ namespace Ikarus {
 
     template <typename OtherType>
     struct Rebind {
-      using other = StandardLocalFunction<
+      using other = StandardLocalFEFunction<
           DuneBasis, typename Std::Rebind<CoeffContainer, typename Manifold::template Rebind<OtherType>::other>::other,
           ID>;
     };
@@ -161,7 +161,7 @@ namespace Ikarus {
   };
 
   template <typename DuneBasis, typename CoeffContainer, std::size_t ID>
-  struct LocalFunctionTraits<StandardLocalFunction<DuneBasis, CoeffContainer, ID>> {
+  struct LocalFunctionTraits<StandardLocalFEFunction<DuneBasis, CoeffContainer, ID>> {
     /** \brief Type used for coordinates */
     using ctype = typename CoeffContainer::value_type::ctype;
     /** \brief Dimension of the coeffs */

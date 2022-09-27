@@ -8,20 +8,20 @@
 
 #include <dune/common/classname.hh>
 
-namespace Ikarus {
+namespace Dune {
 
   /** Pretty printing the name of a local function expression */
   template <typename LF>
-  auto localFunctionName(const LF& lf) {
+  auto localFEFunctionName(const LF& lf) {
     std::string name = Dune::className(lf);
 
-    std::regex regexp0("Ikarus::StandardLocalFunction<(([a-zA-Z0-9_:<, ]*>){10})");
+    std::regex regexp0("Dune::StandardLocalFunction<(([a-zA-Z0-9_:<, ]*>){10})");
     name = regex_replace(name, regexp0, "SLF");
 
-    std::regex regexp1("Ikarus::ProjectionBasedLocalFunction<(([a-zA-Z0-9_:<, ]*>){10})");
+    std::regex regexp1("Dune::ProjectionBasedLocalFunction<(([a-zA-Z0-9_:<, ]*>){10})");
     name = regex_replace(name, regexp1, "PBLF");
 
-    std::regex regexp2("Ikarus::");
+    std::regex regexp2("Dune::");
     name = regex_replace(name, regexp2, "");
 
     std::regex regexp3("LocalFunctionDot");

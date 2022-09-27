@@ -3,7 +3,7 @@
 //
 
 #include "meta.hh"
-namespace Ikarus::DerivativeDirections {
+namespace Dune::DerivativeDirections {
   SpatialPartial spatial(size_t i) { return {i}; }
 
   SingleCoeff<0> coeff(size_t i) {

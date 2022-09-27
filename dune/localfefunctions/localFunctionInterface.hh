@@ -7,12 +7,12 @@
 #include "localFunctionArguments.hh"
 
 #include <concepts>
+#include <Eigen/Core>
 
-#include <ikarus/localBasis/localBasis.hh>
-#include <ikarus/localFunctions/expressions/exprChecks.hh>
-#include <ikarus/utils/traits.hh>
+#include <dune/localfefunctions/expressions/exprChecks.hh>
+//#include <ikarus/utils/traits.hh>
 
-namespace Ikarus {
+namespace Dune {
 
   template <typename LocalFunctionImpl>
   class LocalFunctionInterface {
@@ -134,7 +134,7 @@ namespace Ikarus {
     auto evaluateDerivativeWRTCoeffsANDSpatialImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
                                                    int coeffsIndex,
                                                    const TransformWith<TransformArgs...>& transArgs) const {
-      return std::array<Ikarus::DerivativeDirections::DerivativeNoOp, gridDim>();
+      return std::array<Dune::DerivativeDirections::DerivativeNoOp, gridDim>();
     }
 
     /* Default implementation returns Zero expression if they are not overloaded  */

@@ -7,10 +7,9 @@
 
 #include <concepts>
 
-#include <ikarus/localBasis/localBasis.hh>
-#include <ikarus/utils/traits.hh>
+#include <dune/localfefunctions/helper.hh>
 
-namespace Ikarus {
+namespace Dune {
 
   template <typename Derived>
   struct LocalFunctionTraits;
@@ -45,11 +44,11 @@ namespace Ikarus {
     LocalFunctionEvaluationArgs(const DomainTypeOrIntegrationPointIndex& localOrIpId, const Wrt<WrtArgs...>& args,
                                 const Along<AlongArgs...>& along, const TransformWith<TransformArgs...>& transArgs)
         : integrationPointOrIndex{localOrIpId}, wrtArgs{args}, alongArgs{along}, transformWithArgs{transArgs} {
-      const auto coeffIndicesOfArgs = Ikarus::DerivativeDirections::extractCoeffIndices(args);
+      const auto coeffIndicesOfArgs = Dune::DerivativeDirections::extractCoeffIndices(args);
       Dune::Hybrid::forEach(Dune::Hybrid::integralRange(Dune::index_constant<coeffIndicesOfArgs.size()>{}),
                             [&](auto&& i) { coeffsIndices[i]._data = coeffIndicesOfArgs[i]._data; });
 
-      spatialPartialIndices = Ikarus::DerivativeDirections::extractSpatialPartialIndices(args);
+      spatialPartialIndices = Dune::DerivativeDirections::extractSpatialPartialIndices(args);
     }
 
     // Constructor that does not calculate extractCoeffIndices and extractSpatialPartialIndices
@@ -87,7 +86,7 @@ namespace Ikarus {
     auto extractWrtArgs() const {
       auto wrt_lambda = [](auto... args) { return wrt(args...); };
       auto wrtArg
-          = std::apply(wrt_lambda, Std::makeTupleFromTupleIndices<const decltype(wrtArgs.args)&, I...>(wrtArgs.args));
+          = std::apply(wrt_lambda, Std::subTupleFromIndices<const decltype(wrtArgs.args)&, I...>(wrtArgs.args));
       return LocalFunctionEvaluationArgs<decltype(wrtArg), Along<AlongArgs...>, TransformWith<TransformArgs...>,
                                          DomainTypeOrIntegrationPointIndex>(integrationPointOrIndex, wrtArg, alongArgs,
                                                                             transformWithArgs);
@@ -111,13 +110,13 @@ namespace Ikarus {
     template <template <auto...> class DerivativeDirection>
     auto extractWrtArgsWithGivenType() const {
       using namespace Dune::Indices;
-      if constexpr (Std::isTemplateSame_v<DerivativeDirections::TwoCoeff, DerivativeDirection>) {
+      if constexpr (Std::isSameTemplate_v<DerivativeDirections::TwoCoeff, DerivativeDirection>) {
         auto wrtArg = wrt(DerivativeDirections::coeff(coeffsIndices[_0][_0], coeffsIndices[_0][1],
                                                       coeffsIndices[_1][_0], coeffsIndices[_1][1]));
         return LocalFunctionEvaluationArgs<decltype(wrtArg), Along<AlongArgs...>, TransformWith<TransformArgs...>,
                                            DomainTypeOrIntegrationPointIndex>(integrationPointOrIndex, wrtArg,
                                                                               alongArgs, transformWithArgs);
-      } else if constexpr (Std::isTemplateSame_v<DerivativeDirections::SingleCoeff, DerivativeDirection>) {
+      } else if constexpr (Std::isSameTemplate_v<DerivativeDirections::SingleCoeff, DerivativeDirection>) {
         auto wrtArg = wrt(DerivativeDirections::coeff(coeffsIndices[_0][_0], coeffsIndices[_0][1]));
         return LocalFunctionEvaluationArgs<decltype(wrtArg), Along<AlongArgs...>, TransformWith<TransformArgs...>,
                                            DomainTypeOrIntegrationPointIndex>(integrationPointOrIndex, wrtArg,
