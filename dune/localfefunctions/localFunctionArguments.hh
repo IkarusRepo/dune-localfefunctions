@@ -15,7 +15,7 @@ namespace Dune {
   struct LocalFunctionTraits;
 
   template <typename LocalFunctionImpl>
-  class LocalFunctionInterface;
+  class LocalFEFunctionInterface;
 
   template <typename DomainTypeOrIntegrationPointIndex, typename DomainType>
   concept IsIntegrationPointIndexOrIntegrationPointPosition

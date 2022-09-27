@@ -196,7 +196,7 @@ namespace Dune {
   class LocalFunctionScale;
 
   template <typename LocalFunctionImpl>
-  class LocalFunctionInterface;
+  class LocalFEFunctionInterface;
 
   template <typename LocalFunctionImpl>
   concept LocalFunction = requires {

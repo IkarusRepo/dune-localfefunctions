@@ -3,11 +3,10 @@
 //
 
 #pragma once
-#include <ikarus/localFunctions/meta.hh>
-namespace Ikarus {
+namespace Dune {
 
   template <typename LFImpl>
-  class ClonableLocalFunction {
+  class ClonableLocalFEFunction {
   public:
     LFImpl clone() const { return LFImpl(underlying().basis(), underlying().coeffs, typename LFImpl::Ids()); }
 

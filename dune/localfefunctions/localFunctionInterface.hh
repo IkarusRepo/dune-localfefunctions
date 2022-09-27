@@ -15,7 +15,7 @@
 namespace Dune {
 
   template <typename LocalFunctionImpl>
-  class LocalFunctionInterface {
+  class LocalFEFunctionInterface {
   public:
     using Traits                 = LocalFunctionTraits<LocalFunctionImpl>;
     using DomainType             = typename Traits::DomainType;
@@ -163,11 +163,11 @@ namespace Dune {
 
   private:
     template <typename LocalFunctionEvaluationArgs_, typename LocalFunctionImpl_>
-    friend auto evaluateDerivativeImpl(const LocalFunctionInterface<LocalFunctionImpl_>& f,
+    friend auto evaluateDerivativeImpl(const LocalFEFunctionInterface<LocalFunctionImpl_>& f,
                                        const LocalFunctionEvaluationArgs_& localFunctionArgs);
 
     template <typename LocalFunctionEvaluationArgs_, typename LocalFunctionImpl_>
-    friend auto evaluateFunctionImpl(const LocalFunctionInterface<LocalFunctionImpl_>& f,
+    friend auto evaluateFunctionImpl(const LocalFEFunctionInterface<LocalFunctionImpl_>& f,
                                      const LocalFunctionEvaluationArgs_& localFunctionArgs);
 
     template <typename LF>
@@ -186,7 +186,7 @@ namespace Dune {
   };
 
   template <typename LocalFunctionEvaluationArgs_, typename LocalFunctionImpl>
-  auto evaluateFunctionImpl(const LocalFunctionInterface<LocalFunctionImpl>& f,
+  auto evaluateFunctionImpl(const LocalFEFunctionInterface<LocalFunctionImpl>& f,
                             const LocalFunctionEvaluationArgs_& localFunctionArgs) {
     if constexpr (LocalFunctionImpl::isLeaf)
       return f.impl().evaluateFunctionImpl(localFunctionArgs.integrationPointOrIndex,
@@ -197,7 +197,7 @@ namespace Dune {
   }
 
   template <typename LocalFunctionEvaluationArgs_, typename LocalFunctionImpl>
-  auto evaluateDerivativeImpl(const LocalFunctionInterface<LocalFunctionImpl>& f,
+  auto evaluateDerivativeImpl(const LocalFEFunctionInterface<LocalFunctionImpl>& f,
                               const LocalFunctionEvaluationArgs_& localFunctionArgs) {
     using namespace Dune::Indices;
     if constexpr (LocalFunctionImpl::isLeaf) {
@@ -251,7 +251,7 @@ namespace Dune {
   }
 
   template <typename LocalFunctionEvaluationArgs_, typename LocalFunctionImpl>
-  auto evaluateFirstOrderDerivativesImpl(const LocalFunctionInterface<LocalFunctionImpl>& f,
+  auto evaluateFirstOrderDerivativesImpl(const LocalFEFunctionInterface<LocalFunctionImpl>& f,
                                          const LocalFunctionEvaluationArgs_& localFunctionArgs) {
     if constexpr (localFunctionArgs.derivativeOrder == 3) {
       const auto argsForDx              = localFunctionArgs.extractSpatialOrFirstWrtArg();
@@ -269,7 +269,7 @@ namespace Dune {
   }
 
   template <typename LocalFunctionEvaluationArgs_, typename LocalFunctionImpl>
-  auto evaluateSecondOrderDerivativesImpl(const LocalFunctionInterface<LocalFunctionImpl>& f,
+  auto evaluateSecondOrderDerivativesImpl(const LocalFEFunctionInterface<LocalFunctionImpl>& f,
                                           const LocalFunctionEvaluationArgs_& localFunctionArgs) {
     if constexpr (localFunctionArgs.derivativeOrder == 3) {
       const auto argsForDx              = localFunctionArgs.extractSpatialOrFirstWrtArg();

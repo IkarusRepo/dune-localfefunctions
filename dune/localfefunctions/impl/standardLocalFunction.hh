@@ -21,13 +21,13 @@
 namespace Dune {
 
   template <typename DuneBasis, typename CoeffContainer, std::size_t ID = 0>
-  class StandardLocalFEFunction : public LocalFunctionInterface<StandardLocalFEFunction<DuneBasis, CoeffContainer, ID>>,
-                                  public ClonableLocalFunction<StandardLocalFEFunction<DuneBasis, CoeffContainer, ID>> {
-    using Interface = LocalFunctionInterface<StandardLocalFEFunction<DuneBasis, CoeffContainer, ID>>;
+  class StandardLocalFEFunction : public LocalFEFunctionInterface<StandardLocalFEFunction<DuneBasis, CoeffContainer, ID>>,
+                                  public ClonableLocalFEFunction<StandardLocalFEFunction<DuneBasis, CoeffContainer, ID>> {
+    using Interface = LocalFEFunctionInterface<StandardLocalFEFunction<DuneBasis, CoeffContainer, ID>>;
 
   public:
     friend Interface;
-    friend ClonableLocalFunction<StandardLocalFEFunction>;
+    friend ClonableLocalFEFunction<StandardLocalFEFunction>;
 
     constexpr StandardLocalFEFunction(const Ikarus::LocalBasis<DuneBasis>& p_basis, const CoeffContainer& coeffs_,
                                       Dune::template index_constant<ID> = Dune::template index_constant<std::size_t(0)>{})
@@ -40,11 +40,11 @@ namespace Dune {
     static constexpr int orderID = ID_ == ID ? linear : constant;
 
     template <typename LocalFunctionEvaluationArgs_, typename LocalFunctionImpl_>
-    friend auto evaluateDerivativeImpl(const LocalFunctionInterface<LocalFunctionImpl_>& f,
+    friend auto evaluateDerivativeImpl(const LocalFEFunctionInterface<LocalFunctionImpl_>& f,
                                        const LocalFunctionEvaluationArgs_& localFunctionArgs);
 
     template <typename LocalFunctionEvaluationArgs_, typename LocalFunctionImpl_>
-    friend auto evaluateFunctionImpl(const LocalFunctionInterface<LocalFunctionImpl_>& f,
+    friend auto evaluateFunctionImpl(const LocalFEFunctionInterface<LocalFunctionImpl_>& f,
                                      const LocalFunctionEvaluationArgs_& localFunctionArgs);
 
     using Traits = LocalFunctionTraits<StandardLocalFEFunction<DuneBasis, CoeffContainer, ID>>;

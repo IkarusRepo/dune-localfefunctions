@@ -21,7 +21,7 @@ namespace Ikarus {
   template <typename DuneBasis, typename CoeffContainer, std::size_t ID = 0>
   class ProjectionBasedLocalFEFunction
       : public LocalFunctionInterface<ProjectionBasedLocalFEFunction<DuneBasis, CoeffContainer, ID>>,
-        public ClonableLocalFunction<ProjectionBasedLocalFEFunction<DuneBasis, CoeffContainer, ID>> {
+        public ClonableLocalFEFunction<ProjectionBasedLocalFEFunction<DuneBasis, CoeffContainer, ID>> {
     using Interface = LocalFunctionInterface<ProjectionBasedLocalFEFunction<DuneBasis, CoeffContainer, ID>>;
 
     template <size_t ID_ = 0>
@@ -29,7 +29,7 @@ namespace Ikarus {
 
   public:
     friend Interface;
-    friend ClonableLocalFunction<ProjectionBasedLocalFEFunction>;
+    friend ClonableLocalFEFunction<ProjectionBasedLocalFEFunction>;
     constexpr ProjectionBasedLocalFEFunction(
         const Ikarus::LocalBasis<DuneBasis>& p_basis, const CoeffContainer& coeffs_,
         Dune::template index_constant<ID> = Dune::template index_constant<std::size_t(0)>{})
