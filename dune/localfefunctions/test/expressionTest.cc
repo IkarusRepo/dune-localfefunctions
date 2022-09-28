@@ -400,7 +400,7 @@ int main(int argc, char** argv) try {
     testLocalFunction(k);
     testLocalFunction(normSq);
     for (int gpIndex = 0; auto& gp : rule) {
-      EXPECT_DOUBLE_EQ((-2 * 3) * f.evaluateFunction(gpIndex).dot(g.evaluateFunction(gpIndex)),
+      EXPECT_DOUBLE_EQ((-2 * 3) * f.evaluateFunction(gpIndex).inner(g.evaluateFunction(gpIndex)),
                        k.evaluateFunction(gpIndex)[0]);
 
       ++gpIndex;
@@ -424,7 +424,7 @@ int main(int argc, char** argv) try {
       //      testLocalFunction(k2,gpIndex);
       const auto& N  = localBasis.evaluateFunction(gpIndex);
       const auto& dN = localBasis.evaluateJacobian(gpIndex);
-      EXPECT_DOUBLE_EQ((f2.evaluateFunction(gpIndex) + g2.evaluateFunction(gpIndex)).dot(g2.evaluateFunction(gpIndex)),
+      EXPECT_DOUBLE_EQ((f2.evaluateFunction(gpIndex) + g2.evaluateFunction(gpIndex)).inner(g2.evaluateFunction(gpIndex)),
                        k2.evaluateFunction(gpIndex)[0]);
       auto resSingleSpatial
         = ((f2.evaluateDerivative(gpIndex, wrt(spatial(0))) + g2.evaluateDerivative(gpIndex, wrt(spatial(0))))

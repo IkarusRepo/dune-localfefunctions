@@ -6,12 +6,13 @@
 
 #include "rebind.hh"
 
-#include <ikarus/localFunctions/localFunctionInterface.hh>
+#include <dune/localfefunctions/localFunctionInterface.hh>
+#include <dune/localfefunctions/meta.hh>
 
-namespace Ikarus {
+namespace Dune {
 
   template <template <typename> class Op, typename E1>
-  struct UnaryLocalFunctionExpression : public Ikarus::LocalFunctionInterface<Op<E1>> {
+  struct UnaryExpr : public Dune::LocalFEFunctionInterface<Op<E1>> {
     std::tuple<E1> expr;
 
     using E1Raw = std::remove_cvref_t<E1>;
@@ -33,7 +34,7 @@ namespace Ikarus {
       return rebind<Op, E1, OtherType>(m(), Dune::index_constant<ID>());
     }
 
-    constexpr explicit UnaryLocalFunctionExpression(E1&& u) requires IsLocalFunction<E1> : expr(std::forward<E1>(u)) {}
+    constexpr explicit UnaryExpr(E1&& u) requires IsLocalFunction<E1> : expr(std::forward<E1>(u)) {}
 
     static constexpr bool isLeaf  = false;
     static constexpr int children = 1;

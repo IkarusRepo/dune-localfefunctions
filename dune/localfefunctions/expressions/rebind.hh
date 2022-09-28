@@ -6,7 +6,7 @@
 #include <cstddef>
 #include <tuple>
 
-#include <ikarus/utils/traits.hh>
+#include <dune/localfefunctions/helper.hh>
 namespace Ikarus {
 
   /*  Rebinds the underlying local function coeff coordinate type to a new type, if the ids have a match

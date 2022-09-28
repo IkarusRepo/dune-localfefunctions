@@ -3,8 +3,8 @@
 //
 
 #pragma once
-#include <ikarus/localFunctions/leafNodeCollection.hh>
-namespace Ikarus {
+#include <dune/localfefunctions/leafNodeCollection.hh>
+namespace Dune {
 
   template <typename LocalFunctionImpl>
   bool checkIfAllLeafNodeHaveTheSameBasisState(const LocalFunctionImpl& lf) {

@@ -11,6 +11,12 @@
 #include <dune/localfefunctions/helper.hh>
 namespace Dune {
 
+  template <typename Derived>
+  struct LocalFEFunctionTraits;
+
+  template <typename LocalFunctionImpl>
+  class LocalFEFunctionInterface;
+
   template <typename... Args_>
   struct Wrt {
     using Args = std::tuple<std::remove_cvref_t<Args_>...>;
@@ -199,7 +205,7 @@ namespace Dune {
   class LocalFEFunctionInterface;
 
   template <typename LocalFunctionImpl>
-  concept LocalFunction = requires {
+  concept LocalFEFunction = requires {
     typename std::remove_cvref_t<LocalFunctionImpl>::Traits;
     std::remove_cvref_t<LocalFunctionImpl>::Traits::valueSize;
     typename std::remove_cvref_t<LocalFunctionImpl>::Traits::DomainType;
@@ -214,7 +220,7 @@ namespace Dune {
       = std::remove_cvref_t<LF>::isLeaf == true and !IsArithmeticExpr<std::remove_cvref_t<LF>>;
 
   template <typename... LF>
-  concept IsLocalFunction = (LocalFunction<LF> and ...);
+  concept IsLocalFEFunction = (LocalFEFunction<LF> and ...);
 
   static constexpr int nonLinear = 1000;
   static constexpr int constant  = 0;

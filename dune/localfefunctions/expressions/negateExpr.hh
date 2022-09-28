@@ -3,15 +3,15 @@
 //
 
 #pragma once
-#include <ikarus/localFunctions/expressions/unaryExpr.hh>
-namespace Ikarus {
+#include <dune/localfefunctions/expressions/unaryExpr.hh>
+namespace Dune {
 
   template <typename E1>
-  class LocalFunctionNegate : public UnaryLocalFunctionExpression<LocalFunctionNegate, E1> {
+  class NegateExpr : public UnaryExpr<NegateExpr, E1> {
   public:
-    using Base = UnaryLocalFunctionExpression<LocalFunctionNegate, E1>;
-    using Base::UnaryLocalFunctionExpression;
-    using Traits                   = LocalFunctionTraits<LocalFunctionNegate>;
+    using Base = UnaryExpr<NegateExpr, E1>;
+    using Base::UnaryExpr;
+    using Traits                   = LocalFEFunctionTraits<NegateExpr>;
     static constexpr int valueSize = Traits::valueSize;
 
     template <size_t ID_ = 0>
@@ -19,17 +19,17 @@ namespace Ikarus {
 
     template <typename LFArgs>
     auto evaluateValueOfExpression(const LFArgs& lfArgs) const {
-      return Ikarus::eval(-evaluateFunctionImpl(this->m(), lfArgs));
+      return Dune::eval(-evaluateFunctionImpl(this->m(), lfArgs));
     }
 
     template <int DerivativeOrder, typename LFArgs>
     auto evaluateDerivativeOfExpression(const LFArgs& lfArgs) const {
-      return Ikarus::eval(-evaluateDerivativeImpl(this->m(), lfArgs));
+      return Dune::eval(-evaluateDerivativeImpl(this->m(), lfArgs));
     }
   };
 
   template <typename E1>
-  struct LocalFunctionTraits<LocalFunctionNegate<E1>> : public LocalFunctionTraits<std::remove_cvref_t<E1>> {};
+  struct LocalFEFunctionTraits<NegateExpr<E1>> : public LocalFEFunctionTraits<std::remove_cvref_t<E1>> {};
 
   template <typename E1>
   requires IsLocalFunction<E1>

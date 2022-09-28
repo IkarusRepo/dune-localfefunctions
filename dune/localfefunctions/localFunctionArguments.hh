@@ -11,12 +11,6 @@
 
 namespace Dune {
 
-  template <typename Derived>
-  struct LocalFunctionTraits;
-
-  template <typename LocalFunctionImpl>
-  class LocalFEFunctionInterface;
-
   template <typename DomainTypeOrIntegrationPointIndex, typename DomainType>
   concept IsIntegrationPointIndexOrIntegrationPointPosition
       = std::is_same_v<DomainTypeOrIntegrationPointIndex,

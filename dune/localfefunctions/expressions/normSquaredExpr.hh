@@ -5,17 +5,17 @@
 #pragma once
 #include "rebind.hh"
 
-#include <ikarus/localFunctions/expressions/unaryExpr.hh>
-#include <ikarus/manifolds/realTuple.hh>
-#include <ikarus/utils/linearAlgebraHelper.hh>
-namespace Ikarus {
+#include <dune/localfefunctions/expressions/unaryExpr.hh>
+//#include <dune/localfefunctions/utils/linearAlgebraHelper.hh>
+
+namespace Dune {
 
   template <typename E1>
-  class NormSquaredExpr : public UnaryLocalFunctionExpression<NormSquaredExpr, E1> {
+  class NormSquaredExpr : public UnaryExpr<NormSquaredExpr, E1> {
   public:
-    using Base = UnaryLocalFunctionExpression<NormSquaredExpr, E1>;
-    using Base::UnaryLocalFunctionExpression;
-    using Traits = LocalFunctionTraits<NormSquaredExpr>;
+    using Base = UnaryExpr<NormSquaredExpr, E1>;
+    using Base::UnaryExpr;
+    using Traits = LocalFEFunctionTraits<NormSquaredExpr>;
     /** \brief Type used for coordinates */
     using ctype                    = typename Traits::ctype;
     static constexpr int valueSize = 1;

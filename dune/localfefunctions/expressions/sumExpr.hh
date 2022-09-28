@@ -10,10 +10,10 @@
 namespace Ikarus {
 
   template <typename E1, typename E2>
-  class LocalFunctionSum : public BinaryLocalFunctionExpression<LocalFunctionSum, E1, E2> {
+  class LocalFunctionSum : public BinaryExpr<LocalFunctionSum, E1, E2> {
   public:
-    using Base = BinaryLocalFunctionExpression<LocalFunctionSum, E1, E2>;
-    using Base::BinaryLocalFunctionExpression;
+    using Base = BinaryExpr<LocalFunctionSum, E1, E2>;
+    using Base::BinaryExpr;
     using Traits = LocalFunctionTraits<LocalFunctionSum>;
 
     template <size_t ID_ = 0>

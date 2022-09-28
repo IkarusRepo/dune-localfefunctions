@@ -166,7 +166,7 @@ namespace Ikarus {
 
       if (coeffsIndex[0] == coeffsIndex[1]) {  // Riemannian Hessian Weingarten map correction
         const CoeffDerivEukMatrix dt = evaluateDerivativeWRTCoeffsEukImpl(N, coeffsIndex[0]);
-        ddt -= (coeffs[coeffsIndex[0]].getValue().dot(dt * std::get<0>(alongArgs.args)))
+        ddt -= (coeffs[coeffsIndex[0]].getValue().inner(dt * std::get<0>(alongArgs.args)))
                * CoeffDerivEukMatrix::Identity();
       }
 
@@ -254,7 +254,7 @@ namespace Ikarus {
             = evaluateDerivativeWRTCoeffsANDSpatialEukImpl(ipIndexOrPosition, coeffsIndex[0], transArgs);
         for (int i = 0; i < gridDim; ++i) {
           ChiArrayEuk
-              -= coeffs[coeffsIndex[0]].getValue().dot(Warray[i] * along.col(i)) * CoeffDerivEukMatrix::Identity();
+              -= coeffs[coeffsIndex[0]].getValue().inner(Warray[i] * along.col(i)) * CoeffDerivEukMatrix::Identity();
         }
       }
 
@@ -286,7 +286,7 @@ namespace Ikarus {
       if (coeffsIndex[0] == coeffsIndex[1]) {  // Riemannian Hessian Weingarten map correction
         const CoeffDerivEukMatrix W = evaluateDerivativeWRTCoeffsANDSpatialSingleEukImpl(
             ipIndexOrPosition, coeffsIndex[0], spatialIndex, transArgs);
-        Chi -= coeffs[coeffsIndex[0]].getValue().dot(W * along) * CoeffDerivEukMatrix::Identity();
+        Chi -= coeffs[coeffsIndex[0]].getValue().inner(W * along) * CoeffDerivEukMatrix::Identity();
       }
       return (coeffs[coeffsIndex[0]].orthonormalFrame().transpose() * Chi * coeffs[coeffsIndex[1]].orthonormalFrame())
           .eval();

@@ -3,13 +3,14 @@
 //
 
 #pragma once
-#include <ikarus/localFunctions/expressions/unaryExpr.hh>
-#include <ikarus/localFunctions/meta.hh>
-namespace Ikarus {
+#include <dune/localfefunctions/expressions/unaryExpr.hh>
+#include <dune/localfefunctions/meta.hh>
+
+namespace Dune {
 
   template <typename Type>
   requires std::is_arithmetic_v<Type>
-  class ConstantExpr : public LocalFunctionInterface<ConstantExpr<Type>> {
+  class ConstantExpr : public LocalFEFunctionInterface<ConstantExpr<Type>> {
   public:
     explicit ConstantExpr(Type val_) : val{val_} {}
 
@@ -41,7 +42,7 @@ namespace Ikarus {
   };
 
   template <typename Type>
-  struct LocalFunctionTraits<ConstantExpr<Type>> {
+  struct LocalFEFunctionTraits<ConstantExpr<Type>> {
     static constexpr int valueSize = 1;
     /** \brief Type for the points for evaluation, usually the integration points */
     using DomainType = Dune::FieldVector<double, 0>;

@@ -3,16 +3,17 @@
 //
 
 #pragma once
-#include <ikarus/localFunctions/expressions/binaryExpr.hh>
-#include <ikarus/localFunctions/expressions/constant.hh>
-namespace Ikarus {
+#include <dune/localfefunctions/expressions/binaryExpr.hh>
+#include <dune/localfefunctions/expressions/constant.hh>
+
+namespace Dune {
 
   template <typename E1, typename E2>
-  class LocalFunctionScale : public BinaryLocalFunctionExpression<LocalFunctionScale, E1, E2> {
+  class ScaleExpr : public BinaryExpr<ScaleExpr, E1, E2> {
   public:
-    using Base = BinaryLocalFunctionExpression<LocalFunctionScale, E1, E2>;
-    using Base::BinaryLocalFunctionExpression;
-    using Traits                   = LocalFunctionTraits<LocalFunctionScale>;
+    using Base = BinaryExpr<ScaleExpr, E1, E2>;
+    using Base::BinaryExpr;
+    using Traits                   = LocalFEFunctionTraits<ScaleExpr>;
     static constexpr int valueSize = Traits::valueSize;
 
     template <size_t ID_ = 0>
@@ -21,23 +22,23 @@ namespace Ikarus {
 
     template <typename LocalFunctionEvaluationArgs_>
     auto evaluateValueOfExpression(const LocalFunctionEvaluationArgs_& localFunctionArgs) const {
-      return Ikarus::eval(this->l().value() * evaluateFunctionImpl(this->r(), localFunctionArgs));
+      return Dune::eval(this->l().value() * evaluateFunctionImpl(this->r(), localFunctionArgs));
     }
 
     template <int DerivativeOrder, typename LocalFunctionEvaluationArgs_>
     auto evaluateDerivativeOfExpression(const LocalFunctionEvaluationArgs_& localFunctionArgs) const {
-      return Ikarus::eval(this->l().value() * evaluateDerivativeImpl(this->r(), localFunctionArgs));
+      return Dune::eval(this->l().value() * evaluateDerivativeImpl(this->r(), localFunctionArgs));
     }
   };
 
   template <typename E1, typename E2>
-  struct LocalFunctionTraits<LocalFunctionScale<E1, E2>> : public LocalFunctionTraits<std::remove_cvref_t<E2>> {};
+  struct LocalFEFunctionTraits<ScaleExpr<E1, E2>> : public LocalFEFunctionTraits<std::remove_cvref_t<E2>> {};
 
   template <typename E1, typename E2>
   requires(std::is_arithmetic_v<std::remove_cvref_t<E1>>and
                IsLocalFunction<E2> and !IsScaleExpr<E2>) constexpr LocalFunctionScale<ConstantExpr<E1>, E2>
   operator*(E1&& factor, E2&& u) {
-    return LocalFunctionScale<ConstantExpr<E1>, E2>(ConstantExpr(factor), std::forward<E2>(u));
+    return ScaleExpr<ConstantExpr<E1>, E2>(ConstantExpr(factor), std::forward<E2>(u));
   }
 
   template <typename E1, typename E2>

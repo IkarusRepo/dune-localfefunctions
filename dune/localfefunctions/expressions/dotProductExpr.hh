@@ -3,19 +3,19 @@
 //
 
 #pragma once
-#include "rebind.hh"
 
-#include <ikarus/localFunctions/expressions/binaryExpr.hh>
-#include <ikarus/manifolds/realTuple.hh>
-#include <ikarus/utils/linearAlgebraHelper.hh>
+#include <dune/localfefunctions/expressions/binaryExpr.hh>
+#include <dune/localfefunctions/meta.hh>
+//#include <ikarus/utils/linearAlgebraHelper.hh>
+
 namespace Ikarus {
 
   template <typename E1, typename E2>
-  class LocalFunctionDot : public BinaryLocalFunctionExpression<LocalFunctionDot, E1, E2> {
+  class InnerProductExpr : public BinaryExpr<InnerProductExpr, E1, E2> {
   public:
-    using Base = BinaryLocalFunctionExpression<LocalFunctionDot, E1, E2>;
-    using Base::BinaryLocalFunctionExpression;
-    using Traits = LocalFunctionTraits<LocalFunctionDot>;
+    using Base = BinaryExpr<InnerProductExpr, E1, E2>;
+    using Base::BinaryExpr;
+    using Traits = LocalFEFunctionTraits<InnerProductExpr>;
     /** \brief Type used for coordinates */
     using ctype                    = typename Traits::ctype;
     static constexpr int valueSize = Traits::valueSize;
@@ -146,7 +146,7 @@ namespace Ikarus {
   };
 
   template <typename E1, typename E2>
-  struct LocalFunctionTraits<LocalFunctionDot<E1, E2>> {
+  struct LocalFunctionTraits<InnerProductExpr<E1, E2>> {
     using E1Raw = std::remove_cvref_t<E1>;
     using E2Raw = std::remove_cvref_t<E2>;
     /** \brief Size of the function value */
@@ -161,6 +161,6 @@ namespace Ikarus {
 
   template <typename E1, typename E2>
   requires IsLocalFunction<E1, E2>
-  constexpr auto dot(E1 &&u, E2 &&v) { return LocalFunctionDot<E1, E2>(std::forward<E1>(u), std::forward<E2>(v)); }
+  constexpr auto inner(E1 &&u, E2 &&v) { return InnerProduct<E1, E2>(std::forward<E1>(u), std::forward<E2>(v)); }
 
 }  // namespace Ikarus

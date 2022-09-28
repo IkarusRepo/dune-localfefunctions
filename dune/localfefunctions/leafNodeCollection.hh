@@ -7,7 +7,7 @@
 
 #include <dune/common/indices.hh>
 
-#include <ikarus/utils/traits.hh>
+#include <dune/localfefunctions/helper.hh>
 namespace Ikarus {
   namespace Impl {
 

@@ -3,16 +3,16 @@
 //
 
 #pragma once
-#include <ikarus/localFunctions/expressions/unaryExpr.hh>
-#include <ikarus/utils/linearAlgebraHelper.hh>
-namespace Ikarus {
+#include <dune/localfefunctions/expressions/unaryExpr.hh>
+//#include <dune/utils/linearAlgebraHelper.hh>
+namespace Dune {
 
   template <typename E1>
-  class SqrtExpr : public UnaryLocalFunctionExpression<SqrtExpr, E1> {
+  class SqrtExpr : public UnaryExpr<SqrtExpr, E1> {
   public:
-    using Base = UnaryLocalFunctionExpression<SqrtExpr, E1>;
+    using Base = UnaryExpr<SqrtExpr, E1>;
     using Base::UnaryLocalFunctionExpression;
-    using Traits                   = LocalFunctionTraits<SqrtExpr>;
+    using Traits                   = LocalFEFunctionTraits<SqrtExpr>;
     static constexpr int valueSize = 1;
     static constexpr int gridDim   = Traits::gridDim;
     using ctype                    = typename Traits::ctype;
@@ -24,7 +24,7 @@ namespace Ikarus {
 
     template <typename LFArgs>
     auto evaluateValueOfExpression(const LFArgs& lfArgs) const {
-      return Eigen::Vector<ctype, 1>(Ikarus::eval(sqrt(evaluateFunctionImpl(this->m(), lfArgs)[0])));
+      return Eigen::Vector<ctype, 1>(Dune::eval(sqrt(evaluateFunctionImpl(this->m(), lfArgs)[0])));
     }
 
     template <int DerivativeOrder, typename LFArgs>
@@ -33,12 +33,12 @@ namespace Ikarus {
       if constexpr (DerivativeOrder == 1)  // d(sqrt(u(x)))/(dx) =  u_x /(2*sqrt(u(x))
       {
         const auto u_x = evaluateDerivativeImpl(this->m(), lfArgs);
-        return Ikarus::eval(u_x / (2 * sqrt(u)));
+        return Dune::eval(u_x / (2 * sqrt(u)));
       } else if constexpr (DerivativeOrder == 2) {  // d^3(qrt(u(x,y)))/(dxdy) = - u_x*u_y/(4*u^(3/2)) +
                                                     // u_xy/(2*sqrt(u))
         const auto& [u_x, u_y]    = evaluateFirstOrderDerivativesImpl(this->m(), lfArgs);
         const auto u_xy           = evaluateDerivativeImpl(this->m(), lfArgs);
-        const auto u_yTimesfactor = Ikarus::eval(u_y / (4 * std::pow(u, 3.0 / 2.0)));
+        const auto u_yTimesfactor = Dune::eval(u_y / (4 * std::pow(u, 3.0 / 2.0)));
         if constexpr (LFArgs::hasOneSpatialAll and LFArgs::hasSingleCoeff) {
           std::array<std::remove_cvref_t<decltype(Ikarus::eval(u_x.col(0) * u_y))>, gridDim> res;
           for (int i = 0; i < gridDim; ++i)
