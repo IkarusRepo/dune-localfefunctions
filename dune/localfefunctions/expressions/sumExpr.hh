@@ -28,7 +28,7 @@ namespace Dune {
   class LocalFunctionSum : public BinaryLocalFunctionExpression<LocalFunctionSum, E1, E2> {
   public:
     using Base = BinaryLocalFunctionExpression<LocalFunctionSum, E1, E2>;
-    using Base::BinaryLocalFunctionExpression;
+    using Base::Base;
     using Traits = LocalFunctionTraits<LocalFunctionSum>;
 
     template <size_t ID_ = 0>

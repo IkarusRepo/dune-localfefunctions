@@ -85,11 +85,9 @@ namespace Dune {
   }
 
   template <Concepts::LocalBasis DuneLocalBasis>
-  template <typename... Ints>  requires std::conjunction_v<std::is_convertible<int, Ints>
-                                ...>
-      void LocalBasis<DuneLocalBasis>::bind(const Dune::QuadratureRule<DomainFieldType, gridDim>& p_rule, Impl::Derivatives<Ints...>&& ints) {
+  void LocalBasis<DuneLocalBasis>::bind(const Dune::QuadratureRule<DomainFieldType, gridDim>& p_rule, std::set<int>&& ints) {
     rule             = p_rule;
-    boundDerivatives = ints.args;
+    boundDerivatives = ints;
     Nbound           = std::make_optional<typename decltype(Nbound)::value_type> ();
     dNbound           = std::make_optional<typename decltype(dNbound)::value_type> ();
     ddNbound           = std::make_optional<typename decltype(ddNbound)::value_type> ();

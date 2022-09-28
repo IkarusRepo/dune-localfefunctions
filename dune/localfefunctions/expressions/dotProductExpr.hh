@@ -29,7 +29,7 @@ namespace Dune {
   class LocalFunctionDot : public BinaryLocalFunctionExpression<LocalFunctionDot, E1, E2> {
   public:
     using Base = BinaryLocalFunctionExpression<LocalFunctionDot, E1, E2>;
-    using Base::BinaryLocalFunctionExpression;
+    using Base::Base;
     using Traits = LocalFunctionTraits<LocalFunctionDot>;
     /** \brief Type used for coordinates */
     using ctype                    = typename Traits::ctype;
@@ -108,15 +108,18 @@ namespace Dune {
         } else if constexpr (LFArgs::hasOneSpatialAll) {
           // check that the along argument has the correct size
           const auto &alongMatrix = std::get<0>(lfArgs.alongArgs.args);
-          static_assert(alongMatrix.ColsAtCompileTime == gridDim);
-          static_assert(alongMatrix.RowsAtCompileTime == 1);
+          using AlongMatrix = std::remove_cvref_t<decltype(alongMatrix)>;
+          static_assert(AlongMatrix::ColsAtCompileTime == gridDim);
+          static_assert(AlongMatrix::RowsAtCompileTime == 1);
 
           const auto uTimesA = eval(u * alongMatrix);
           const auto vTimesA = eval(v * alongMatrix);
-          static_assert(uTimesA.RowsAtCompileTime == Base::E1Raw::valueSize);
-          static_assert(vTimesA.RowsAtCompileTime == Base::E2Raw::valueSize);
-          static_assert(uTimesA.ColsAtCompileTime == gridDim);
-          static_assert(vTimesA.ColsAtCompileTime == gridDim);
+          using uTimesAType = std::remove_cvref_t<decltype(uTimesA)>;
+          using vTimesAType = std::remove_cvref_t<decltype(vTimesA)>;
+          static_assert(uTimesAType::RowsAtCompileTime == Base::E1Raw::valueSize);
+          static_assert(vTimesAType::RowsAtCompileTime == Base::E2Raw::valueSize);
+          static_assert(uTimesAType::ColsAtCompileTime == gridDim);
+          static_assert(vTimesAType::ColsAtCompileTime == gridDim);
 
           const auto &[gradu, u_c0, u_c1]  = evaluateFirstOrderDerivativesImpl(this->l(), lfArgs);
           const auto &[gradv, v_c0, v_c1]  = evaluateFirstOrderDerivativesImpl(this->r(), lfArgs);

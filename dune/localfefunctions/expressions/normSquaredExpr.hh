@@ -29,7 +29,7 @@ namespace Dune {
   class NormSquaredExpr : public UnaryLocalFunctionExpression<NormSquaredExpr, E1> {
   public:
     using Base = UnaryLocalFunctionExpression<NormSquaredExpr, E1>;
-    using Base::UnaryLocalFunctionExpression;
+    using Base::Base;
     using Traits = LocalFunctionTraits<NormSquaredExpr>;
     /** \brief Type used for coordinates */
     using ctype                    = typename Traits::ctype;
@@ -88,8 +88,10 @@ namespace Dune {
         } else if constexpr (LFArgs::hasOneSpatialAll) {
           // check that the along argument has the correct size
           const auto &alongMatrix = std::get<0>(lfArgs.alongArgs.args);
-          static_assert(alongMatrix.ColsAtCompileTime == gridDim);
-          static_assert(alongMatrix.RowsAtCompileTime == 1);
+          using AlongMatrix = std::remove_cvref_t<decltype(alongMatrix)>;
+
+          static_assert(AlongMatrix::ColsAtCompileTime == gridDim);
+          static_assert(AlongMatrix::RowsAtCompileTime == 1);
 
           const auto uTimesA = eval(u * alongMatrix);
           static_assert(uTimesA.RowsAtCompileTime == Base::E1Raw::valueSize);
@@ -99,8 +101,10 @@ namespace Dune {
           const auto &[gradu_c0, gradu_c1] = evaluateSecondOrderDerivativesImpl(this->m(), lfArgs);
 
           const auto graduTimesA = (gradu * alongMatrix.transpose()).eval();
-          static_assert(graduTimesA.RowsAtCompileTime == Base::E1Raw::valueSize);
-          static_assert(graduTimesA.ColsAtCompileTime == 1);
+          using graduTimesAType = std::remove_cvref_t<decltype(graduTimesA)>;
+
+          static_assert(graduTimesAType::RowsAtCompileTime == Base::E1Raw::valueSize);
+          static_assert(graduTimesAType::ColsAtCompileTime == 1);
 
           const auto argsForDyz = lfArgs.extractSecondWrtArgOrFirstNonSpatial();
 

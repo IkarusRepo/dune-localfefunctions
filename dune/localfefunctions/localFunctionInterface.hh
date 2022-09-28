@@ -102,10 +102,9 @@ namespace Dune {
     }
 
     /** \brief Forward the binding to the local basis */
-    template <typename IntegrationRule, typename... Ints>
-    requires std::conjunction_v<std::is_convertible<int, Ints>...>
-    void bind(IntegrationRule&& p_rule, Impl::Derivatives<Ints...>&& ints) {
-      impl().basis.bind(std::forward<IntegrationRule>(p_rule), std::forward<Impl::Derivatives<Ints...>>(ints));
+    template <typename IntegrationRule>
+    void bind(IntegrationRule&& p_rule, std::set<int>&& ints) {
+      impl().basis.bind(std::forward<IntegrationRule>(p_rule), std::forward<std::set<int>>(ints));
     }
 
   protected:
@@ -186,8 +185,8 @@ namespace Dune {
                                      const LocalFunctionEvaluationArgs_& localFunctionArgs);
 
     template <typename LF>
-    requires LocalFunction<LF>
-    friend auto collectNonArithmeticLeafNodes(LF&& a);
+//      requires LocalFunction<LF>
+    friend auto collectNonArithmeticLeafNodes(LF&& a) ;
 
     constexpr LocalFunctionImpl const& impl() const  // CRTP
     {
@@ -211,49 +210,49 @@ namespace Dune {
     }
   }
 
-  template <typename LocalFunctionEvaluationArgs_, typename LocalFunctionImpl>
+  template <typename LocalFunctionArguments, typename LocalFunctionImpl>
   auto evaluateDerivativeImpl(const LocalFunctionInterface<LocalFunctionImpl>& f,
-                              const LocalFunctionEvaluationArgs_& localFunctionArgs) {
+                              const LocalFunctionArguments& localFunctionArgs) {
     using namespace Dune::Indices;
     if constexpr (LocalFunctionImpl::isLeaf) {
-      if constexpr (localFunctionArgs.hasNoCoeff) {
-        if constexpr (localFunctionArgs.hasOneSpatialSingle) {
+      if constexpr (LocalFunctionArguments::hasNoCoeff) {
+        if constexpr (LocalFunctionArguments::hasOneSpatialSingle) {
           return f.impl().evaluateDerivativeWRTSpaceSingleImpl(localFunctionArgs.integrationPointOrIndex,
                                                                localFunctionArgs.spatialPartialIndices,
                                                                localFunctionArgs.transformWithArgs);
-        } else if constexpr (localFunctionArgs.hasOneSpatialAll) {
+        } else if constexpr (LocalFunctionArguments::hasOneSpatialAll) {
           return f.impl().evaluateDerivativeWRTSpaceAllImpl(localFunctionArgs.integrationPointOrIndex,
                                                             localFunctionArgs.transformWithArgs);
         }
-      } else if constexpr (localFunctionArgs.hasSingleCoeff) {
+      } else if constexpr (LocalFunctionArguments::hasSingleCoeff) {
         if constexpr (decltype(localFunctionArgs.coeffsIndices[_0][_0])::value != LocalFunctionImpl::Ids::value)
           return DerivativeDirections::DerivativeNoOp();
-        else if constexpr (localFunctionArgs.hasNoSpatial) {
+        else if constexpr (LocalFunctionArguments::hasNoSpatial) {
           return f.impl().evaluateDerivativeWRTCoeffsImpl(localFunctionArgs.integrationPointOrIndex,
                                                           localFunctionArgs.coeffsIndices[_0][1],
                                                           localFunctionArgs.transformWithArgs);
-        } else if constexpr (localFunctionArgs.hasOneSpatialSingle) {
+        } else if constexpr (LocalFunctionArguments::hasOneSpatialSingle) {
           return f.impl().evaluateDerivativeWRTCoeffsANDSpatialSingleImpl(
               localFunctionArgs.integrationPointOrIndex, localFunctionArgs.coeffsIndices[_0][1],
               localFunctionArgs.spatialPartialIndices, localFunctionArgs.transformWithArgs);
-        } else if constexpr (localFunctionArgs.hasOneSpatialAll) {
+        } else if constexpr (LocalFunctionArguments::hasOneSpatialAll) {
           return f.impl().evaluateDerivativeWRTCoeffsANDSpatialImpl(localFunctionArgs.integrationPointOrIndex,
                                                                     localFunctionArgs.coeffsIndices[_0][1],
                                                                     localFunctionArgs.transformWithArgs);
         }
-      } else if constexpr (localFunctionArgs.hasTwoCoeff) {
-        if constexpr (localFunctionArgs.hasNoSpatial) {
+      } else if constexpr (LocalFunctionArguments::hasTwoCoeff) {
+        if constexpr (LocalFunctionArguments::hasNoSpatial) {
           return f.impl().evaluateSecondDerivativeWRTCoeffsImpl(
               localFunctionArgs.integrationPointOrIndex,
               {localFunctionArgs.coeffsIndices[_0][1], localFunctionArgs.coeffsIndices[_1][1]},
               localFunctionArgs.alongArgs, localFunctionArgs.transformWithArgs);
-        } else if constexpr (localFunctionArgs.hasOneSpatialSingle) {
+        } else if constexpr (LocalFunctionArguments::hasOneSpatialSingle) {
           return f.impl().evaluateThirdDerivativeWRTCoeffsTwoTimesAndSpatialSingleImpl(
               localFunctionArgs.integrationPointOrIndex,
               {localFunctionArgs.coeffsIndices[_0][1], localFunctionArgs.coeffsIndices[_1][1]},
               localFunctionArgs.spatialPartialIndices, localFunctionArgs.alongArgs,
               localFunctionArgs.transformWithArgs);
-        } else if constexpr (localFunctionArgs.hasOneSpatialAll) {
+        } else if constexpr (LocalFunctionArguments::hasOneSpatialAll) {
           return f.impl().evaluateThirdDerivativeWRTCoeffsTwoTimesAndSpatialImpl(
               localFunctionArgs.integrationPointOrIndex,
               {localFunctionArgs.coeffsIndices[_0][1], localFunctionArgs.coeffsIndices[_1][1]},
@@ -261,21 +260,21 @@ namespace Dune {
         }
       }
     } else {
-      return f.impl().template evaluateDerivativeOfExpression<localFunctionArgs.derivativeOrder>(localFunctionArgs);
+      return f.impl().template evaluateDerivativeOfExpression<LocalFunctionArguments::derivativeOrder>(localFunctionArgs);
     }
   }
 
-  template <typename LocalFunctionEvaluationArgs_, typename LocalFunctionImpl>
+  template <typename LocalFunctionArguments, typename LocalFunctionImpl>
   auto evaluateFirstOrderDerivativesImpl(const LocalFunctionInterface<LocalFunctionImpl>& f,
-                                         const LocalFunctionEvaluationArgs_& localFunctionArgs) {
-    if constexpr (localFunctionArgs.derivativeOrder == 3) {
+                                         const LocalFunctionArguments& localFunctionArgs) {
+    if constexpr (LocalFunctionArguments::derivativeOrder == 3) {
       const auto argsForDx              = localFunctionArgs.extractSpatialOrFirstWrtArg();
       const auto [argsForDy, argsForDz] = extractWrtArgsTwoCoeffsToSingleCoeff(localFunctionArgs);
       auto dfdx                         = evaluateDerivativeImpl(f, argsForDx);
       auto dfdy                         = evaluateDerivativeImpl(f, argsForDy);
       auto dfdz                         = evaluateDerivativeImpl(f, argsForDz);
       return std::make_tuple(dfdx, dfdy, dfdz);
-    } else if constexpr (localFunctionArgs.derivativeOrder == 2) {
+    } else if constexpr (LocalFunctionArguments::derivativeOrder == 2) {
       const auto [argsForDx, argsForDy] = extractFirstTwoArgs(localFunctionArgs);
       auto dfdx                         = evaluateDerivativeImpl(f, argsForDx);
       auto dfdy                         = evaluateDerivativeImpl(f, argsForDy);
@@ -283,10 +282,10 @@ namespace Dune {
     }
   }
 
-  template <typename LocalFunctionEvaluationArgs_, typename LocalFunctionImpl>
+  template <typename LocalFunctionArguments, typename LocalFunctionImpl>
   auto evaluateSecondOrderDerivativesImpl(const LocalFunctionInterface<LocalFunctionImpl>& f,
-                                          const LocalFunctionEvaluationArgs_& localFunctionArgs) {
-    if constexpr (localFunctionArgs.derivativeOrder == 3) {
+                                          const LocalFunctionArguments& localFunctionArgs) {
+    if constexpr (LocalFunctionArguments::derivativeOrder == 3) {
       const auto argsForDx              = localFunctionArgs.extractSpatialOrFirstWrtArg();
       const auto [argsForDy, argsForDz] = extractWrtArgsTwoCoeffsToSingleCoeff(localFunctionArgs);
       const auto argsForDxy             = joinWRTArgs(argsForDx, argsForDy);
@@ -295,7 +294,7 @@ namespace Dune {
       const auto df_dxz                 = evaluateDerivativeImpl(f, argsForDxz);
       return std::make_tuple(df_dxy, df_dxz);
     } else
-      static_assert(localFunctionArgs.derivativeOrder == 3);
+      static_assert(LocalFunctionArguments::derivativeOrder == 3);
   }
 
 }  // namespace Dune

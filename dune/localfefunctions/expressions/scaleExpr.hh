@@ -26,7 +26,7 @@ namespace Dune {
   class LocalFunctionScale : public BinaryLocalFunctionExpression<LocalFunctionScale, E1, E2> {
   public:
     using Base = BinaryLocalFunctionExpression<LocalFunctionScale, E1, E2>;
-    using Base::BinaryLocalFunctionExpression;
+    using Base::Base;
     using Traits                   = LocalFunctionTraits<LocalFunctionScale>;
     static constexpr int valueSize = Traits::valueSize;
 

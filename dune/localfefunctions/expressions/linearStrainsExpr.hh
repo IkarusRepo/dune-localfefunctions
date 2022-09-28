@@ -5,17 +5,16 @@
 #pragma once
 #include "rebind.hh"
 
-//#include <ikarus/finiteElements/physicsHelper.hh>
 #include <dune/localfefunctions/expressions/unaryExpr.hh>
-//#include <ikarus/manifolds/realTuple.hh>
-//#include <ikarus/utils/linearAlgebraHelper.hh>
+#include <dune/localfefunctions/helper.hh>
+
 namespace Dune {
 
   template <typename E1>
   class LinearStrainsExpr : public UnaryLocalFunctionExpression<LinearStrainsExpr, E1> {
   public:
     using Base = UnaryLocalFunctionExpression<LinearStrainsExpr, E1>;
-    using Base::UnaryLocalFunctionExpression;
+    using Base::Base;
     using Traits = LocalFunctionTraits<LinearStrainsExpr>;
 
     /** \brief Type used for coordinates */

@@ -32,17 +32,11 @@
 
 namespace Dune {
 
-  namespace Impl {
-    template <typename... Args>
-    struct Derivatives {
-      std::set<int> args;
-    };
-  }  // namespace Impl
 
   /* Helper function to pass integers. These indicate which derivatives should be precomputed */
   template <typename... Ints>
   requires std::conjunction_v<std::is_convertible<int, Ints>...>
-  auto bindDerivatives(Ints&&... ints) { return Impl::Derivatives<Ints&&...>({std::forward<Ints>(ints)...}); }
+  auto bindDerivatives(Ints... ints) { return std::set<int>({std::forward<Ints>(ints)...}); }
 
   /* Convenient wrapper to store a dune local basis. It is possible to precompute derivatives */
   template <Concepts::LocalBasis DuneLocalBasis>
@@ -94,9 +88,7 @@ namespace Dune {
     }
 
     /* Binds this basis to a given integration rule */
-    template <typename... Ints>
-    requires std::conjunction_v<std::is_convertible<int, Ints>...>
-    void bind(const Dune::QuadratureRule<DomainFieldType, gridDim>& p_rule, Impl::Derivatives<Ints...>&& ints);
+    void bind(const Dune::QuadratureRule<DomainFieldType, gridDim>& p_rule, std::set<int>&& ints);
 
     /* Returns a reference to the ansatz functions evaluated at the given integration point index
      * The requires statement is needed to circumvent implicit conversion from FieldVector<double,1>
@@ -157,7 +149,7 @@ namespace Dune {
              && "Number of intergrationpoint evaluations does not match.");
       if (Nbound and dNbound) {
         auto res = std::views::iota(0UL, Nbound.value().size())
-                   | std::views::transform([&](auto&& i_) { return IntegrationPointsAndIndex(i_, rule.value()[i_]); });
+                   | std::views::transform([&](auto&& i_) { return IntegrationPointsAndIndex({i_, rule.value()[i_]}); });
         return res;
       } else {
         assert(false && "You need to call bind first");

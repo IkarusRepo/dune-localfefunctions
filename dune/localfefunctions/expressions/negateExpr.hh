@@ -26,7 +26,7 @@ namespace Dune {
   class LocalFunctionNegate : public UnaryLocalFunctionExpression<LocalFunctionNegate, E1> {
   public:
     using Base = UnaryLocalFunctionExpression<LocalFunctionNegate, E1>;
-    using Base::UnaryLocalFunctionExpression;
+    using Base::Base;
     using Traits                   = LocalFunctionTraits<LocalFunctionNegate>;
     static constexpr int valueSize = Traits::valueSize;
 

@@ -64,7 +64,7 @@ namespace Dune {
   }
 
   template <typename LF>
-  requires LocalFunction<LF>
+//  requires LocalFunction<LF>
   auto collectNonArithmeticLeafNodes(LF&& a) {
     return Std::makeNestedTupleFlatAndStoreReferences(Impl::collectNonArithmeticLeafNodesImpl(a.impl()));
   }

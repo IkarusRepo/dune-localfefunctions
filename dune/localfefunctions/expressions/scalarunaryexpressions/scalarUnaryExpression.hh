@@ -26,7 +26,7 @@ namespace Dune {
   class ScalarUnaryExpression : public UnaryLocalFunctionExpression<ScalarUnaryExpression, E1, Func> {
   public:
     using Base = UnaryLocalFunctionExpression<ScalarUnaryExpression, E1, Func>;
-    using Base::UnaryLocalFunctionExpression;
+    using Base::Base;
     using Traits                   = LocalFunctionTraits<ScalarUnaryExpression>;
     static constexpr int valueSize = 1;
     static constexpr int gridDim   = Traits::gridDim;

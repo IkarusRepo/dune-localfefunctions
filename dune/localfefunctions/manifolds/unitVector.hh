@@ -242,4 +242,7 @@ namespace Dune {
     return rt * factor;
   }
 
+  extern template class UnitVector<double,2>;
+  extern template class UnitVector<double,3>;
+  extern template class UnitVector<double,4>;
 }  // namespace Dune

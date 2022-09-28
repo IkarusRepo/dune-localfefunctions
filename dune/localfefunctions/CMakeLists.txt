@@ -18,12 +18,6 @@ file(
 target_sources(dune-localfefunctions PRIVATE
         ${sources})
 
-dune_register_package_flags(
-        INCLUDE_DIRS
-        ${Eigen3_INCLUDE_DIRS}
-        LIBRARIES
-        Eigen3::Eigen
-)
 
 target_link_dune_default_libraries(${PROJECT_NAME})
 

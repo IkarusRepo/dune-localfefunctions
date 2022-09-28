@@ -14,7 +14,7 @@ namespace Dune {
   public:
     static void construct(Dune::BlockVector<TargetSpace>& values, const int testPointsSize = 10) {
       values.resize(testPointsSize);
-      std::ranges::generate(values, []() { return TargetSpace(TargetSpace::CoordinateType::Random()); });
+      std::generate(values.begin(),values.end(), []() { return TargetSpace(TargetSpace::CoordinateType::Random()); });
     }
   };
 }  // namespace Ikarus

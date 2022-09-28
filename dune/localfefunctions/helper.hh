@@ -13,8 +13,8 @@
 #include <Eigen/Core>
 
 namespace Dune {
-  template <typename ST, int size>
-    requires(size > 0 and size <= 3) auto toVoigt(const Eigen::Matrix<ST, size, size>& E) {
+  template<typename ST, int size, int Options, int MaxRows, int MaxCols>
+    requires(size > 0 and size <= 3) auto toVoigt(const Eigen::Matrix<ST, size, size,Options,MaxRows,MaxCols>& E) {
     Eigen::Vector<ST, (size * (size + 1)) / 2> EVoigt;
     EVoigt.setZero();
     for (int i = 0; i < size; ++i)
@@ -275,13 +275,13 @@ namespace Std {
   template<template<auto...> class Type, typename Tuple>
   static constexpr bool countTypeSpecialization_v = countTypeSpecialization<Type, Tuple>();
 
-  template<int N, class Tuple>
-  constexpr auto makeTupleSubset(Tuple &&t) {
-    static_assert(N < std::tuple_size_v<std::remove_reference_t<Tuple>>,
-                  "The requested size needs to be smaller than the size of the tuple.");
-
-    return Impl::makeTupleSubsetImpl(std::forward<Tuple>(t), std::make_index_sequence<N>{});
-  }
+//  template<int N, class Tuple>
+//  constexpr auto makeTupleSubset(Tuple &&t) {
+//    static_assert(N < std::tuple_size_v<std::remove_reference_t<Tuple>>,
+//                  "The requested size needs to be smaller than the size of the tuple.");
+//
+//    return Impl::makeTupleSubsetImpl(std::forward<Tuple>(t), std::make_index_sequence<N>{});
+//  }
 
   template<class Tuple, std::size_t... I>
   constexpr auto subTupleFromIndices(Tuple &&t) {
@@ -329,23 +329,23 @@ namespace Std {
    * >If the type is not found the returned indenx is the size of the tuple
 
    */
-  template<class T, class Tuple>
-  struct Index;
-
-  template<class T>
-  struct Index<T, std::tuple<>> {
-    static const std::size_t value = 0;
-  };
-
-  template<class T, class... Types>
-  struct Index<T, std::tuple<T, Types...>> {
-    static constexpr std::size_t value = 0;
-  };
-
-  template<class T, class U, class... Types>
-  struct Index<T, std::tuple<U, Types...>> {
-    static const std::size_t value = 1 + Index<T, std::tuple<Types...>>::value;
-  };
+//  template<class T, class Tuple>
+//  struct Index;
+//
+//  template<class T>
+//  struct Index<T, std::tuple<>> {
+//    static const std::size_t value = 0;
+//  };
+//
+//  template<class T, class... Types>
+//  struct Index<T, std::tuple<T, Types...>> {
+//    static constexpr std::size_t value = 0;
+//  };
+//
+//  template<class T, class U, class... Types>
+//  struct Index<T, std::tuple<U, Types...>> {
+//    static const std::size_t value = 1 + Index<T, std::tuple<Types...>>::value;
+//  };
 
   /*
    * Rebind the underlying type of containers
