@@ -1,6 +1,21 @@
-//
-// Created by Alex on 21.04.2021.
-//
+/*
+ * This file is part of the Ikarus distribution (https://github.com/IkarusRepo/Ikarus).
+ * Copyright (c) 2022. The Ikarus developers.
+ *
+ * This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ */
 
 #pragma once
 
@@ -11,31 +26,31 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 
-#include <ikarus/localBasis/localBasis.hh>
+#include <dune/localfefunctions/localBasis/localBasis.hh>
 #include <dune/localfefunctions/localFunctionHelper.hh>
 #include <dune/localfefunctions/localFunctionInterface.hh>
-#include <dune/localfefunctions/helper.hh>
+//#include <ikarus/utils/linearAlgebraHelper.hh>
 
-namespace Ikarus {
+namespace Dune {
 
   template <typename DuneBasis, typename CoeffContainer, std::size_t ID = 0>
-  class ProjectionBasedLocalFEFunction
-      : public LocalFunctionInterface<ProjectionBasedLocalFEFunction<DuneBasis, CoeffContainer, ID>>,
-        public ClonableLocalFEFunction<ProjectionBasedLocalFEFunction<DuneBasis, CoeffContainer, ID>> {
-    using Interface = LocalFunctionInterface<ProjectionBasedLocalFEFunction<DuneBasis, CoeffContainer, ID>>;
+  class ProjectionBasedLocalFunction
+      : public LocalFunctionInterface<ProjectionBasedLocalFunction<DuneBasis, CoeffContainer, ID>>,
+        public ClonableLocalFunction<ProjectionBasedLocalFunction<DuneBasis, CoeffContainer, ID>> {
+    using Interface = LocalFunctionInterface<ProjectionBasedLocalFunction<DuneBasis, CoeffContainer, ID>>;
 
     template <size_t ID_ = 0>
     static constexpr int orderID = ID_ == ID ? nonLinear : constant;
 
   public:
     friend Interface;
-    friend ClonableLocalFEFunction<ProjectionBasedLocalFEFunction>;
-    constexpr ProjectionBasedLocalFEFunction(
-        const Ikarus::LocalBasis<DuneBasis>& p_basis, const CoeffContainer& coeffs_,
+    friend ClonableLocalFunction<ProjectionBasedLocalFunction>;
+    constexpr ProjectionBasedLocalFunction(
+        const Dune::LocalBasis<DuneBasis>& p_basis, const CoeffContainer& coeffs_,
         Dune::template index_constant<ID> = Dune::template index_constant<std::size_t(0)>{})
-        : basis_{p_basis}, coeffs{coeffs_}, coeffsAsMat{Ikarus::viewAsEigenMatrixFixedDyn(coeffs)} {}
+        : basis_{p_basis}, coeffs{coeffs_}, coeffsAsMat{Dune::viewAsEigenMatrixFixedDyn(coeffs)} {}
 
-    using Traits = LocalFunctionTraits<ProjectionBasedLocalFEFunction>;
+    using Traits = LocalFunctionTraits<ProjectionBasedLocalFunction>;
 
     static constexpr bool isLeaf = true;
     using Ids                    = Dune::index_constant<ID>;
@@ -78,9 +93,10 @@ namespace Ikarus {
     /** \brief Type for the Jacobian of the ansatz function values */
     using AnsatzFunctionJacobian = typename Traits::AnsatzFunctionJacobian;
 
+    const auto& coefficientsRef() const { return coeffs; }
     auto& coefficientsRef() { return coeffs; }
 
-    const Ikarus::LocalBasis<DuneBasis>& basis() const { return basis_; }
+    const Dune::LocalBasis<DuneBasis>& basis() const { return basis_; }
 
     template <typename OtherType>
     struct Rebind {
@@ -166,7 +182,7 @@ namespace Ikarus {
 
       if (coeffsIndex[0] == coeffsIndex[1]) {  // Riemannian Hessian Weingarten map correction
         const CoeffDerivEukMatrix dt = evaluateDerivativeWRTCoeffsEukImpl(N, coeffsIndex[0]);
-        ddt -= (coeffs[coeffsIndex[0]].getValue().inner(dt * std::get<0>(alongArgs.args)))
+        ddt -= (coeffs[coeffsIndex[0]].getValue().dot(dt * std::get<0>(alongArgs.args)))
                * CoeffDerivEukMatrix::Identity();
       }
 
@@ -254,7 +270,7 @@ namespace Ikarus {
             = evaluateDerivativeWRTCoeffsANDSpatialEukImpl(ipIndexOrPosition, coeffsIndex[0], transArgs);
         for (int i = 0; i < gridDim; ++i) {
           ChiArrayEuk
-              -= coeffs[coeffsIndex[0]].getValue().inner(Warray[i] * along.col(i)) * CoeffDerivEukMatrix::Identity();
+              -= coeffs[coeffsIndex[0]].getValue().dot(Warray[i] * along.col(i)) * CoeffDerivEukMatrix::Identity();
         }
       }
 
@@ -286,7 +302,7 @@ namespace Ikarus {
       if (coeffsIndex[0] == coeffsIndex[1]) {  // Riemannian Hessian Weingarten map correction
         const CoeffDerivEukMatrix W = evaluateDerivativeWRTCoeffsANDSpatialSingleEukImpl(
             ipIndexOrPosition, coeffsIndex[0], spatialIndex, transArgs);
-        Chi -= coeffs[coeffsIndex[0]].getValue().inner(W * along) * CoeffDerivEukMatrix::Identity();
+        Chi -= coeffs[coeffsIndex[0]].getValue().dot(W * along) * CoeffDerivEukMatrix::Identity();
       }
       return (coeffs[coeffsIndex[0]].orthonormalFrame().transpose() * Chi * coeffs[coeffsIndex[1]].orthonormalFrame())
           .eval();
@@ -305,20 +321,23 @@ namespace Ikarus {
     }
 
     Jacobian evaluateEmbeddingJacobianImpl(const AnsatzFunctionJacobian& dN) const {
-      Jacobian J = coeffsAsMat * dN;
+      Jacobian J
+          = coeffsAsMat
+            * dN.template cast<ctype>();  // The cast here is only necessary since the autodiff types are not working
+      // otherwise, see Issue https://github.com/autodiff/autodiff/issues/73
       return J;
     }
 
     FunctionReturnType evaluateEmbeddingFunctionImpl(const AnsatzFunctionType& N) const { return coeffsAsMat * N; }
 
     mutable AnsatzFunctionJacobian dNTransformed;
-    Ikarus::LocalBasis<DuneBasis> basis_;
+    Dune::LocalBasis<DuneBasis> basis_;
     CoeffContainer coeffs;
-    const decltype(Ikarus::viewAsEigenMatrixFixedDyn(coeffs)) coeffsAsMat;
+    const decltype(Dune::viewAsEigenMatrixFixedDyn(coeffs)) coeffsAsMat;
   };
 
   template <typename DuneBasis, typename CoeffContainer, std::size_t ID>
-  struct LocalFunctionTraits<ProjectionBasedLocalFEFunction<DuneBasis, CoeffContainer, ID>> {
+  struct LocalFunctionTraits<ProjectionBasedLocalFunction<DuneBasis, CoeffContainer, ID>> {
     /** \brief Type used for coordinates */
     using ctype = typename CoeffContainer::value_type::ctype;
     /** \brief Dimension of the coeffs */
@@ -326,7 +345,7 @@ namespace Ikarus {
     /** \brief Dimension of the correction size of coeffs */
     static constexpr int correctionSize = CoeffContainer::value_type::correctionSize;
     /** \brief Dimension of the grid */
-    static constexpr int gridDim = Ikarus::LocalBasis<DuneBasis>::gridDim;
+    static constexpr int gridDim = Dune::LocalBasis<DuneBasis>::gridDim;
     /** \brief The manifold where the function values lives in */
     using Manifold = typename CoeffContainer::value_type;
     /** \brief Type for the return value */
@@ -338,9 +357,9 @@ namespace Ikarus {
     /** \brief Type for the derivatives wrt. the coeffiecients */
     using CoeffDerivEukMatrix = Eigen::Matrix<ctype, valueSize, valueSize>;
     /** \brief Type for the Jacobian of the ansatz function values */
-    using AnsatzFunctionJacobian = typename Ikarus::LocalBasis<DuneBasis>::JacobianType;
+    using AnsatzFunctionJacobian = typename Dune::LocalBasis<DuneBasis>::JacobianType;
     /** \brief Type for ansatz function values */
-    using AnsatzFunctionType = typename Ikarus::LocalBasis<DuneBasis>::AnsatzFunctionType;
+    using AnsatzFunctionType = typename Dune::LocalBasis<DuneBasis>::AnsatzFunctionType;
     /** \brief Type for the points for evaluation, usually the integration points */
     using DomainType = typename DuneBasis::Traits::DomainType;
     /** \brief Type for a column of the Jacobian matrix */
@@ -349,4 +368,4 @@ namespace Ikarus {
     using AlongType = Eigen::Vector<ctype, valueSize>;
   };
 
-}  // namespace Ikarus
+}  // namespace Dune

@@ -1,21 +1,37 @@
-//
-// Created by alex on 3/17/22.
-//
+/*
+ * This file is part of the Ikarus distribution (https://github.com/IkarusRepo/Ikarus).
+ * Copyright (c) 2022. The Ikarus developers.
+ *
+ * This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ */
 
 #pragma once
 #include "leafNodeCollection.hh"
 #include "localFunctionArguments.hh"
 
 #include <concepts>
-#include <Eigen/Core>
 
+#include <dune/localfefunctions/localBasis/localBasis.hh>
 #include <dune/localfefunctions/expressions/exprChecks.hh>
+#include <dune/localfefunctions/concepts.hh>
 //#include <ikarus/utils/traits.hh>
 
 namespace Dune {
 
   template <typename LocalFunctionImpl>
-  class LocalFEFunctionInterface {
+  class LocalFunctionInterface {
   public:
     using Traits                 = LocalFunctionTraits<LocalFunctionImpl>;
     using DomainType             = typename Traits::DomainType;
@@ -35,7 +51,7 @@ namespace Dune {
 
     /** \brief Return the function value*/
     template <typename DomainTypeOrIntegrationPointIndex, typename... TransformArgs>
-    requires IsIntegrationPointIndexOrIntegrationPointPosition<DomainTypeOrIntegrationPointIndex, DomainType>
+    requires Concepts::IsIntegrationPointIndexOrIntegrationPointPosition<DomainTypeOrIntegrationPointIndex, DomainType>
     auto evaluateFunction(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
                           const TransformWith<TransformArgs...>& transArgs = transformWith()) const {
       const LocalFunctionEvaluationArgs evalArgs(ipIndexOrPosition, wrt(), along(), transArgs);
@@ -67,7 +83,7 @@ namespace Dune {
       assert(checkIfAllLeafNodeHaveTheSameBasisState(impl())
              && "The basis of the leaf nodes are not in the same state.");
       auto leafNodeCollection = collectLeafNodeLocalFunctions(impl());
-      auto& node               = leafNodeCollection.node(Dune::index_constant<I>());
+      auto& node              = leafNodeCollection.node(Dune::index_constant<I>());
       return node.basis().viewOverIntegrationPoints();
     }
 
@@ -76,7 +92,6 @@ namespace Dune {
     template <std::size_t I = 0>
     requires(Std::countType<typename LocalFunctionImpl::Ids, Dune::index_constant<I>>()
              == 1) auto& coefficientsRef(Dune::index_constant<I> = Dune::index_constant<I>()) {
-      auto leafNodeCollection = collectLeafNodeLocalFunctions(impl());
       return collectLeafNodeLocalFunctions(impl()).coefficientsRef(Dune::index_constant<I>());
     }
 
@@ -163,11 +178,11 @@ namespace Dune {
 
   private:
     template <typename LocalFunctionEvaluationArgs_, typename LocalFunctionImpl_>
-    friend auto evaluateDerivativeImpl(const LocalFEFunctionInterface<LocalFunctionImpl_>& f,
+    friend auto evaluateDerivativeImpl(const LocalFunctionInterface<LocalFunctionImpl_>& f,
                                        const LocalFunctionEvaluationArgs_& localFunctionArgs);
 
     template <typename LocalFunctionEvaluationArgs_, typename LocalFunctionImpl_>
-    friend auto evaluateFunctionImpl(const LocalFEFunctionInterface<LocalFunctionImpl_>& f,
+    friend auto evaluateFunctionImpl(const LocalFunctionInterface<LocalFunctionImpl_>& f,
                                      const LocalFunctionEvaluationArgs_& localFunctionArgs);
 
     template <typename LF>
@@ -186,7 +201,7 @@ namespace Dune {
   };
 
   template <typename LocalFunctionEvaluationArgs_, typename LocalFunctionImpl>
-  auto evaluateFunctionImpl(const LocalFEFunctionInterface<LocalFunctionImpl>& f,
+  auto evaluateFunctionImpl(const LocalFunctionInterface<LocalFunctionImpl>& f,
                             const LocalFunctionEvaluationArgs_& localFunctionArgs) {
     if constexpr (LocalFunctionImpl::isLeaf)
       return f.impl().evaluateFunctionImpl(localFunctionArgs.integrationPointOrIndex,
@@ -197,7 +212,7 @@ namespace Dune {
   }
 
   template <typename LocalFunctionEvaluationArgs_, typename LocalFunctionImpl>
-  auto evaluateDerivativeImpl(const LocalFEFunctionInterface<LocalFunctionImpl>& f,
+  auto evaluateDerivativeImpl(const LocalFunctionInterface<LocalFunctionImpl>& f,
                               const LocalFunctionEvaluationArgs_& localFunctionArgs) {
     using namespace Dune::Indices;
     if constexpr (LocalFunctionImpl::isLeaf) {
@@ -251,7 +266,7 @@ namespace Dune {
   }
 
   template <typename LocalFunctionEvaluationArgs_, typename LocalFunctionImpl>
-  auto evaluateFirstOrderDerivativesImpl(const LocalFEFunctionInterface<LocalFunctionImpl>& f,
+  auto evaluateFirstOrderDerivativesImpl(const LocalFunctionInterface<LocalFunctionImpl>& f,
                                          const LocalFunctionEvaluationArgs_& localFunctionArgs) {
     if constexpr (localFunctionArgs.derivativeOrder == 3) {
       const auto argsForDx              = localFunctionArgs.extractSpatialOrFirstWrtArg();
@@ -269,7 +284,7 @@ namespace Dune {
   }
 
   template <typename LocalFunctionEvaluationArgs_, typename LocalFunctionImpl>
-  auto evaluateSecondOrderDerivativesImpl(const LocalFEFunctionInterface<LocalFunctionImpl>& f,
+  auto evaluateSecondOrderDerivativesImpl(const LocalFunctionInterface<LocalFunctionImpl>& f,
                                           const LocalFunctionEvaluationArgs_& localFunctionArgs) {
     if constexpr (localFunctionArgs.derivativeOrder == 3) {
       const auto argsForDx              = localFunctionArgs.extractSpatialOrFirstWrtArg();
@@ -283,4 +298,4 @@ namespace Dune {
       static_assert(localFunctionArgs.derivativeOrder == 3);
   }
 
-}  // namespace Ikarus
+}  // namespace Dune

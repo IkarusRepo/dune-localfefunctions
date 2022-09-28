@@ -1,19 +1,34 @@
-//
-// Created by lex on 4/25/22.
-//
+/*
+ * This file is part of the Ikarus distribution (https://github.com/IkarusRepo/Ikarus).
+ * Copyright (c) 2022. The Ikarus developers.
+ *
+ * This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ */
 
 #pragma once
-#include <ikarus/localFunctions/expressions/binaryExpr.hh>
-#include <ikarus/localFunctions/expressions/rebind.hh>
-#include <ikarus/utils/linearAlgebraHelper.hh>
+#include <dune/localfefunctions/expressions/binaryExpr.hh>
+#include <dune/localfefunctions/expressions/rebind.hh>
+#include <dune/localfefunctions/linearAlgebraHelper.hh>
 
-namespace Ikarus {
+namespace Dune {
 
   template <typename E1, typename E2>
-  class LocalFunctionSum : public BinaryExpr<LocalFunctionSum, E1, E2> {
+  class LocalFunctionSum : public BinaryLocalFunctionExpression<LocalFunctionSum, E1, E2> {
   public:
-    using Base = BinaryExpr<LocalFunctionSum, E1, E2>;
-    using Base::BinaryExpr;
+    using Base = BinaryLocalFunctionExpression<LocalFunctionSum, E1, E2>;
+    using Base::BinaryLocalFunctionExpression;
     using Traits = LocalFunctionTraits<LocalFunctionSum>;
 
     template <size_t ID_ = 0>
@@ -25,13 +40,13 @@ namespace Ikarus {
 
     template <typename LocalFunctionEvaluationArgs_>
     auto evaluateValueOfExpression(const LocalFunctionEvaluationArgs_& localFunctionArgs) const {
-      return Ikarus::eval(evaluateFunctionImpl(this->l(), localFunctionArgs)
+      return Dune::eval(evaluateFunctionImpl(this->l(), localFunctionArgs)
                           + evaluateFunctionImpl(this->r(), localFunctionArgs));
     }
 
     template <int DerivativeOrder, typename LocalFunctionEvaluationArgs_>
     auto evaluateDerivativeOfExpression(const LocalFunctionEvaluationArgs_& localFunctionArgs) const {
-      return Ikarus::eval(evaluateDerivativeImpl(this->l(), localFunctionArgs)
+      return Dune::eval(evaluateDerivativeImpl(this->l(), localFunctionArgs)
                           + evaluateDerivativeImpl(this->r(), localFunctionArgs));
     }
   };
@@ -49,4 +64,4 @@ namespace Ikarus {
                   "The function values of your local functions are not addable!");
     return LocalFunctionSum<E1, E2>(std::forward<E1>(u), std::forward<E2>(v));
   }
-}  // namespace Ikarus
+}  // namespace Dune

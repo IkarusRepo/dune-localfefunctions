@@ -12,7 +12,7 @@ install(FILES ${headers}
 file(
         GLOB_RECURSE sources
         RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-        CONFIGURE_DEPENDS *.cc
+        CONFIGURE_DEPENDS *.cpp
 )
 
 target_sources(dune-localfefunctions PRIVATE

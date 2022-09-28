@@ -1,21 +1,36 @@
-//
-// Created by lex on 4/25/22.
-//
+/*
+ * This file is part of the Ikarus distribution (https://github.com/IkarusRepo/Ikarus).
+ * Copyright (c) 2022. The Ikarus developers.
+ *
+ * This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ */
 
 #pragma once
+#include "rebind.hh"
 
 #include <dune/localfefunctions/expressions/binaryExpr.hh>
-#include <dune/localfefunctions/meta.hh>
-//#include <ikarus/utils/linearAlgebraHelper.hh>
-
-namespace Ikarus {
+//#include <ikarus/manifolds/realTuple.hh>
+#include <dune/localfefunctions/linearAlgebraHelper.hh>
+namespace Dune {
 
   template <typename E1, typename E2>
-  class InnerProductExpr : public BinaryExpr<InnerProductExpr, E1, E2> {
+  class LocalFunctionDot : public BinaryLocalFunctionExpression<LocalFunctionDot, E1, E2> {
   public:
-    using Base = BinaryExpr<InnerProductExpr, E1, E2>;
-    using Base::BinaryExpr;
-    using Traits = LocalFEFunctionTraits<InnerProductExpr>;
+    using Base = BinaryLocalFunctionExpression<LocalFunctionDot, E1, E2>;
+    using Base::BinaryLocalFunctionExpression;
+    using Traits = LocalFunctionTraits<LocalFunctionDot>;
     /** \brief Type used for coordinates */
     using ctype                    = typename Traits::ctype;
     static constexpr int valueSize = Traits::valueSize;
@@ -40,7 +55,7 @@ namespace Ikarus {
       {
         const auto u_x = evaluateDerivativeImpl(this->l(), lfArgs);
         const auto v_x = evaluateDerivativeImpl(this->r(), lfArgs);
-        return Ikarus::eval(v.transpose() * u_x + u.transpose() * v_x);
+        return Dune::eval(v.transpose() * u_x + u.transpose() * v_x);
       } else if constexpr (DerivativeOrder
                            == 2) {  // dd(dot(u,v))/(dxdy) =  u_{x,y} * v + u_x*v_y + u_y* v_x + u * v_{x,y}
         const auto &[u_x, u_y] = evaluateFirstOrderDerivativesImpl(this->l(), lfArgs);
@@ -52,17 +67,17 @@ namespace Ikarus {
           const auto u_xyAlongv = evaluateDerivativeImpl(this->l(), alongvArgs);
           const auto v_xyAlongu = evaluateDerivativeImpl(this->r(), alonguArgs);
 
-          return Ikarus::eval(u_xyAlongv + transpose(u_x) * v_y + transpose(v_x) * u_y + v_xyAlongu);
+          return Dune::eval(u_xyAlongv + transpose(u_x) * v_y + transpose(v_x) * u_y + v_xyAlongu);
         } else if constexpr (LFArgs::hasOneSpatial and LFArgs::hasSingleCoeff) {
           const auto u_xy = evaluateDerivativeImpl(this->l(), lfArgs);
           const auto v_xy = evaluateDerivativeImpl(this->r(), lfArgs);
           if constexpr (LFArgs::hasOneSpatialSingle and LFArgs::hasSingleCoeff) {
-            return Ikarus::eval(transpose(v) * u_xy + transpose(u_x) * v_y + transpose(v_x) * u_y
+            return Dune::eval(transpose(v) * u_xy + transpose(u_x) * v_y + transpose(v_x) * u_y
                                 + transpose(u) * v_xy);
           } else if constexpr (LFArgs::hasOneSpatialAll and LFArgs::hasSingleCoeff) {
-            std::array<std::remove_cvref_t<decltype(Ikarus::eval(transpose(v) * u_xy[0]))>, gridDim> res;
+            std::array<std::remove_cvref_t<decltype(Dune::eval(transpose(v) * u_xy[0]))>, gridDim> res;
             for (int i = 0; i < gridDim; ++i)
-              res[i] = Ikarus::eval(transpose(v) * u_xy[i] + transpose(u_x.col(i)) * v_y + transpose(v_x.col(i)) * u_y
+              res[i] = Dune::eval(transpose(v) * u_xy[i] + transpose(u_x.col(i)) * v_y + transpose(v_x.col(i)) * u_y
                                     + transpose(u) * v_xy[i]);
             return res;
           }
@@ -88,7 +103,7 @@ namespace Ikarus {
           const auto u_yzAlongvx = evaluateDerivativeImpl(this->l(), argsForDyzalongv_xArgs);
           const auto v_yzAlongux = evaluateDerivativeImpl(this->r(), argsForDyzalongu_xArgs);
 
-          return Ikarus::eval(u_xyzAlongv + transpose(u_xy) * v_z + transpose(u_xz) * v_y + v_yzAlongux + u_yzAlongvx
+          return Dune::eval(u_xyzAlongv + transpose(u_xy) * v_z + transpose(u_xz) * v_y + v_yzAlongux + u_yzAlongvx
                               + transpose(v_xz) * u_y + transpose(v_xy) * u_z + v_xyzAlongu);
         } else if constexpr (LFArgs::hasOneSpatialAll) {
           // check that the along argument has the correct size
@@ -146,7 +161,7 @@ namespace Ikarus {
   };
 
   template <typename E1, typename E2>
-  struct LocalFunctionTraits<InnerProductExpr<E1, E2>> {
+  struct LocalFunctionTraits<LocalFunctionDot<E1, E2>> {
     using E1Raw = std::remove_cvref_t<E1>;
     using E2Raw = std::remove_cvref_t<E2>;
     /** \brief Size of the function value */
@@ -161,6 +176,6 @@ namespace Ikarus {
 
   template <typename E1, typename E2>
   requires IsLocalFunction<E1, E2>
-  constexpr auto inner(E1 &&u, E2 &&v) { return InnerProduct<E1, E2>(std::forward<E1>(u), std::forward<E2>(v)); }
+  constexpr auto dot(E1 &&u, E2 &&v) { return LocalFunctionDot<E1, E2>(std::forward<E1>(u), std::forward<E2>(v)); }
 
-}  // namespace Ikarus
+}  // namespace Dune

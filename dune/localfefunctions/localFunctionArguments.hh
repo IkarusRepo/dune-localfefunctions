@@ -1,20 +1,39 @@
-//
-// Created by alex on 3/17/22.
-//
+/*
+ * This file is part of the Ikarus distribution (https://github.com/IkarusRepo/Ikarus).
+ * Copyright (c) 2022. The Ikarus developers.
+ *
+ * This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ */
 
 #pragma once
 #include "meta.hh"
 
 #include <concepts>
 
-#include <dune/localfefunctions/helper.hh>
+#include <dune/localfefunctions/localBasis/localBasis.hh>
+//#include <ikarus/utils/traits.hh>
 
 namespace Dune {
 
-  template <typename DomainTypeOrIntegrationPointIndex, typename DomainType>
-  concept IsIntegrationPointIndexOrIntegrationPointPosition
-      = std::is_same_v<DomainTypeOrIntegrationPointIndex,
-                       DomainType> or std::numeric_limits<DomainTypeOrIntegrationPointIndex>::is_integer;
+  template <typename Derived>
+  struct LocalFunctionTraits;
+
+  template <typename LocalFunctionImpl>
+  class LocalFunctionInterface;
+
+
 
   template <typename TypeListOne, typename TypeListTwo, typename TypeListThree,
             typename DomainTypeOrIntegrationPointIndex>
@@ -185,7 +204,7 @@ namespace Dune {
       return extractWrtArgsTwoCoeffsToSingleCoeff(a);
   }
 
-  /* This fnctions takes localfunction arguments and replaces the "along" argument with the given one */
+  /* This functions takes localfunction arguments and replaces the "along" argument with the given one */
   template <typename... WrtArgs, typename... TransformArgs, typename... AlongArgs, typename... AlongArgsOther,
             typename DomainTypeOrIntegrationPointIndex>
   auto replaceAlong(
@@ -204,4 +223,40 @@ namespace Dune {
     return newArgs;
   }
 
-}  // namespace Ikarus
+  /* This functions takes localfunction arguments and replaces the "along" argument with the given one */
+  template <typename... WrtArgs, typename... TransformArgs, typename... AlongArgs, typename... WRTArgsOther,
+            typename DomainTypeOrIntegrationPointIndex>
+  auto addWrt(const LocalFunctionEvaluationArgs<Wrt<WrtArgs...>, Along<AlongArgs...>, TransformWith<TransformArgs...>,
+                                                DomainTypeOrIntegrationPointIndex>& args,
+              const Wrt<WRTArgsOther...>& wrtArgs) {
+    auto newWrtArgs = std::apply(Dune::wrt<std::remove_cvref_t<WrtArgs>..., std::remove_cvref_t<WRTArgsOther>...>,
+                                 std::tuple_cat(args.wrtArgs.args, wrtArgs.args));
+
+    auto newArgs = LocalFunctionEvaluationArgs<decltype(newWrtArgs), Along<AlongArgs...>,
+                                               TransformWith<TransformArgs...>, DomainTypeOrIntegrationPointIndex>(
+        args.integrationPointOrIndex, newWrtArgs, args.alongArgs, args.transformWithArgs, false);
+
+    using namespace Dune::Indices;
+    if constexpr (newArgs.hasSingleCoeff)
+      std::get<1>(newArgs.coeffsIndices[_0]._data) = std::get<1>(args.coeffsIndices[_0]._data);
+    if constexpr (newArgs.hasTwoCoeff)
+      std::get<1>(newArgs.coeffsIndices[_1]._data) = std::get<1>(args.coeffsIndices[_1]._data);
+    newArgs.spatialPartialIndices = args.spatialPartialIndices;
+
+    return newArgs;
+  }
+
+  template <typename... WrtArgs, typename... TransformArgs, typename... AlongArgs, typename... WRTArgsOther,
+            typename DomainTypeOrIntegrationPointIndex>
+  auto replaceWrt(
+      const LocalFunctionEvaluationArgs<Wrt<WrtArgs...>, Along<AlongArgs...>, TransformWith<TransformArgs...>,
+                                        DomainTypeOrIntegrationPointIndex>& args,
+      const Wrt<WRTArgsOther...>& wrtArgs) {
+    auto newArgs = LocalFunctionEvaluationArgs<Wrt<WRTArgsOther...>, Along<AlongArgs...>,
+                                               TransformWith<TransformArgs...>, DomainTypeOrIntegrationPointIndex>(
+        args.integrationPointOrIndex, wrtArgs, args.alongArgs, args.transformWithArgs, false);
+
+    return newArgs;
+  }
+
+}  // namespace Dune

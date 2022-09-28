@@ -1,14 +1,30 @@
-//
-// Created by Alex on 04.05.2022.
-//
+/*
+ * This file is part of the Ikarus distribution (https://github.com/IkarusRepo/Ikarus).
+ * Copyright (c) 2022. The Ikarus developers.
+ *
+ * This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ */
 
 #pragma once
 #include "meta.hh"
 
 #include <dune/common/indices.hh>
 
+//#include <ikarus/utils/linearAlgebraHelper.hh>
 #include <dune/localfefunctions/helper.hh>
-namespace Ikarus {
+namespace Dune {
   namespace Impl {
 
     template <typename LocalFunctionImpl>
@@ -17,7 +33,7 @@ namespace Ikarus {
     template <typename LF>
     requires(!std::is_arithmetic_v<LF>) consteval int countNonArithmeticLeafNodesImpl() {
       if constexpr (Std::isSpecialization<std::tuple, typename LF::Ids>::value) {
-        constexpr auto predicate = []<typename Type>(Type) { return Type::value != Ikarus::arithmetic; };
+        constexpr auto predicate = []<typename Type>(Type) { return Type::value != Dune::arithmetic; };
         return std::tuple_size_v<decltype(Std::filter(typename LF::Ids(), predicate))>;
       } else
         return 1;
@@ -88,6 +104,16 @@ namespace Ikarus {
         if constexpr (LFI::Ids::value == I) lfi.coefficientsRef() += correction;
       });
     }
+
+    // This function updates the embedding values of the underlying coefficients
+    template <typename Derived, std::size_t I = 0>
+    void addToCoeffsInEmbedding(const Eigen::MatrixBase<Derived>& correction,
+                                Dune::index_constant<I> = Dune::index_constant<0UL>()) {
+      Dune::Hybrid::forEach(leafNodes, [&]<typename LFI>(LFI& lfi) {
+        if constexpr (LFI::Ids::value == I) addInEmbedding(lfi.coefficientsRef(), correction);
+      });
+    }
+
     template <std::size_t I = 0>
     auto& basis(Dune::index_constant<I> = Dune::index_constant<0UL>()) {
       return std::get<I>(leafNodes).basis();
@@ -109,4 +135,4 @@ namespace Ikarus {
   template <typename LF>
   requires LocalFunction<LF>
   auto collectLeafNodeLocalFunctions(LF&& lf) { return LocalFunctionLeafNodeCollection<LF>(std::forward<LF>(lf)); }
-}  // namespace Ikarus
+}  // namespace Dune

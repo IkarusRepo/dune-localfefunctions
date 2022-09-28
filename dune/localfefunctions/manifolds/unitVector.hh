@@ -1,11 +1,26 @@
-//
-// Created by Alex on 19.05.2021.
-//
+/*
+ * This file is part of the Ikarus distribution (https://github.com/IkarusRepo/Ikarus).
+ * Copyright (c) 2022. The Ikarus developers.
+ *
+ * This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ */
 
 #pragma once
 #include <concepts>
 
-#include <ikarus/utils/eigenDuneTransformations.hh>
+#include <dune/localfefunctions/eigenDuneTransformations.hh>
 
 namespace Dune {
   /**
@@ -14,7 +29,7 @@ namespace Dune {
    * \tparam ct The type used for the scalar coordinate values, e.g. double,float
    * \tparam d Dimension of the embedding space of the manifold
    */
-  template <typename ct, int d>
+  template <typename ct, int d>  // requires (d>1)
   class UnitVector {
   public:
     /** \brief Type used for coordinates */
@@ -89,6 +104,14 @@ namespace Dune {
       return result;
     }
 
+    Eigen::Matrix<ctype, valueSize, valueSize> weingartenMapEmbedded(const CoordinateType &p) const {
+      return -var.dot(p) * Eigen::Matrix<ctype, valueSize, valueSize>::Identity();
+    }
+
+    Eigen::Matrix<ctype, correctionSize, correctionSize> weingartenMap(const CoordinateType &p) const {
+      return -var.dot(p) * Eigen::Matrix<ctype, correctionSize, correctionSize>::Identity();
+    }
+
     template <typename Derived>
     static Eigen::Matrix<ctype, valueSize, valueSize> secondDerivativeOfProjectionWRTposition(
         const Eigen::Vector<ctype, valueSize> &p, const Eigen::MatrixBase<Derived> &along) {
@@ -159,10 +182,23 @@ namespace Dune {
       return result;
     }
 
+    template <typename ctOther, int dOther>
+    friend class UnitVector;
+
+    /** \brief Copy assignement if the other type has different underlying type*/
+    template <typename ctype_>
+    requires std::convertible_to<ctype_, ctype> UnitVector<ctype, d>
+    &operator=(const UnitVector<ctype_, d> &other) {
+      var = other.var;
+      return *this;
+    }
+
     auto &operator+=(const CorrectionType &correction) {
       this->update(correction);
       return *this;
     }
+
+    void addInEmbedding(const CoordinateType &correction) { var += correction; }
 
   private:
     CoordinateType var{CoordinateType::UnitX()};
@@ -206,4 +242,4 @@ namespace Dune {
     return rt * factor;
   }
 
-}  // namespace Ikarus
+}  // namespace Dune

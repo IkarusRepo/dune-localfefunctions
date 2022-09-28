@@ -1,6 +1,4 @@
-//
-// Created by Alex on 21.04.2021.
-//
+
 
 #pragma once
 
@@ -14,7 +12,7 @@
 #include <ikarus/LocalBasis/localBasis.hh>
 #include <ikarus/utils/LinearAlgebraHelper.hh>
 
-namespace Ikarus {
+namespace Dune {
 
   template <typename DuneBasis, typename CoeffContainer>
   class LocalFunctionTemplate : public LocalFunctionInterface<LocalFunctionTemplate<DuneBasis, CoeffContainer>> {
@@ -22,8 +20,8 @@ namespace Ikarus {
 
   public:
     friend Base;
-    LocalFunctionTemplate(const Ikarus::LocalBasis<DuneBasis>& basis_, const CoeffContainer& coeffs_)
-        : basis{basis_}, coeffs{coeffs_}, coeffsAsMat{Ikarus:: ::viewAsEigenMatrixFixedDyn(coeffs)} {}
+    LocalFunctionTemplate(const Dune::LocalBasis<DuneBasis>& basis_, const CoeffContainer& coeffs_)
+        : basis{basis_}, coeffs{coeffs_}, coeffsAsMat{Dune:: ::viewAsEigenMatrixFixedDyn(coeffs)} {}
 
     using Traits = LocalFunctionTraits<LocalFunctionTemplate>;
 
@@ -103,9 +101,9 @@ namespace Ikarus {
       return CoeffDerivMatrix{};
     }
 
-    const Ikarus::LocalBasis<DuneBasis>& basis;
+    const Dune::LocalBasis<DuneBasis>& basis;
     CoeffContainer coeffs;
-    const decltype(Ikarus:: ::viewAsEigenMatrixFixedDyn(coeffs)) coeffsAsMat;
+    const decltype(Dune:: ::viewAsEigenMatrixFixedDyn(coeffs)) coeffsAsMat;
   };
 
   template <typename DuneBasis, typename CoeffContainer>
@@ -115,7 +113,7 @@ namespace Ikarus {
     /** \brief Dimension of the coeffs */
     static constexpr int valueSize = CoeffContainer::value_type::valueSize;
     /** \brief Dimension of the grid */
-    static constexpr int gridDim = Ikarus::LocalBasis<DuneBasis>::gridDim;
+    static constexpr int gridDim = Dune::LocalBasis<DuneBasis>::gridDim;
     /** \brief Type for the return value */
     using FunctionReturnType = typename CoeffContainer::value_type;
     /** \brief Type for the Jacobian matrix */
@@ -123,9 +121,9 @@ namespace Ikarus {
     /** \brief Type for the derivatives wrt. the coeffiecients */
     using CoeffDerivMatrix = Eigen::Matrix<ctype, valueSize, valueSize>;
     /** \brief Type for the Jacobian of the ansatz function values */
-    using AnsatzFunctionJacobian = typename Ikarus::LocalBasis<DuneBasis>::JacobianType;
+    using AnsatzFunctionJacobian = typename Dune::LocalBasis<DuneBasis>::JacobianType;
     /** \brief Type for ansatz function values */
-    using AnsatzFunctionType = typename Ikarus::LocalBasis<DuneBasis>::AnsatzFunctionType;
+    using AnsatzFunctionType = typename Dune::LocalBasis<DuneBasis>::AnsatzFunctionType;
     /** \brief Type for the points for evaluation, usually the integration points */
     using DomainType = typename DuneBasis::Traits::DomainType;
     /** \brief Matrix to transform the ansatz function Jacobian to world coordinates*/
@@ -136,4 +134,4 @@ namespace Ikarus {
     using AlongType = Eigen::Vector<ctype, valueSize>;
   };
 
-}  // namespace Ikarus
+}  // namespace Dune

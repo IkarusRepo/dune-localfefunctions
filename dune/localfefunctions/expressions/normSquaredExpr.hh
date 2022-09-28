@@ -1,21 +1,36 @@
-//
-// Created by lex on 4/25/22.
-//
+/*
+ * This file is part of the Ikarus distribution (https://github.com/IkarusRepo/Ikarus).
+ * Copyright (c) 2022. The Ikarus developers.
+ *
+ * This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ */
 
 #pragma once
 #include "rebind.hh"
 
 #include <dune/localfefunctions/expressions/unaryExpr.hh>
-//#include <dune/localfefunctions/utils/linearAlgebraHelper.hh>
-
+//#include <ikarus/manifolds/realTuple.hh>
+//#include <ikarus/utils/linearAlgebraHelper.hh>
 namespace Dune {
 
   template <typename E1>
-  class NormSquaredExpr : public UnaryExpr<NormSquaredExpr, E1> {
+  class NormSquaredExpr : public UnaryLocalFunctionExpression<NormSquaredExpr, E1> {
   public:
-    using Base = UnaryExpr<NormSquaredExpr, E1>;
-    using Base::UnaryExpr;
-    using Traits = LocalFEFunctionTraits<NormSquaredExpr>;
+    using Base = UnaryLocalFunctionExpression<NormSquaredExpr, E1>;
+    using Base::UnaryLocalFunctionExpression;
+    using Traits = LocalFunctionTraits<NormSquaredExpr>;
     /** \brief Type used for coordinates */
     using ctype                    = typename Traits::ctype;
     static constexpr int valueSize = 1;
@@ -36,20 +51,20 @@ namespace Dune {
       if constexpr (DerivativeOrder == 1)  // d(squaredNorm(u))/dx = 2 * u_x * u
       {
         const auto u_x = evaluateDerivativeImpl(this->m(), lfArgs);
-        return Ikarus::eval(2 * u.transpose() * u_x);
+        return Dune::eval(2 * u.transpose() * u_x);
       } else if constexpr (DerivativeOrder == 2) {  // dd(squaredNorm(u))/(dxdy) =  2 *u_{x,y} * u + 2*u_x*u_y
         const auto &[u_x, u_y] = evaluateFirstOrderDerivativesImpl(this->m(), lfArgs);
         if constexpr (LFArgs::hasNoSpatial and LFArgs::hasTwoCoeff) {
           const auto alonguArgs = replaceAlong(lfArgs, along(u));
           const auto u_xyAlongu = evaluateDerivativeImpl(this->m(), alonguArgs);
 
-          return Ikarus::eval(2 * (u_xyAlongu + transpose(u_x) * u_y));
+          return Dune::eval(2 * (u_xyAlongu + transpose(u_x) * u_y));
         } else if constexpr (LFArgs::hasOneSpatial and LFArgs::hasSingleCoeff) {
           const auto u_xy = evaluateDerivativeImpl(this->m(), lfArgs);
           if constexpr (LFArgs::hasOneSpatialSingle and LFArgs::hasSingleCoeff) {
-            return Ikarus::eval(2 * (transpose(u) * u_xy + transpose(u_x) * u_y));
+            return Dune::eval(2 * (transpose(u) * u_xy + transpose(u_x) * u_y));
           } else if constexpr (LFArgs::hasOneSpatialAll and LFArgs::hasSingleCoeff) {
-            std::array<std::remove_cvref_t<decltype(Ikarus::eval(transpose(u) * u_xy[0]))>, gridDim> res;
+            std::array<std::remove_cvref_t<decltype(Dune::eval(transpose(u) * u_xy[0]))>, gridDim> res;
             for (int i = 0; i < gridDim; ++i)
               res[i] = 2 * (transpose(u) * u_xy[i] + transpose(u_x.col(i)) * u_y);
             return res;
@@ -69,7 +84,7 @@ namespace Dune {
           const auto u_xyzAlongu = evaluateDerivativeImpl(this->m(), alonguArgs);
           const auto u_yzAlongux = evaluateDerivativeImpl(this->m(), argsForDyzalongu_xArgs);
 
-          return Ikarus::eval(2 * (u_xyzAlongu + transpose(u_xy) * u_z + transpose(u_xz) * u_y + u_yzAlongux));
+          return Dune::eval(2 * (u_xyzAlongu + transpose(u_xy) * u_z + transpose(u_xz) * u_y + u_yzAlongux));
         } else if constexpr (LFArgs::hasOneSpatialAll) {
           // check that the along argument has the correct size
           const auto &alongMatrix = std::get<0>(lfArgs.alongArgs.args);
@@ -129,4 +144,4 @@ namespace Dune {
   requires IsLocalFunction<E1>
   constexpr auto normSquared(E1 &&u) { return NormSquaredExpr<E1>(std::forward<E1>(u)); }
 
-}  // namespace Ikarus
+}  // namespace Dune

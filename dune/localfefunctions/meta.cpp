@@ -17,14 +17,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  */
 
-#pragma once
+#include "meta.hh"
+namespace Dune::DerivativeDirections {
+  SpatialPartial spatial(size_t i) { return {i}; }
 
-#include "expressions/dotProductExpr.hh"
-#include "expressions/linearStrainsExpr.hh"
-#include "expressions/negateExpr.hh"
-#include "expressions/normSquaredExpr.hh"
-#include "expressions/scalarunaryexpressions/scalarLogExpr.hh"
-#include "expressions/scalarunaryexpressions/scalarPowExpr.hh"
-#include "expressions/scalarunaryexpressions/scalarSqrtExpr.hh"
-#include "expressions/scaleExpr.hh"
-#include "expressions/sumExpr.hh"
+  SingleCoeff<0> coeff(size_t i) {
+    using namespace Dune::Indices;
+    SingleCoeff<0> coeffs;
+    std::get<1>(coeffs.index[_0]._data) = i;
+    return coeffs;
+  }
+
+  TwoCoeff<0, 0> coeff(size_t i, size_t j) {
+    using namespace Dune::Indices;
+    TwoCoeff<0, 0> coeffs;
+    std::get<1>(coeffs.index[_0]._data) = i;
+    std::get<1>(coeffs.index[_1]._data) = j;
+    return coeffs;
+  }
+}  // namespace Dune::DerivativeDirections

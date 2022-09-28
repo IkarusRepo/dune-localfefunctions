@@ -12,3 +12,6 @@ install(FILES
         sumExpr.hh
         unaryExpr.hh
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/localfefunctions/expressions)
+
+
+add_subdirectory(scalarunaryexpressions)

@@ -1,6 +1,21 @@
-//
-// Created by Alex on 21.04.2021.
-//
+/*
+ * This file is part of the Ikarus distribution (https://github.com/IkarusRepo/Ikarus).
+ * Copyright (c) 2022. The Ikarus developers.
+ *
+ * This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ */
 
 #pragma once
 
@@ -13,25 +28,25 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 
-#include <ikarus/localBasis/localBasis.hh>
-#include <ikarus/localFunctions/localFunctionHelper.hh>
-#include <ikarus/localFunctions/localFunctionInterface.hh>
-#include <ikarus/utils/linearAlgebraHelper.hh>
+#include <dune/localfefunctions/localBasis/localBasis.hh>
+#include <dune/localfefunctions/localFunctionHelper.hh>
+#include <dune/localfefunctions/localFunctionInterface.hh>
+//#include <ikarus/utils/linearAlgebraHelper.hh>
 
 namespace Dune {
 
   template <typename DuneBasis, typename CoeffContainer, std::size_t ID = 0>
-  class StandardLocalFEFunction : public LocalFEFunctionInterface<StandardLocalFEFunction<DuneBasis, CoeffContainer, ID>>,
-                                  public ClonableLocalFEFunction<StandardLocalFEFunction<DuneBasis, CoeffContainer, ID>> {
-    using Interface = LocalFEFunctionInterface<StandardLocalFEFunction<DuneBasis, CoeffContainer, ID>>;
+  class StandardLocalFunction : public LocalFunctionInterface<StandardLocalFunction<DuneBasis, CoeffContainer, ID>>,
+                                public ClonableLocalFunction<StandardLocalFunction<DuneBasis, CoeffContainer, ID>> {
+    using Interface = LocalFunctionInterface<StandardLocalFunction<DuneBasis, CoeffContainer, ID>>;
 
   public:
     friend Interface;
-    friend ClonableLocalFEFunction<StandardLocalFEFunction>;
+    friend ClonableLocalFunction<StandardLocalFunction>;
 
-    constexpr StandardLocalFEFunction(const Ikarus::LocalBasis<DuneBasis>& p_basis, const CoeffContainer& coeffs_,
-                                      Dune::template index_constant<ID> = Dune::template index_constant<std::size_t(0)>{})
-        : basis_{p_basis}, coeffs{coeffs_}, coeffsAsMat{Ikarus::viewAsEigenMatrixFixedDyn(coeffs)} {}
+    constexpr StandardLocalFunction(const Dune::LocalBasis<DuneBasis>& p_basis, const CoeffContainer& coeffs_,
+                                    Dune::template index_constant<ID> = Dune::template index_constant<std::size_t(0)>{})
+        : basis_{p_basis}, coeffs{coeffs_}, coeffsAsMat{Dune::viewAsEigenMatrixFixedDyn(coeffs)} {}
 
     static constexpr bool isLeaf = true;
     using Ids                    = Dune::index_constant<ID>;
@@ -40,14 +55,14 @@ namespace Dune {
     static constexpr int orderID = ID_ == ID ? linear : constant;
 
     template <typename LocalFunctionEvaluationArgs_, typename LocalFunctionImpl_>
-    friend auto evaluateDerivativeImpl(const LocalFEFunctionInterface<LocalFunctionImpl_>& f,
+    friend auto evaluateDerivativeImpl(const LocalFunctionInterface<LocalFunctionImpl_>& f,
                                        const LocalFunctionEvaluationArgs_& localFunctionArgs);
 
     template <typename LocalFunctionEvaluationArgs_, typename LocalFunctionImpl_>
-    friend auto evaluateFunctionImpl(const LocalFEFunctionInterface<LocalFunctionImpl_>& f,
+    friend auto evaluateFunctionImpl(const LocalFunctionInterface<LocalFunctionImpl_>& f,
                                      const LocalFunctionEvaluationArgs_& localFunctionArgs);
 
-    using Traits = LocalFunctionTraits<StandardLocalFEFunction<DuneBasis, CoeffContainer, ID>>;
+    using Traits = LocalFunctionTraits<StandardLocalFunction<DuneBasis, CoeffContainer, ID>>;
     /** \brief Type used for coordinates */
     using ctype = typename Traits::ctype;
     //    /** \brief Dimension of the coeffs */
@@ -78,12 +93,12 @@ namespace Dune {
 
     template <typename OtherType>
     struct Rebind {
-      using other = StandardLocalFEFunction<
+      using other = StandardLocalFunction<
           DuneBasis, typename Std::Rebind<CoeffContainer, typename Manifold::template Rebind<OtherType>::other>::other,
           ID>;
     };
 
-    const Ikarus::LocalBasis<DuneBasis>& basis() const { return basis_; }
+    const Dune::LocalBasis<DuneBasis>& basis() const { return basis_; }
 
   private:
     template <typename DomainTypeOrIntegrationPointIndex, typename... TransformArgs>
@@ -155,13 +170,13 @@ namespace Dune {
     }
 
     mutable AnsatzFunctionJacobian dNTransformed;
-    const Ikarus::LocalBasis<DuneBasis>& basis_;
+    const Dune::LocalBasis<DuneBasis>& basis_;
     CoeffContainer coeffs;
-    const decltype(Ikarus::viewAsEigenMatrixFixedDyn(coeffs)) coeffsAsMat;
+    const decltype(Dune::viewAsEigenMatrixFixedDyn(coeffs)) coeffsAsMat;
   };
 
   template <typename DuneBasis, typename CoeffContainer, std::size_t ID>
-  struct LocalFunctionTraits<StandardLocalFEFunction<DuneBasis, CoeffContainer, ID>> {
+  struct LocalFunctionTraits<StandardLocalFunction<DuneBasis, CoeffContainer, ID>> {
     /** \brief Type used for coordinates */
     using ctype = typename CoeffContainer::value_type::ctype;
     /** \brief Dimension of the coeffs */
@@ -169,7 +184,7 @@ namespace Dune {
     /** \brief Dimension of the correction size of coeffs */
     static constexpr int correctionSize = CoeffContainer::value_type::correctionSize;
     /** \brief Dimension of the grid */
-    static constexpr int gridDim = Ikarus::LocalBasis<DuneBasis>::gridDim;
+    static constexpr int gridDim = Dune::LocalBasis<DuneBasis>::gridDim;
     /** \brief The manifold where the function values lives in */
     using Manifold = typename CoeffContainer::value_type;
     /** \brief Type for the return value */
@@ -179,9 +194,9 @@ namespace Dune {
     /** \brief Type for the derivatives wrt. the coeffiecients */
     using CoeffDerivMatrix = Eigen::DiagonalMatrix<ctype, valueSize>;
     /** \brief Type for the Jacobian of the ansatz function values */
-    using AnsatzFunctionJacobian = typename Ikarus::LocalBasis<DuneBasis>::JacobianType;
+    using AnsatzFunctionJacobian = typename Dune::LocalBasis<DuneBasis>::JacobianType;
     /** \brief Type for ansatz function values */
-    using AnsatzFunctionType = typename Ikarus::LocalBasis<DuneBasis>::AnsatzFunctionType;
+    using AnsatzFunctionType = typename Dune::LocalBasis<DuneBasis>::AnsatzFunctionType;
     /** \brief Type for the points for evaluation, usually the integration points */
     using DomainType = typename DuneBasis::Traits::DomainType;
     /** \brief Type for a column of the Jacobian matrix */
@@ -190,4 +205,4 @@ namespace Dune {
     using AlongType = Eigen::Vector<ctype, valueSize>;
   };
 
-}  // namespace Ikarus
+}  // namespace Dune

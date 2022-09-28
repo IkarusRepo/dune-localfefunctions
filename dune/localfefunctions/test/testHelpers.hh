@@ -1,3 +1,4 @@
+
 /*
  * This file is part of the Ikarus distribution (https://github.com/IkarusRepo/Ikarus).
  * Copyright (c) 2022. The Ikarus developers.
@@ -18,21 +19,20 @@
  */
 
 #pragma once
-#include <ostream>
 
-namespace Dune::Concepts {
-  template <typename ManifoldType>
-  concept Manifold = requires(ManifoldType var, typename ManifoldType::CorrectionType correction, std::ostream& s,
-                              typename ManifoldType::CoordinateType value, int i) {
-    typename ManifoldType::ctype;
-    ManifoldType::valueSize;
-    ManifoldType::correctionSize;
-    typename ManifoldType::CoordinateType;
-    typename ManifoldType::CorrectionType;
-    { var.getValue() } -> std::convertible_to<typename ManifoldType::CoordinateType>;
-    { var.setValue(value) } -> std::same_as<void>;
-    { var = value } -> std::same_as<void>;
-    { var += correction } -> std::same_as<void>;
-    { s << var } -> std::same_as<std::ostream&>;
-  };
-}  // namespace Dune::Concepts
+#include <Eigen/Core>
+
+template <typename Derived, typename OtherDerived>
+  requires(std::convertible_to<Derived, Eigen::EigenBase<Derived> const&>
+           and std::convertible_to<OtherDerived, Eigen::EigenBase<OtherDerived> const&>) bool
+isApproxSame(Derived const& val, OtherDerived const& other, double prec) {
+  if constexpr (requires {
+                  val.isApprox(other, prec);
+                  (val - other).isMuchSmallerThan(1, prec);
+                })
+    return val.isApprox(other, prec) or (val - other).isZero(prec);
+  else if constexpr (requires { val.isApprox(other, prec); })
+    return val.isApprox(other, prec);
+  else  // Eigen::DiagonalMatrix branch
+    return val.diagonal().isApprox(other.diagonal(), prec) or (val.diagonal() - other.diagonal()).isZero(prec);
+}

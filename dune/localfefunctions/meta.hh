@@ -1,6 +1,21 @@
-//
-// Created by Alex on 26.04.2022.
-//
+/*
+ * This file is part of the Ikarus distribution (https://github.com/IkarusRepo/Ikarus).
+ * Copyright (c) 2022. The Ikarus developers.
+ *
+ * This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ */
 
 #pragma once
 #include <cstddef>
@@ -8,14 +23,8 @@
 #include <dune/istl/multitypeblockvector.hh>
 #include <dune/typetree/typetree.hh>
 
-#include <dune/localfefunctions/helper.hh>
+#include "helper.hh"
 namespace Dune {
-
-  template <typename Derived>
-  struct LocalFEFunctionTraits;
-
-  template <typename LocalFunctionImpl>
-  class LocalFEFunctionInterface;
 
   template <typename... Args_>
   struct Wrt {
@@ -202,10 +211,10 @@ namespace Dune {
   class LocalFunctionScale;
 
   template <typename LocalFunctionImpl>
-  class LocalFEFunctionInterface;
+  class LocalFunctionInterface;
 
   template <typename LocalFunctionImpl>
-  concept LocalFEFunction = requires {
+  concept LocalFunction = requires {
     typename std::remove_cvref_t<LocalFunctionImpl>::Traits;
     std::remove_cvref_t<LocalFunctionImpl>::Traits::valueSize;
     typename std::remove_cvref_t<LocalFunctionImpl>::Traits::DomainType;
@@ -220,7 +229,7 @@ namespace Dune {
       = std::remove_cvref_t<LF>::isLeaf == true and !IsArithmeticExpr<std::remove_cvref_t<LF>>;
 
   template <typename... LF>
-  concept IsLocalFEFunction = (LocalFEFunction<LF> and ...);
+  concept IsLocalFunction = (LocalFunction<LF> and ...);
 
   static constexpr int nonLinear = 1000;
   static constexpr int constant  = 0;
@@ -228,4 +237,4 @@ namespace Dune {
   static constexpr int quadratic = 2;
   static constexpr int cubic     = 3;
 
-}  // namespace Ikarus
+}  // namespace Dune

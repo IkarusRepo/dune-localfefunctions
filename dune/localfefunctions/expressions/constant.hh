@@ -1,16 +1,30 @@
-//
-// Created by lex on 4/25/22.
-//
+/*
+ * This file is part of the Ikarus distribution (https://github.com/IkarusRepo/Ikarus).
+ * Copyright (c) 2022. The Ikarus developers.
+ *
+ * This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ */
 
 #pragma once
 #include <dune/localfefunctions/expressions/unaryExpr.hh>
 #include <dune/localfefunctions/meta.hh>
-
 namespace Dune {
 
   template <typename Type>
   requires std::is_arithmetic_v<Type>
-  class ConstantExpr : public LocalFEFunctionInterface<ConstantExpr<Type>> {
+  class ConstantExpr : public LocalFunctionInterface<ConstantExpr<Type>> {
   public:
     explicit ConstantExpr(Type val_) : val{val_} {}
 
@@ -42,10 +56,10 @@ namespace Dune {
   };
 
   template <typename Type>
-  struct LocalFEFunctionTraits<ConstantExpr<Type>> {
+  struct LocalFunctionTraits<ConstantExpr<Type>> {
     static constexpr int valueSize = 1;
     /** \brief Type for the points for evaluation, usually the integration points */
     using DomainType = Dune::FieldVector<double, 0>;
   };
 
-}  // namespace Ikarus
+}  // namespace Dune

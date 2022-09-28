@@ -10,7 +10,26 @@
 #include <dune/common/hybridutilities.hh>
 #include <dune/istl/bvector.hh>
 
+#include <Eigen/Core>
+
 namespace Dune {
+  template <typename ST, int size>
+    requires(size > 0 and size <= 3) auto toVoigt(const Eigen::Matrix<ST, size, size>& E) {
+    Eigen::Vector<ST, (size * (size + 1)) / 2> EVoigt;
+    EVoigt.setZero();
+    for (int i = 0; i < size; ++i)
+      EVoigt(i) = E(i, i);
+
+    if constexpr (size == 2)
+      EVoigt(2) = E(0, 1) * 2;
+    else if constexpr (size == 3) {
+      EVoigt(3) = E(1, 2) * 2;
+      EVoigt(4) = E(0, 2) * 2;
+      EVoigt(5) = E(0, 1) * 2;
+    }
+    return EVoigt;
+  }
+
 namespace Std {
 
   // Forward delare functions
@@ -280,7 +299,7 @@ namespace Std {
 
   template<template<auto...> typename TT,
     template<auto...> typename UU>
-  inline constexpr bool isSameTemplate_v = isSameTemplate_v<TT, UU>::value;
+  inline constexpr bool isSameTemplate_v = isSameTemplate<TT, UU>::value;
 
   template<typename... Types>
   auto makeNestedTupleFlat(std::tuple<Types...> tup) {
@@ -361,14 +380,4 @@ namespace Std {
   }
 }
 
-  /** \brief View Dune::BlockVector as a Eigen::Matrix with fixed rows depending on the size of  the ValueType and
- * dynamics columns */
-  template <typename ValueType>
-  auto viewAsEigenMatrixFixedDyn(Dune::BlockVector<ValueType>& blockedVector) {
-    Eigen::Map<Eigen::Matrix<typename ValueType::field_type, ValueType::valueSize, Eigen::Dynamic>> vec(
-      &blockedVector.begin()->begin().operator*(), blockedVector[0].size(), blockedVector.size());
-
-    return vec;
-  }
-
-}  // namespace Ikarus::Std
+}  // namespace Dune::Std
