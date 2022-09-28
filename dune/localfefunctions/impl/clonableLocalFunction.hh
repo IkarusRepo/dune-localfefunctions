@@ -24,13 +24,13 @@ namespace Dune {
   template <typename LFImpl>
   class ClonableLocalFunction {
   public:
-    LFImpl clone() const { return LFImpl(underlying().basis(), underlying().coeffs, typename LFImpl::Ids()); }
+    LFImpl clone() const { return LFImpl(underlying().basis(), underlying().coeffs,underlying().geometry, typename LFImpl::Ids()); }
 
     template <typename OtherType, size_t ID = 0>
     auto rebindClone(OtherType&& t, Dune::index_constant<ID>&& id = Dune::index_constant<0>()) const {
       if constexpr (LFImpl::Ids::value == ID)
         return typename LFImpl::template Rebind<OtherType>::other(
-            underlying().basis(), convertUnderlying<OtherType>(underlying().coeffs), typename LFImpl::Ids());
+            underlying().basis(), convertUnderlying<OtherType>(underlying().coeffs),underlying().geometry, typename LFImpl::Ids());
       else
         return clone();
     }

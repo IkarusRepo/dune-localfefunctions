@@ -35,18 +35,18 @@
 
 namespace Dune {
 
-  template <typename DuneBasis, typename CoeffContainer, std::size_t ID = 0>
-  class StandardLocalFunction : public LocalFunctionInterface<StandardLocalFunction<DuneBasis, CoeffContainer, ID>>,
-                                public ClonableLocalFunction<StandardLocalFunction<DuneBasis, CoeffContainer, ID>> {
-    using Interface = LocalFunctionInterface<StandardLocalFunction<DuneBasis, CoeffContainer, ID>>;
+  template <typename DuneBasis, typename CoeffContainer, typename Geometry, std::size_t ID = 0>
+  class StandardLocalFunction : public LocalFunctionInterface<StandardLocalFunction<DuneBasis, CoeffContainer,Geometry, ID>>,
+                                public ClonableLocalFunction<StandardLocalFunction<DuneBasis, CoeffContainer,Geometry, ID>> {
+    using Interface = LocalFunctionInterface<StandardLocalFunction<DuneBasis, CoeffContainer,Geometry, ID>>;
 
   public:
     friend Interface;
     friend ClonableLocalFunction<StandardLocalFunction>;
 
-    constexpr StandardLocalFunction(const Dune::LocalBasis<DuneBasis>& p_basis, const CoeffContainer& coeffs_,
+    constexpr StandardLocalFunction(const Dune::LocalBasis<DuneBasis>& p_basis, const CoeffContainer& coeffs_, const std::shared_ptr<const Geometry>& geo,
                                     Dune::template index_constant<ID> = Dune::template index_constant<std::size_t(0)>{})
-        : basis_{p_basis}, coeffs{coeffs_}, coeffsAsMat{Dune::viewAsEigenMatrixFixedDyn(coeffs)} {}
+        : basis_{p_basis}, coeffs{coeffs_},geometry{geo}, coeffsAsMat{Dune::viewAsEigenMatrixFixedDyn(coeffs)} {}
 
     static constexpr bool isLeaf = true;
     using Ids                    = Dune::index_constant<ID>;
@@ -62,7 +62,7 @@ namespace Dune {
     friend auto evaluateFunctionImpl(const LocalFunctionInterface<LocalFunctionImpl_>& f,
                                      const LocalFunctionEvaluationArgs_& localFunctionArgs);
 
-    using Traits = LocalFunctionTraits<StandardLocalFunction<DuneBasis, CoeffContainer, ID>>;
+    using Traits = LocalFunctionTraits<StandardLocalFunction<DuneBasis, CoeffContainer, Geometry,ID>>;
     /** \brief Type used for coordinates */
     using ctype = typename Traits::ctype;
     //    /** \brief Dimension of the coeffs */
@@ -94,7 +94,7 @@ namespace Dune {
     template <typename OtherType>
     struct Rebind {
       using other = StandardLocalFunction<
-          DuneBasis, typename Std::Rebind<CoeffContainer, typename Manifold::template Rebind<OtherType>::other>::other,
+          DuneBasis, typename Std::Rebind<CoeffContainer, typename Manifold::template Rebind<OtherType>::other>::other,Geometry,
           ID>;
     };
 
@@ -172,11 +172,12 @@ namespace Dune {
     mutable AnsatzFunctionJacobian dNTransformed;
     const Dune::LocalBasis<DuneBasis>& basis_;
     CoeffContainer coeffs;
+    std::shared_ptr<const Geometry> geometry;
     const decltype(Dune::viewAsEigenMatrixFixedDyn(coeffs)) coeffsAsMat;
   };
 
-  template <typename DuneBasis, typename CoeffContainer, std::size_t ID>
-  struct LocalFunctionTraits<StandardLocalFunction<DuneBasis, CoeffContainer, ID>> {
+  template <typename DuneBasis, typename CoeffContainer,typename Geometry,std::size_t ID>
+  struct LocalFunctionTraits<StandardLocalFunction<DuneBasis, CoeffContainer, Geometry, ID>> {
     /** \brief Type used for coordinates */
     using ctype = typename CoeffContainer::value_type::ctype;
     /** \brief Dimension of the coeffs */

@@ -28,6 +28,7 @@
 #include <dune/localfefunctions/manifolds/unitVector.hh>
 #include <dune/common/test/testsuite.hh>
 #include <dune/common/parallel/mpihelper.hh>
+#include <dune/geometry/multilineargeometry.hh>
 //#include <ikarus/utils/functionSanityChecks.hh>
 //#include <ikarus/utils/linearAlgebraHelper.hh>
 //#include <ikarus/utils/multiIndex.hh>
@@ -325,6 +326,11 @@ void localFunctionTestConstructor(const Dune::GeometryType &geometryType, size_t
   Dune::TestSuite testSuite;
 
   using namespace Dune::Indices;
+  const auto& refElement = Dune::ReferenceElements<double,domainDim>::general( geometryType );
+  std::vector<Dune::FieldVector<double,worldDim>> corners;
+  CornerFactory<worldDim>::construct(corners, refElement.size(domainDim) );
+  auto geometry = std::make_shared<const Dune::MultiLinearGeometry<double,domainDim,worldDim>>(refElement,corners);
+
   using Manifold     = Dune::RealTuple<double, worldDim>;
   using Manifold2    = Dune::UnitVector<double, worldDim>;
   using VectorType   = Eigen::Vector<double, worldDim>;
@@ -365,12 +371,12 @@ void localFunctionTestConstructor(const Dune::GeometryType &geometryType, size_t
     vBlockedLocal3[j] = testNodalPoints2[j];
   }
 
-  auto f = Dune::StandardLocalFunction(localBasis, vBlockedLocal);
+  auto f = Dune::StandardLocalFunction(localBasis, vBlockedLocal,geometry);
   testLocalFunction(f);
   static_assert(f.order() == linear);
   static_assert(countNonArithmeticLeafNodes(f) == 1);
 
-  auto g = Dune::StandardLocalFunction(localBasis, vBlockedLocal);
+  auto g = Dune::StandardLocalFunction(localBasis, vBlockedLocal,geometry);
   static_assert(countNonArithmeticLeafNodes(g) == 1);
   static_assert(g.order() == linear);
 
@@ -432,21 +438,21 @@ void localFunctionTestConstructor(const Dune::GeometryType &geometryType, size_t
 
   if constexpr (size > 1)  // Projection-Based only makes sense in 2d+
   {
-    auto gP = Dune::ProjectionBasedLocalFunction(localBasis, vBlockedLocal3);
+    auto gP = Dune::ProjectionBasedLocalFunction(localBasis, vBlockedLocal3, geometry);
     static_assert(gP.order() == nonLinear);
     testLocalFunction(gP);
   }
 
   {
     auto localBasisNotBound = Dune::LocalBasis(fe.localBasis());
-    auto fNotBound          = Dune::StandardLocalFunction(localBasisNotBound, vBlockedLocal);
+    auto fNotBound          = Dune::StandardLocalFunction(localBasisNotBound, vBlockedLocal,geometry);
     auto h1                 = f + fNotBound;
     //    (h1.viewOverIntegrationPoints(), "The basis of the leaf nodes are not in the same state.");
 
     const auto &ruleHigher                 = Dune::QuadratureRules<double, domainDim>::rule(fe.type(), 7);
     auto localBasisBoundButToDifferentRule = Dune::LocalBasis(fe.localBasis());
     localBasisBoundButToDifferentRule.bind(ruleHigher, bindDerivatives(0, 1));
-    auto fBoundButHigher = Dune::StandardLocalFunction(localBasisBoundButToDifferentRule, vBlockedLocal);
+    auto fBoundButHigher = Dune::StandardLocalFunction(localBasisBoundButToDifferentRule, vBlockedLocal,geometry);
     auto h2              = f + fBoundButHigher;
     //    (h2.viewOverIntegrationPoints(), "The basis of the leaf nodes are not in the same state.");
   }
@@ -455,8 +461,8 @@ void localFunctionTestConstructor(const Dune::GeometryType &geometryType, size_t
 
   const double tol = 1e-13;
 
-  auto f2 = Dune::StandardLocalFunction(localBasis, vBlockedLocal, _0);
-  auto g2 = Dune::StandardLocalFunction(localBasis, vBlockedLocal2, _1);
+  auto f2 = Dune::StandardLocalFunction(localBasis, vBlockedLocal,geometry, _0);
+  auto g2 = Dune::StandardLocalFunction(localBasis, vBlockedLocal2,geometry, _1);
   static_assert(countNonArithmeticLeafNodes(f2) == 1);
   static_assert(countNonArithmeticLeafNodes(g2) == 1);
 
