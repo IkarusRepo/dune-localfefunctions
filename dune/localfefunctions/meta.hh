@@ -206,7 +206,7 @@ namespace Dune {
   concept IsArithmeticExpr = std::remove_cvref_t<LF>::Ids::value == arithmetic;
 
   template <typename E1, typename E2>
-  class LocalFunctionScale;
+  class ScaleExpr;
 
   template <typename LocalFunctionImpl>
   class LocalFunctionInterface;
@@ -220,7 +220,7 @@ namespace Dune {
   };
 
   template <typename LF>
-  concept IsScaleExpr = Std::isSpecialization<LocalFunctionScale, std::remove_cvref_t<LF>>::value;
+  concept IsScaleExpr = Std::isSpecialization<ScaleExpr, std::remove_cvref_t<LF>>::value;
 
   template <typename LF>
   concept IsNonArithmeticLeafNode

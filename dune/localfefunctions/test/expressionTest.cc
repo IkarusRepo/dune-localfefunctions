@@ -52,6 +52,7 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
   const size_t coeffSize = coeffs.size();
 
   constexpr int gridDim                = LF::gridDim;
+  constexpr int worldDimension                = LF::worldDimension;
   using Manifold                       = typename std::remove_cvref_t<decltype(coeffs)>::value_type;
   constexpr int localFunctionValueSize = LF::Traits::valueSize;
   constexpr int coeffValueSize         = Manifold::valueSize;
@@ -84,9 +85,9 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
 
       /// Check if spatial derivatives are really derivatives
       /// Perturb in a random direction in the elements parameter space and check spatial derivative
-      auto func = [&](auto &gpOffset_) { return lf.evaluateFunction(toFieldVector(gpOffset_)); };
+      auto func = [&](auto &gpOffset_) { return lf.evaluateFunction(toFieldVector(gpOffset_),Dune::on(DerivativeDirections::referenceElement)); };
       auto spatialDerivAll
-          = [&](auto &gpOffset_) { return lf.evaluateDerivative(toFieldVector(gpOffset_), Dune::wrt(spatialAll)); };
+          = [&](auto &gpOffset_) { return lf.evaluateDerivative(toFieldVector(gpOffset_), Dune::wrt(spatialAll),Dune::on(DerivativeDirections::referenceElement)); };
 
       Eigen::Vector<double, gridDim> ipOffset = (Eigen::Vector<double, gridDim>::Random()).normalized() / 16;
       try {
@@ -107,13 +108,13 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
         auto derivDerivSingleI = [&](auto gpOffset_) {
           auto offSetSingle = ipOffset;
           offSetSingle[i] += gpOffset_[0];
-          return lf.evaluateDerivative(toFieldVector(offSetSingle), Dune::wrt(spatial(i)));
+          return lf.evaluateDerivative(toFieldVector(offSetSingle), Dune::wrt(spatial(i)),Dune::on(DerivativeDirections::referenceElement));
         };
 
         auto funcSingle = [&](const auto &gpOffset_) {
           auto offSetSingle = ipOffset;
           offSetSingle[i] += gpOffset_[0];
-          return Eigen::Vector<ctype, localFunctionValueSize>(lf.evaluateFunction(toFieldVector(offSetSingle)));
+          return Eigen::Vector<ctype, localFunctionValueSize>(lf.evaluateFunction(toFieldVector(offSetSingle),Dune::on(DerivativeDirections::referenceElement)));
         };
 
         try {
@@ -142,21 +143,21 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
 
     auto localFdual2nd = [&](const auto &x) {
       lfDual2ndLeafNodeCollection.addToCoeffsInEmbedding(x);
-      auto value = (transpose(lfDual2nd.evaluateFunction(ipIndex)) * alongVec).trace();
+      auto value = (transpose(lfDual2nd.evaluateFunction(ipIndex,Dune::on(DerivativeDirections::referenceElement))) * alongVec).trace();
       lfDual2ndLeafNodeCollection.addToCoeffsInEmbedding(-x);
       return value;
     };
 
     auto localFdual2ndSpatialSingle = [&](const auto &x, int i) {
       lfDual2ndLeafNodeCollection.addToCoeffsInEmbedding(x);
-      auto value = (lfDual2nd.evaluateDerivative(ipIndex, Dune::wrt(spatial(i))).transpose() * alongVec).trace();
+      auto value = (lfDual2nd.evaluateDerivative(ipIndex, Dune::wrt(spatial(i)),Dune::on(DerivativeDirections::referenceElement)).transpose() * alongVec).trace();
       lfDual2ndLeafNodeCollection.addToCoeffsInEmbedding(-x);
       return value;
     };
 
     auto localFdual2ndSpatialAll = [&](const auto &x) {
       lfDual2ndLeafNodeCollection.addToCoeffsInEmbedding(x);
-      auto value = (lfDual2nd.evaluateDerivative(ipIndex, Dune::wrt(spatialAll)).transpose() * alongMat).trace();
+      auto value = (lfDual2nd.evaluateDerivative(ipIndex, Dune::wrt(spatialAll),Dune::on(DerivativeDirections::referenceElement)).transpose() * alongMat).trace();
       lfDual2ndLeafNodeCollection.addToCoeffsInEmbedding(-x);
       return value;
     };
@@ -187,7 +188,7 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
 
     for (size_t i = 0; i < coeffSize; ++i) {
       const auto BLAi                = coeffs[i].orthonormalFrame();
-      const auto jacobianWRTCoeffslf = lf.evaluateDerivative(ipIndex, Dune::wrt(coeff(i)));
+      const auto jacobianWRTCoeffslf = lf.evaluateDerivative(ipIndex, Dune::wrt(coeff(i)),Dune::on(DerivativeDirections::referenceElement));
       static_assert(jacobianWRTCoeffslf.ColsAtCompileTime == coeffCorrectionSize);
       static_assert(jacobianWRTCoeffslf.RowsAtCompileTime == localFunctionValueSize);
       const auto jacobianWRTCoeffs = ((alongVec.transpose() * jacobianWRTCoeffslf).transpose()).eval();
@@ -195,16 +196,16 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
       static_assert(jacobianWRTCoeffs.rows() == coeffCorrectionSize);
       t.check(isApproxSame(jacobianWRTCoeffs,
                            BLAi.transpose() * gradienWRTCoeffs.template segment<coeffValueSize>(i * coeffValueSize),
-                           tol));
+                           tol),"Test first derivative wrt coeff");
 
       if (spatialSingleImplemented)
         for (int d = 0; d < gridDim; ++d) {
-          const auto jacoWrtCoeffAndSpatiallf = lf.evaluateDerivative(ipIndex, Dune::wrt(coeff(i), spatial(d)));
+          const auto jacoWrtCoeffAndSpatiallf = lf.evaluateDerivative(ipIndex, Dune::wrt(coeff(i), spatial(d)),Dune::on(DerivativeDirections::referenceElement));
           static_assert(jacoWrtCoeffAndSpatiallf.ColsAtCompileTime == coeffCorrectionSize);
           static_assert(jacoWrtCoeffAndSpatiallf.RowsAtCompileTime == localFunctionValueSize);
           const auto jacoWrtCoeffAndSpatial = ((alongVec.transpose() * jacoWrtCoeffAndSpatiallf).transpose()).eval();
           const auto jacoWrtSpatialAndCoeff
-              = ((alongVec.transpose() * lf.evaluateDerivative(ipIndex, Dune::wrt(spatial(d), coeff(i)))).transpose())
+              = ((alongVec.transpose() * lf.evaluateDerivative(ipIndex, Dune::wrt(spatial(d), coeff(i)),Dune::on(DerivativeDirections::referenceElement))).transpose())
                     .eval();
 
           static_assert(jacoWrtSpatialAndCoeff.cols() == 1);
@@ -212,17 +213,17 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
           static_assert(jacoWrtCoeffAndSpatial.rows() == jacoWrtCoeffAndSpatial.rows()
                         and jacoWrtCoeffAndSpatial.cols() == jacoWrtCoeffAndSpatial.cols());
 
-          t.check(isApproxSame(jacoWrtCoeffAndSpatial, jacoWrtSpatialAndCoeff, tol));
+          t.check(isApproxSame(jacoWrtCoeffAndSpatial, jacoWrtSpatialAndCoeff, tol),"Check that passing in different order does not change anything for the derivatives (spatial single)");
 
           t.check(isApproxSame(
               jacoWrtCoeffAndSpatial,
               BLAi.transpose()
                   * gradientWRTCoeffsTwoTimesSingleSpatial[d].template segment<coeffValueSize>(i * coeffValueSize),
-              tol));
+              tol),"Test mixed first derivative wrt coeff and first derivative wrt single spatial");
         }
 
       if (spatialAllImplemented and spatialSingleImplemented) {
-        const auto jacoWrtSpatialAllAndCoeff = lf.evaluateDerivative(ipIndex, Dune::wrt(spatialAll, coeff(i)));
+        const auto jacoWrtSpatialAllAndCoeff = lf.evaluateDerivative(ipIndex, Dune::wrt(spatialAll, coeff(i)),Dune::on(DerivativeDirections::referenceElement));
 
         static_assert(jacoWrtSpatialAllAndCoeff[0].ColsAtCompileTime == coeffCorrectionSize);
         static_assert(jacoWrtSpatialAllAndCoeff[0].RowsAtCompileTime == localFunctionValueSize);
@@ -237,25 +238,25 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
             jacoWrtSpatialAllAndCoeffProd,
             (BLAi.transpose() * gradienWRTCoeffsSpatialAll.template segment<coeffValueSize>(i * coeffValueSize))
                 .transpose(),
-            tol));
+            tol),"Test spatiall all and coeff derivative");
 
         // Check if spatialAll returns the same as the single spatial derivatives
-        const auto Warray  = lf.evaluateDerivative(ipIndex, Dune::wrt(coeff(i), spatialAll));
-        const auto Warray2 = lf.evaluateDerivative(ipIndex, Dune::wrt(spatialAll, coeff(i)));
+        const auto Warray  = lf.evaluateDerivative(ipIndex, Dune::wrt(coeff(i), spatialAll),Dune::on(DerivativeDirections::referenceElement));
+        const auto Warray2 = lf.evaluateDerivative(ipIndex, Dune::wrt(spatialAll, coeff(i)),Dune::on(DerivativeDirections::referenceElement));
         for (int j = 0; j < gridDim; ++j)
-          t.check(isApproxSame(Warray[j], Warray2[j], tol));
+          t.check(isApproxSame(Warray[j], Warray2[j], tol),"Check that passing in different order does not change anything for the derivatives (spatial all)");
 
         std::array<std::remove_cvref_t<decltype(Warray[0])>, gridDim> WarraySingle;
         for (int s = 0; s < gridDim; ++s)
-          WarraySingle[s] = lf.evaluateDerivative(ipIndex, Dune::wrt(coeff(i), spatial(s)));
+          WarraySingle[s] = lf.evaluateDerivative(ipIndex, Dune::wrt(coeff(i), spatial(s)),Dune::on(DerivativeDirections::referenceElement));
 
         for (int j = 0; j < gridDim; ++j)
-          t.check(isApproxSame(Warray[j], WarraySingle[j], tol));
+          t.check(isApproxSame(Warray[j], WarraySingle[j], tol),"Check that spatial all and spatial single coincide with coeff derivative");
       }
       for (size_t j = 0; j < coeffSize; ++j) {
         const auto BLAj = coeffs[j].orthonormalFrame();
         const auto jacobianWRTCoeffsTwoTimes
-            = lf.evaluateDerivative(ipIndex, Dune::wrt(coeff(i, j)), Dune::along(alongVec));
+            = lf.evaluateDerivative(ipIndex, Dune::wrt(coeff(i, j)), Dune::along(alongVec),Dune::on(DerivativeDirections::referenceElement));
         static_assert(jacobianWRTCoeffsTwoTimes.cols() == coeffCorrectionSize);
         static_assert(jacobianWRTCoeffsTwoTimes.rows() == coeffCorrectionSize);
         const auto jacobianWRTCoeffsTwoTimesExpected
@@ -266,11 +267,11 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
                + (i == j)
                      * coeffs[j].weingartenMap(gradienWRTCoeffs.template segment<coeffValueSize>(i * coeffValueSize)))
                   .eval();
-        t.check(isApproxSame(jacobianWRTCoeffsTwoTimes, jacobianWRTCoeffsTwoTimesExpected, tol));
+        t.check(isApproxSame(jacobianWRTCoeffsTwoTimes, jacobianWRTCoeffsTwoTimesExpected, tol),"Test second derivatives wrt coeffs");
 
         if (spatialAllImplemented) {
           const auto jacobianWRTCoeffsTwoTimesSpatialAll
-              = lf.evaluateDerivative(ipIndex, Dune::wrt(coeff(i, j), spatialAll), Dune::along(alongMat));
+              = lf.evaluateDerivative(ipIndex, Dune::wrt(coeff(i, j), spatialAll), Dune::along(alongMat),Dune::on(DerivativeDirections::referenceElement));
           static_assert(jacobianWRTCoeffsTwoTimesSpatialAll.cols() == coeffCorrectionSize);
           static_assert(jacobianWRTCoeffsTwoTimesSpatialAll.rows() == coeffCorrectionSize);
           const auto jacobianWRTCoeffsTwoTimesSpatialAllExpected
@@ -285,17 +286,17 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
 
           /// if the order of the function value is less then quadratic then this should yield a vanishing derivative
           if constexpr (lf.order() < quadratic) {
-            t.check(jacobianWRTCoeffsTwoTimesSpatialAll.norm() < tol);
-            t.check(jacobianWRTCoeffsTwoTimesSpatialAllExpected.norm() < tol);
+            t.check(jacobianWRTCoeffsTwoTimesSpatialAll.norm() < tol,"First linear local functions the second derivative should vanish");
+            t.check(jacobianWRTCoeffsTwoTimesSpatialAllExpected.norm() < tol,"First linear local functions the second derivative should vanish");
           } else {
             t.check(
-                isApproxSame(jacobianWRTCoeffsTwoTimesSpatialAll, jacobianWRTCoeffsTwoTimesSpatialAllExpected, tol));
+                isApproxSame(jacobianWRTCoeffsTwoTimesSpatialAll, jacobianWRTCoeffsTwoTimesSpatialAllExpected, tol),"Test third derivatives wrt coeffs, coeffs and spatialall");
           }
         }
         if (spatialSingleImplemented)
           for (int d = 0; d < gridDim; ++d) {
             const auto jacobianWRTCoeffsTwoTimesSingleSpatial
-                = lf.evaluateDerivative(ipIndex, Dune::wrt(coeff(i, j), spatial(d)), Dune::along(alongVec));
+                = lf.evaluateDerivative(ipIndex, Dune::wrt(coeff(i, j), spatial(d)), Dune::along(alongVec),Dune::on(DerivativeDirections::referenceElement));
             static_assert(jacobianWRTCoeffsTwoTimesSingleSpatial.cols() == coeffCorrectionSize);
             static_assert(jacobianWRTCoeffsTwoTimesSingleSpatial.rows() == coeffCorrectionSize);
             const auto jacobianWRTCoeffsTwoTimesSingleSpatialExpected
@@ -309,7 +310,7 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
                                  i * coeffValueSize)))
                       .eval();
             t.check(isApproxSame(jacobianWRTCoeffsTwoTimesSingleSpatial, jacobianWRTCoeffsTwoTimesSingleSpatialExpected,
-                                 tol));
+                                 tol),"Test third derivatives wrt coeffs, coeffs and spatial single");
           }
       }
     }
@@ -319,9 +320,9 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
     const auto lfCopy     = lf.clone();
     const auto &coeffCopy = lfCopy.coefficientsRef();
     for (size_t i = 0; i < coeffSize; ++i)
-      t.check(coeffCopy[i] == coeffs[i]);
+      t.check(coeffCopy[i] == coeffs[i],"Copied coeffs coincide");
 
-    t.check(&coeffCopy != &coeffs);
+    t.check(&coeffCopy != &coeffs,"Copied coeffs differ by address");
 
     t.subTest(testLocalFunction(lfCopy, true));
   }
@@ -391,8 +392,8 @@ auto localFunctionTestConstructor(const Dune::GeometryType &geometryType, size_t
   t.subTest(testLocalFunction(h));
   static_assert(h.order() == linear);
   for (size_t k = 0; k < fe.size(); ++k) {
-    t.check(h.coefficientsRef(_0)[k] == vBlockedLocal[k]);
-    t.check(h.coefficientsRef(_1)[k] == vBlockedLocal[k]);
+    t.check(h.coefficientsRef(_0)[k] == vBlockedLocal[k],"Check if coeffref returns the correct coeffs in slot 0");
+    t.check(h.coefficientsRef(_1)[k] == vBlockedLocal[k],"Check if coeffref returns the correct coeffs in slot 1");
   }
   static_assert(std::tuple_size_v<decltype(collectNonArithmeticLeafNodes(h))> == 2);
   static_assert(countNonArithmeticLeafNodes(h) == 2);
@@ -486,49 +487,49 @@ auto localFunctionTestConstructor(const Dune::GeometryType &geometryType, size_t
     const auto &dN = localBasis.evaluateJacobian(gpIndex);
     t.check(Dune::FloatCmp::eq(
         (f2.evaluateFunction(gpIndex) + g2.evaluateFunction(gpIndex)).dot(g2.evaluateFunction(gpIndex)),
-        k2.evaluateFunction(gpIndex)[0]));
+        k2.evaluateFunction(gpIndex)[0]),"Check function value");
     auto resSingleSpatial
-        = ((f2.evaluateDerivative(gpIndex, wrt(spatial(0))) + g2.evaluateDerivative(gpIndex, wrt(spatial(0))))
+        = ((f2.evaluateDerivative(gpIndex, wrt(spatial(0)),Dune::on(DerivativeDirections::referenceElement)) + g2.evaluateDerivative(gpIndex, wrt(spatial(0)),Dune::on(DerivativeDirections::referenceElement)))
                    .transpose()
                * g2.evaluateFunction(gpIndex)
            + (f2.evaluateFunction(gpIndex) + g2.evaluateFunction(gpIndex)).transpose()
-                 * g2.evaluateDerivative(gpIndex, wrt(spatial(0))))
+                 * g2.evaluateDerivative(gpIndex, wrt(spatial(0)),Dune::on(DerivativeDirections::referenceElement)))
               .eval();
-    t.check(isApproxSame(resSingleSpatial, k2.evaluateDerivative(gpIndex, wrt(spatial(0))), tol));
+    t.check(isApproxSame(resSingleSpatial, k2.evaluateDerivative(gpIndex, wrt(spatial(0)),Dune::on(DerivativeDirections::referenceElement)), tol));
     auto resSpatialAll
-        = (((f2.evaluateDerivative(gpIndex, wrt(spatialAll)) + g2.evaluateDerivative(gpIndex, wrt(spatialAll)))
+        = (((f2.evaluateDerivative(gpIndex, wrt(spatialAll),Dune::on(DerivativeDirections::referenceElement)) + g2.evaluateDerivative(gpIndex, wrt(spatialAll),Dune::on(DerivativeDirections::referenceElement)))
                 .transpose()
             * g2.evaluateFunction(gpIndex))
                .transpose()
            + (f2.evaluateFunction(gpIndex) + g2.evaluateFunction(gpIndex)).transpose()
-                 * g2.evaluateDerivative(gpIndex, wrt(spatialAll)))
+                 * g2.evaluateDerivative(gpIndex, wrt(spatialAll),Dune::on(DerivativeDirections::referenceElement)))
               .eval();
     static_assert(resSpatialAll.cols() == domainDim);
     static_assert(resSpatialAll.rows() == 1);
 
-    t.check(isApproxSame(resSpatialAll, k2.evaluateDerivative(gpIndex, wrt(spatialAll)), tol));
+    t.check(isApproxSame(resSpatialAll, k2.evaluateDerivative(gpIndex, wrt(spatialAll),Dune::on(DerivativeDirections::referenceElement)), tol));
 
     for (size_t iC = 0; iC < fe.size(); ++iC) {
       const VectorType dfdi = g2.evaluateFunction(gpIndex) * N[iC];
 
-      const VectorType dkdi = k2.evaluateDerivative(gpIndex, wrt(coeff(_0, iC)));
+      const VectorType dkdi = k2.evaluateDerivative(gpIndex, wrt(coeff(_0, iC)),Dune::on(DerivativeDirections::referenceElement));
 
       t.check(isApproxSame(dfdi, dkdi, tol));
 
       for (size_t jC = 0; jC < fe.size(); ++jC) {
-        const MatrixType dkdij         = k2.evaluateDerivative(gpIndex, wrt(coeff(_0, iC, _1, jC)));
+        const MatrixType dkdij         = k2.evaluateDerivative(gpIndex, wrt(coeff(_0, iC, _1, jC)),Dune::on(DerivativeDirections::referenceElement));
         const MatrixType dkdijExpected = N[jC] * N[iC] * MatrixType::Identity();
         t.check(isApproxSame(dkdijExpected, dkdij, tol));
 
-        const MatrixType dkdij2         = k2.evaluateDerivative(gpIndex, wrt(coeff(_0, iC, _0, jC)));
+        const MatrixType dkdij2         = k2.evaluateDerivative(gpIndex, wrt(coeff(_0, iC, _0, jC)),Dune::on(DerivativeDirections::referenceElement));
         const MatrixType dkdijExpected2 = MatrixType::Zero();
         t.check(isApproxSame(dkdijExpected2, dkdij2, tol));
-        const MatrixType dkdij3         = k2.evaluateDerivative(gpIndex, wrt(coeff(_1, iC, _1, jC)));
+        const MatrixType dkdij3         = k2.evaluateDerivative(gpIndex, wrt(coeff(_1, iC, _1, jC)),Dune::on(DerivativeDirections::referenceElement));
         const MatrixType dkdijExpected3 = 2 * N[iC] * N[jC] * MatrixType::Identity();
         t.check(isApproxSame(dkdijExpected3, dkdij3, tol));
 
-        const MatrixType dkdSij         = k2.evaluateDerivative(gpIndex, wrt(spatial(0), coeff(_0, iC, _1, jC)));
-        const MatrixType dkdSijR        = k2.evaluateDerivative(gpIndex, wrt(coeff(_0, iC, _1, jC), spatial(0)));
+        const MatrixType dkdSij         = k2.evaluateDerivative(gpIndex, wrt(spatial(0), coeff(_0, iC, _1, jC)),Dune::on(DerivativeDirections::referenceElement));
+        const MatrixType dkdSijR        = k2.evaluateDerivative(gpIndex, wrt(coeff(_0, iC, _1, jC), spatial(0)),Dune::on(DerivativeDirections::referenceElement));
         const MatrixType dkdSijExpected = (dN(jC, 0) * N[iC] + N[jC] * dN(iC, 0)) * MatrixType::Identity();
         t.check(isApproxSame(dkdSijR, dkdSij, tol));
         t.check(isApproxSame(dkdSijExpected, dkdSij, tol));

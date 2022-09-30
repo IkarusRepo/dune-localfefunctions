@@ -159,9 +159,4 @@ namespace Dune {
     return v1.getValue() == v2.getValue();
   }
 
-
-//  extern template class RealTuple<double,1>;
-  extern template class RealTuple<double,2>;
-  extern template class RealTuple<double,3>;
-  extern template class RealTuple<double,4>;
 }  // namespace Dune

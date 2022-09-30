@@ -23,11 +23,11 @@
 namespace Dune {
 
   template <typename E1, typename E2>
-  class LocalFunctionScale : public BinaryLocalFunctionExpression<LocalFunctionScale, E1, E2> {
+  class ScaleExpr : public BinaryExpr<ScaleExpr, E1, E2> {
   public:
-    using Base = BinaryLocalFunctionExpression<LocalFunctionScale, E1, E2>;
+    using Base = BinaryExpr<ScaleExpr, E1, E2>;
     using Base::Base;
-    using Traits                   = LocalFunctionTraits<LocalFunctionScale>;
+    using Traits                   = LocalFunctionTraits<ScaleExpr>;
     static constexpr int valueSize = Traits::valueSize;
 
     template <size_t ID_ = 0>
@@ -46,18 +46,18 @@ namespace Dune {
   };
 
   template <typename E1, typename E2>
-  struct LocalFunctionTraits<LocalFunctionScale<E1, E2>> : public LocalFunctionTraits<std::remove_cvref_t<E2>> {};
+  struct LocalFunctionTraits<ScaleExpr<E1, E2>> : public LocalFunctionTraits<std::remove_cvref_t<E2>> {};
 
   template <typename E1, typename E2>
   requires(std::is_arithmetic_v<std::remove_cvref_t<E1>>and
-               IsLocalFunction<E2> and !IsScaleExpr<E2>) constexpr LocalFunctionScale<ConstantExpr<E1>, E2>
+               IsLocalFunction<E2> and !IsScaleExpr<E2>) constexpr ScaleExpr<ConstantExpr<E1>, E2>
   operator*(E1&& factor, E2&& u) {
-    return LocalFunctionScale<ConstantExpr<E1>, E2>(ConstantExpr(factor), std::forward<E2>(u));
+    return ScaleExpr<ConstantExpr<E1>, E2>(ConstantExpr(factor), std::forward<E2>(u));
   }
 
   template <typename E1, typename E2>
   requires(std::is_arithmetic_v<std::remove_cvref_t<E1>>and
-               IsLocalFunction<E2> and !IsScaleExpr<E2>) constexpr LocalFunctionScale<ConstantExpr<E1>, E2>
+               IsLocalFunction<E2> and !IsScaleExpr<E2>) constexpr ScaleExpr<ConstantExpr<E1>, E2>
   operator*(E2&& u, E1&& factor) {
     return factor * u;
   }

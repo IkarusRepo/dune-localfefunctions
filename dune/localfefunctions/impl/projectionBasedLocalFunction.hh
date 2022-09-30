@@ -48,7 +48,7 @@ namespace Dune {
     constexpr ProjectionBasedLocalFunction(
         const Dune::LocalBasis<DuneBasis>& p_basis, const CoeffContainer& coeffs_, const std::shared_ptr<const Geometry>& geo,
         Dune::template index_constant<ID> = Dune::template index_constant<std::size_t(0)>{})
-        : basis_{p_basis}, coeffs{coeffs_},geometry{geo}, coeffsAsMat{Dune::viewAsEigenMatrixFixedDyn(coeffs)} {}
+        : basis_{p_basis}, coeffs{coeffs_},geometry_{geo}, coeffsAsMat{Dune::viewAsEigenMatrixFixedDyn(coeffs)} {}
 
     using Traits = LocalFunctionTraits<ProjectionBasedLocalFunction>;
 
@@ -71,6 +71,8 @@ namespace Dune {
     static constexpr int correctionSize = Traits::correctionSize;
     /** \brief Dimension of the grid */
     static constexpr int gridDim = Traits::gridDim;
+    /** \brief Dimension of the world where this function is mapped to from the reference element */
+    static constexpr int worldDimension = Traits::worldDimension;
     /** \brief Type for coordinate vector in world space */
     using FunctionReturnType = typename Traits::FunctionReturnType;
     /** \brief Type for the directional derivatives */
@@ -95,6 +97,7 @@ namespace Dune {
 
     const auto& coefficientsRef() const { return coeffs; }
     auto& coefficientsRef() { return coeffs; }
+    auto& geometry() const { return geometry_; }
 
     const Dune::LocalBasis<DuneBasis>& basis() const { return basis_; }
 
@@ -139,7 +142,7 @@ namespace Dune {
     Jacobian evaluateDerivativeWRTSpaceAllImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
                                                const On<TransformArgs>& transArgs) const {
       const auto& [N, dNraw] = evaluateFunctionAndDerivativeWithIPorCoord(ipIndexOrPosition, basis_);
-      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry,ipIndexOrPosition,basis_);
+      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry_,ipIndexOrPosition,basis_);
       Jacobian J              = evaluateEmbeddingJacobianImpl(dNTransformed);
       FunctionReturnType valE = evaluateEmbeddingFunctionImpl(N);
       return tryToCallDerivativeOfProjectionWRTposition(valE) * J;
@@ -150,7 +153,7 @@ namespace Dune {
                                                          int spaceIndex,
                                                          const On<TransformArgs>& transArgs) const {
       const auto& [N, dNraw] = evaluateFunctionAndDerivativeWithIPorCoord(ipIndexOrPosition, basis_);
-      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry,ipIndexOrPosition,basis_);
+      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry_,ipIndexOrPosition,basis_);
       JacobianColType Jcol    = evaluateEmbeddingJacobianColImpl(dNTransformed, spaceIndex);
       FunctionReturnType valE = evaluateEmbeddingFunctionImpl(N);
       return tryToCallDerivativeOfProjectionWRTposition(valE) * Jcol;
@@ -208,7 +211,7 @@ namespace Dune {
         const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition, int coeffsIndex,
         const On<TransformArgs>& transArgs) const {
       const auto& [N, dNraw] = evaluateFunctionAndDerivativeWithIPorCoord(ipIndexOrPosition, basis_);
-      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry,ipIndexOrPosition,basis_);
+      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry_,ipIndexOrPosition,basis_);
       const FunctionReturnType valE = evaluateEmbeddingFunctionImpl(N);
       const Jacobian J              = evaluateEmbeddingJacobianImpl(dNTransformed);
       const CoeffDerivEukMatrix Pm  = tryToCallDerivativeOfProjectionWRTposition(valE);
@@ -235,7 +238,7 @@ namespace Dune {
         const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition, int coeffsIndex, int spatialIndex,
         const On<TransformArgs>& transArgs) const {
       const auto& [N, dNraw] = evaluateFunctionAndDerivativeWithIPorCoord(ipIndexOrPosition, basis_);
-      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry,ipIndexOrPosition,basis_);
+      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry_,ipIndexOrPosition,basis_);
       const FunctionReturnType valE = evaluateEmbeddingFunctionImpl(N);
       const JacobianColType Jcol    = evaluateEmbeddingJacobianColImpl(dNTransformed, spatialIndex);
       const CoeffDerivEukMatrix Pm  = tryToCallDerivativeOfProjectionWRTposition(valE);
@@ -251,7 +254,7 @@ namespace Dune {
         const Along<AlongArgs...>& alongArgs, const On<TransformArgs>& transArgs) const {
       const auto& [N, dNraw] = evaluateFunctionAndDerivativeWithIPorCoord(ipIndexOrPosition, basis_);
 
-      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry,ipIndexOrPosition,basis_);
+      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry_,ipIndexOrPosition,basis_);
       const FunctionReturnType valE = evaluateEmbeddingFunctionImpl(N);
       const Jacobian J              = evaluateEmbeddingJacobianImpl(dNTransformed);
       const auto& along             = std::get<0>(alongArgs.args);
@@ -288,7 +291,7 @@ namespace Dune {
         const int spatialIndex, const Along<AlongArgs...>& alongArgs,
         const On<TransformArgs>& transArgs) const {
       const auto& [N, dNraw] = evaluateFunctionAndDerivativeWithIPorCoord(ipIndexOrPosition, basis_);
-      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry,ipIndexOrPosition,basis_);
+      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry_,ipIndexOrPosition,basis_);
       const FunctionReturnType valE = evaluateEmbeddingFunctionImpl(N);
       const Jacobian J              = evaluateEmbeddingJacobianImpl(dNTransformed);
       const auto& along             = std::get<0>(alongArgs.args);
@@ -334,7 +337,7 @@ namespace Dune {
     mutable AnsatzFunctionJacobian dNTransformed;
     Dune::LocalBasis<DuneBasis> basis_;
     CoeffContainer coeffs;
-    std::shared_ptr<const Geometry> geometry;
+    std::shared_ptr<const Geometry> geometry_;
     const decltype(Dune::viewAsEigenMatrixFixedDyn(coeffs)) coeffsAsMat;
   };
 
@@ -368,6 +371,8 @@ namespace Dune {
     using JacobianColType = typename Eigen::internal::plain_col_type<Jacobian>::type;
     /** \brief Type for the directional derivatives */
     using AlongType = Eigen::Vector<ctype, valueSize>;
+    /** \brief Dimension of the world where this function is mapped to from the reference element */
+    static constexpr int worldDimension = Geometry::coorddimension;
   };
 
 }  // namespace Dune

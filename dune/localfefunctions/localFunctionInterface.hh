@@ -36,6 +36,7 @@ namespace Dune {
     using Traits                 = LocalFunctionTraits<LocalFunctionImpl>;
     using DomainType             = typename Traits::DomainType;
     static constexpr int gridDim = Traits::gridDim;
+    static constexpr int worldDimension = Traits::worldDimension;
 
     template <typename WrtType>
     static constexpr bool hasTwoCoeff = DerivativeDirections::HasTwoCoeff<WrtType>;

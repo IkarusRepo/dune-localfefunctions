@@ -23,11 +23,11 @@
 namespace Dune {
 
   template <typename E1>
-  class LocalFunctionNegate : public UnaryLocalFunctionExpression<LocalFunctionNegate, E1> {
+  class NegateExpr : public UnaryExpr<NegateExpr, E1> {
   public:
-    using Base = UnaryLocalFunctionExpression<LocalFunctionNegate, E1>;
+    using Base = UnaryExpr<NegateExpr, E1>;
     using Base::Base;
-    using Traits                   = LocalFunctionTraits<LocalFunctionNegate>;
+    using Traits                   = LocalFunctionTraits<NegateExpr>;
     static constexpr int valueSize = Traits::valueSize;
 
     template <size_t ID_ = 0>
@@ -45,10 +45,10 @@ namespace Dune {
   };
 
   template <typename E1>
-  struct LocalFunctionTraits<LocalFunctionNegate<E1>> : public LocalFunctionTraits<std::remove_cvref_t<E1>> {};
+  struct LocalFunctionTraits<NegateExpr<E1>> : public LocalFunctionTraits<std::remove_cvref_t<E1>> {};
 
   template <typename E1>
   requires IsLocalFunction<E1>
-  constexpr auto operator-(E1&& u) { return LocalFunctionNegate<E1>(std::forward<E1>(u)); }
+  constexpr auto operator-(E1&& u) { return NegateExpr<E1>(std::forward<E1>(u)); }
 
 }  // namespace Dune

@@ -18,32 +18,27 @@
  */
 
 #include "meta.hh"
-namespace Dune::DerivativeDirections {
+namespace Dune {
 
-  On<DerivativeDirections::GridElement> on(DerivativeDirections::GridElement)
-  {
-    return On<DerivativeDirections::GridElement>{};
-  }
+  On<DerivativeDirections::GridElement> on(DerivativeDirections::GridElement) { return {}; }
+  On<DerivativeDirections::ReferenceElement> on(DerivativeDirections::ReferenceElement) { return {}; }
 
-  On<DerivativeDirections::ReferenceElement>  on(DerivativeDirections::ReferenceElement)
-  {
-    return On<DerivativeDirections::ReferenceElement>{};
-  }
+  namespace DerivativeDirections {
+    SpatialPartial spatial(size_t i) { return {i}; }
 
-  SpatialPartial spatial(size_t i) { return {i}; }
+    SingleCoeff<0> coeff(size_t i) {
+      using namespace Dune::Indices;
+      SingleCoeff<0> coeffs;
+      std::get<1>(coeffs.index[_0]._data) = i;
+      return coeffs;
+    }
 
-  SingleCoeff<0> coeff(size_t i) {
-    using namespace Dune::Indices;
-    SingleCoeff<0> coeffs;
-    std::get<1>(coeffs.index[_0]._data) = i;
-    return coeffs;
-  }
-
-  TwoCoeff<0, 0> coeff(size_t i, size_t j) {
-    using namespace Dune::Indices;
-    TwoCoeff<0, 0> coeffs;
-    std::get<1>(coeffs.index[_0]._data) = i;
-    std::get<1>(coeffs.index[_1]._data) = j;
-    return coeffs;
-  }
-}  // namespace Dune::DerivativeDirections
+    TwoCoeff<0, 0> coeff(size_t i, size_t j) {
+      using namespace Dune::Indices;
+      TwoCoeff<0, 0> coeffs;
+      std::get<1>(coeffs.index[_0]._data) = i;
+      std::get<1>(coeffs.index[_1]._data) = j;
+      return coeffs;
+    }
+  }  // namespace DerivativeDirections
+}  // namespace Dune

@@ -26,7 +26,7 @@
 namespace Dune {
 
   template <template <typename, typename...> class Op, typename E1, typename... Args>
-  struct UnaryLocalFunctionExpression : public Dune::LocalFunctionInterface<Op<E1, Args...>> {
+  struct UnaryExpr : public Dune::LocalFunctionInterface<Op<E1, Args...>> {
     std::tuple<E1> expr;
 
     using E1Raw = std::remove_cvref_t<E1>;
@@ -48,7 +48,7 @@ namespace Dune {
       return rebind<Op, E1, OtherType, ID, Args...>(m(), Dune::index_constant<ID>());
     }
 
-    constexpr explicit UnaryLocalFunctionExpression(E1&& u) requires IsLocalFunction<E1> : expr(std::forward<E1>(u)) {}
+    constexpr explicit UnaryExpr(E1&& u) requires IsLocalFunction<E1> : expr(std::forward<E1>(u)) {}
 
     static constexpr bool isLeaf  = false;
     static constexpr int children = 1;

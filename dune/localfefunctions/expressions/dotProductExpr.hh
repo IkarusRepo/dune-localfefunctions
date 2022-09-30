@@ -26,11 +26,11 @@
 namespace Dune {
 
   template <typename E1, typename E2>
-  class LocalFunctionDot : public BinaryLocalFunctionExpression<LocalFunctionDot, E1, E2> {
+  class InnerProductExpr : public BinaryExpr<InnerProductExpr, E1, E2> {
   public:
-    using Base = BinaryLocalFunctionExpression<LocalFunctionDot, E1, E2>;
+    using Base = BinaryExpr<InnerProductExpr, E1, E2>;
     using Base::Base;
-    using Traits = LocalFunctionTraits<LocalFunctionDot>;
+    using Traits = LocalFunctionTraits<InnerProductExpr>;
     /** \brief Type used for coordinates */
     using ctype                    = typename Traits::ctype;
     static constexpr int valueSize = Traits::valueSize;
@@ -164,7 +164,7 @@ namespace Dune {
   };
 
   template <typename E1, typename E2>
-  struct LocalFunctionTraits<LocalFunctionDot<E1, E2>> {
+  struct LocalFunctionTraits<InnerProductExpr<E1, E2>> {
     using E1Raw = std::remove_cvref_t<E1>;
     using E2Raw = std::remove_cvref_t<E2>;
     /** \brief Size of the function value */
@@ -175,10 +175,12 @@ namespace Dune {
     using ctype = std::common_type_t<typename E1Raw::ctype, typename E1Raw::ctype>;
     /** \brief Dimension of the grid */
     static constexpr int gridDim = E1Raw::gridDim;
+    /** \brief Dimension of the world where this function is mapped to from the reference element */
+    static constexpr int worldDimension =  E1Raw::worldDimension;
   };
 
   template <typename E1, typename E2>
   requires IsLocalFunction<E1, E2>
-  constexpr auto dot(E1 &&u, E2 &&v) { return LocalFunctionDot<E1, E2>(std::forward<E1>(u), std::forward<E2>(v)); }
+  constexpr auto dot(E1 &&u, E2 &&v) { return InnerProductExpr<E1, E2>(std::forward<E1>(u), std::forward<E2>(v)); }
 
 }  // namespace Dune

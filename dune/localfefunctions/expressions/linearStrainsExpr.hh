@@ -11,11 +11,11 @@
 namespace Dune {
 
   template <typename E1>
-  class LinearStrainsExpr : public UnaryLocalFunctionExpression<LinearStrainsExpr, E1> {
+  class LinearStrainExpr : public UnaryExpr<LinearStrainExpr, E1> {
   public:
-    using Base = UnaryLocalFunctionExpression<LinearStrainsExpr, E1>;
+    using Base = UnaryExpr<LinearStrainExpr, E1>;
     using Base::Base;
-    using Traits = LocalFunctionTraits<LinearStrainsExpr>;
+    using Traits = LocalFunctionTraits<LinearStrainExpr>;
 
     /** \brief Type used for coordinates */
     using ctype                           = typename Traits::ctype;
@@ -98,7 +98,7 @@ namespace Dune {
   };
 
   template <typename E1>
-  struct LocalFunctionTraits<LinearStrainsExpr<E1>> {
+  struct LocalFunctionTraits<LinearStrainExpr<E1>> {
     using E1Raw = std::remove_cvref_t<E1>;
     /** \brief Size of the function value */
     static constexpr int valueSize = E1Raw::valueSize == 1 ? 1 : (E1Raw::valueSize == 2 ? 3 : 6);
@@ -108,10 +108,12 @@ namespace Dune {
     using ctype = std::common_type_t<typename E1Raw::ctype>;
     /** \brief Dimension of the grid */
     static constexpr int gridDim = E1Raw::gridDim;
+    /** \brief Dimension of the world where this function is mapped to from the reference element */
+    static constexpr int worldDimension =  E1Raw::worldDimension;
   };
 
   template <typename E1>
   requires IsLocalFunction<E1>
-  constexpr auto linearStrains(E1 &&u) { return LinearStrainsExpr<E1>(std::forward<E1>(u)); }
+  constexpr auto linearStrains(E1 &&u) { return LinearStrainExpr<E1>(std::forward<E1>(u)); }
 
 }  // namespace Dune

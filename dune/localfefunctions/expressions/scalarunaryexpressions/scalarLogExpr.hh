@@ -49,6 +49,6 @@ namespace Dune {
   constexpr auto log(E1&& u) {
     static_assert(std::remove_cvref_t<E1>::valueSize == 1,
                   "Log expression only defined for scalar valued local functions.");
-    return ScalarUnaryExpression<E1, LogFunc>(std::forward<E1>(u));
+    return ScalarUnaryExpr<E1, LogFunc>(std::forward<E1>(u));
   }
 }  // namespace Dune

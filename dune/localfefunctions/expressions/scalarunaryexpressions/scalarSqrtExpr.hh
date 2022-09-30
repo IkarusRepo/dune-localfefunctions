@@ -51,6 +51,6 @@ namespace Dune {
   constexpr auto sqrt(E1&& u) {
     static_assert(std::remove_cvref_t<E1>::valueSize == 1,
                   "Sqrt expression only defined for scalar valued local functions.");
-    return ScalarUnaryExpression<E1, SqrtFunc>(std::forward<E1>(u));
+    return ScalarUnaryExpr<E1, SqrtFunc>(std::forward<E1>(u));
   }
 }  // namespace Dune

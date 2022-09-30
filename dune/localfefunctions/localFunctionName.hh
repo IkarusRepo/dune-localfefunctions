@@ -38,16 +38,16 @@ namespace Dune {
     std::regex regexp2("Dune::");
     name = regex_replace(name, regexp2, "");
 
-    std::regex regexp3("LocalFunctionDot");
+    std::regex regexp3("InnerProductExpr");
     name = regex_replace(name, regexp3, "Dot");
 
-    std::regex regexp4("LocalFunctionNegate");
+    std::regex regexp4("NegateExpr");
     name = regex_replace(name, regexp4, "Negate");
 
-    std::regex regexp5("LocalFunctionScale");
+    std::regex regexp5("ScaleExpr");
     name = regex_replace(name, regexp5, "Scale");
 
-    std::regex regexp6("LocalFunctionSum");
+    std::regex regexp6("SumExpr");
     name = regex_replace(name, regexp6, "Sum");
 
     std::regex regexp7("const");
@@ -62,7 +62,7 @@ namespace Dune {
     std::regex regexp10("NormSquaredExpr");
     name = regex_replace(name, regexp10, "NormSquared");
 
-    std::regex regexp11("LinearStrainsExpr");
+    std::regex regexp11("LinearStrainExpr");
     name = regex_replace(name, regexp11, "LinearStrains");
 
     return name;

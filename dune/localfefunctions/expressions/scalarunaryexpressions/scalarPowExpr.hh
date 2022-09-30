@@ -50,6 +50,6 @@ namespace Dune {
   constexpr auto pow(E1&& u) {
     static_assert(std::remove_cvref_t<E1>::valueSize == 1,
                   "Pow expression only defined for scalar valued local functions.");
-    return ScalarUnaryExpression<E1, PowFunc<exponent>>(std::forward<E1>(u));
+    return ScalarUnaryExpr<E1, PowFunc<exponent>>(std::forward<E1>(u));
   }
 }  // namespace Dune

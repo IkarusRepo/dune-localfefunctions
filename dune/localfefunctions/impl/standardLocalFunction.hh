@@ -46,7 +46,7 @@ namespace Dune {
 
     constexpr StandardLocalFunction(const Dune::LocalBasis<DuneBasis>& p_basis, const CoeffContainer& coeffs_, const std::shared_ptr<const Geometry>& geo,
                                     Dune::template index_constant<ID> = Dune::template index_constant<std::size_t(0)>{})
-        : basis_{p_basis}, coeffs{coeffs_},geometry{geo}, coeffsAsMat{Dune::viewAsEigenMatrixFixedDyn(coeffs)} {}
+        : basis_{p_basis}, coeffs{coeffs_},geometry_{geo}, coeffsAsMat{Dune::viewAsEigenMatrixFixedDyn(coeffs)} {}
 
     static constexpr bool isLeaf = true;
     using Ids                    = Dune::index_constant<ID>;
@@ -71,6 +71,8 @@ namespace Dune {
     static constexpr int correctionSize = Traits::correctionSize;
     /** \brief Dimension of the grid */
     static constexpr int gridDim = Traits::gridDim;
+    /** \brief Dimension of the world where this function is mapped to from the reference element */
+    static constexpr int worldDimension = Traits::worldDimension;
     /** \brief Type for coordinate vector in world space */
     using FunctionReturnType = typename Traits::FunctionReturnType;
     /** \brief The manifold where the function values lives in */
@@ -90,6 +92,7 @@ namespace Dune {
 
     const auto& coefficientsRef() const { return coeffs; }
     auto& coefficientsRef() { return coeffs; }
+    auto& geometry() const { return geometry_; }
 
     template <typename OtherType>
     struct Rebind {
@@ -113,7 +116,7 @@ namespace Dune {
     Jacobian evaluateDerivativeWRTSpaceAllImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
                                                const On<TransformArgs>& transArgs) const {
       const auto& dNraw = evaluateDerivativeWithIPorCoord(ipIndexOrPosition, basis_);
-      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry,ipIndexOrPosition,basis_);
+      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry_,ipIndexOrPosition,basis_);
       return coeffsAsMat
              * dNTransformed
                    .template cast<ctype>();  // The cast here is only necessary since the autodiff types are not working
@@ -125,7 +128,7 @@ namespace Dune {
                                                          int spaceIndex,
                                                          const On<TransformArgs>& transArgs) const {
       const auto& dNraw = evaluateDerivativeWithIPorCoord(ipIndexOrPosition, basis_);
-      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry,ipIndexOrPosition,basis_);
+      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry_,ipIndexOrPosition,basis_);
 
       return coeffsAsMat * dNTransformed.col(spaceIndex);
     }
@@ -146,7 +149,7 @@ namespace Dune {
         const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition, int coeffsIndex,
         const On<TransformArgs>& transArgs) const {
       const auto& dNraw = evaluateDerivativeWithIPorCoord(ipIndexOrPosition, basis_);
-      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry,ipIndexOrPosition,basis_);
+      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry_,ipIndexOrPosition,basis_);
       std::array<CoeffDerivMatrix, gridDim> Warray;
       for (int dir = 0; dir < gridDim; ++dir) {
         Warray[dir].setIdentity(valueSize);
@@ -161,7 +164,7 @@ namespace Dune {
         const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition, int coeffsIndex, int spatialIndex,
         const On<TransformArgs>& transArgs) const {
       const auto& dNraw = evaluateDerivativeWithIPorCoord(ipIndexOrPosition, basis_);
-      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry,ipIndexOrPosition,basis_);
+      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry_,ipIndexOrPosition,basis_);
       CoeffDerivMatrix W;
       W.setIdentity(valueSize);
       W.diagonal() *= dNTransformed(coeffsIndex, spatialIndex);
@@ -172,7 +175,7 @@ namespace Dune {
     mutable AnsatzFunctionJacobian dNTransformed;
     const Dune::LocalBasis<DuneBasis>& basis_;
     CoeffContainer coeffs;
-    std::shared_ptr<const Geometry> geometry;
+    std::shared_ptr<const Geometry> geometry_;
     const decltype(Dune::viewAsEigenMatrixFixedDyn(coeffs)) coeffsAsMat;
   };
 
@@ -204,6 +207,8 @@ namespace Dune {
     using JacobianColType = typename Eigen::internal::plain_col_type<Jacobian>::type;
     /** \brief Type for the directional derivatives */
     using AlongType = Eigen::Vector<ctype, valueSize>;
+    /** \brief Dimension of the world where this function is mapped to from the reference element */
+    static constexpr int worldDimension = Geometry::coorddimension;
   };
 
 }  // namespace Dune

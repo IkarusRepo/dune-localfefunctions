@@ -25,11 +25,11 @@
 namespace Dune {
 
   template <typename E1, typename E2>
-  class LocalFunctionSum : public BinaryLocalFunctionExpression<LocalFunctionSum, E1, E2> {
+  class SumExpr : public BinaryExpr<SumExpr, E1, E2> {
   public:
-    using Base = BinaryLocalFunctionExpression<LocalFunctionSum, E1, E2>;
+    using Base = BinaryExpr<SumExpr, E1, E2>;
     using Base::Base;
-    using Traits = LocalFunctionTraits<LocalFunctionSum>;
+    using Traits = LocalFunctionTraits<SumExpr>;
 
     template <size_t ID_ = 0>
     static constexpr int orderID = std::max(Base::E1Raw::template order<ID_>(), Base::E1Raw::template order<ID_>());
@@ -52,7 +52,7 @@ namespace Dune {
   };
 
   template <typename E1, typename E2>
-  struct LocalFunctionTraits<LocalFunctionSum<E1, E2>> : public LocalFunctionTraits<std::remove_cvref_t<E1>> {
+  struct LocalFunctionTraits<SumExpr<E1, E2>> : public LocalFunctionTraits<std::remove_cvref_t<E1>> {
     using Base = LocalFunctionTraits<std::remove_cvref_t<E1>>;
   };
 
@@ -62,6 +62,6 @@ namespace Dune {
     static_assert(Concepts::AddAble<typename std::remove_cvref_t<E1>::FunctionReturnType,
                                     typename std::remove_cvref_t<E2>::FunctionReturnType>,
                   "The function values of your local functions are not addable!");
-    return LocalFunctionSum<E1, E2>(std::forward<E1>(u), std::forward<E2>(v));
+    return SumExpr<E1, E2>(std::forward<E1>(u), std::forward<E2>(v));
   }
 }  // namespace Dune

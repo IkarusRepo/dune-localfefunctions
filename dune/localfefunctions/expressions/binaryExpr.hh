@@ -26,7 +26,7 @@
 namespace Dune {
 
   template <template <typename, typename> class Op, typename E1, typename E2>
-  struct BinaryLocalFunctionExpression : public Dune::LocalFunctionInterface<Op<E1, E2>> {
+  struct BinaryExpr : public Dune::LocalFunctionInterface<Op<E1, E2>> {
     using E1Raw = std::remove_cvref_t<E1>;
     using E2Raw = std::remove_cvref_t<E2>;
 
@@ -54,7 +54,7 @@ namespace Dune {
     template <size_t ID_ = 0>
     static constexpr int orderID = Op<E1, E2>::template orderID<ID_>;
 
-    constexpr BinaryLocalFunctionExpression(E1&& u, E2&& v) requires IsLocalFunction<E1, E2>
+    constexpr BinaryExpr(E1&& u, E2&& v) requires IsLocalFunction<E1, E2>
         : expr(std::forward<E1>(u), std::forward<E2>(v)) {}
 
     static constexpr bool isLeaf  = false;

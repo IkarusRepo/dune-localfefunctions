@@ -26,9 +26,9 @@
 namespace Dune {
 
   template <typename E1>
-  class NormSquaredExpr : public UnaryLocalFunctionExpression<NormSquaredExpr, E1> {
+  class NormSquaredExpr : public UnaryExpr<NormSquaredExpr, E1> {
   public:
-    using Base = UnaryLocalFunctionExpression<NormSquaredExpr, E1>;
+    using Base = UnaryExpr<NormSquaredExpr, E1>;
     using Base::Base;
     using Traits = LocalFunctionTraits<NormSquaredExpr>;
     /** \brief Type used for coordinates */
@@ -142,6 +142,8 @@ namespace Dune {
     using ctype = std::common_type_t<typename E1Raw::ctype>;
     /** \brief Dimension of the grid */
     static constexpr int gridDim = E1Raw::gridDim;
+    /** \brief Dimension of the world where this function is mapped to from the reference element */
+    static constexpr int worldDimension =  E1Raw::worldDimension;
   };
 
   template <typename E1>

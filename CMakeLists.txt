@@ -17,17 +17,17 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules"
 #include the dune macros
 include(DuneMacros)
 
-file(
-        GLOB_RECURSE sources
-        RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-        CONFIGURE_DEPENDS dune/localfefunctions/*.cpp
-)
+#file(
+#        GLOB_RECURSE sources
+#        RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+#        CONFIGURE_DEPENDS dune/localfefunctions/*.cpp
+#)
 
 # start a dune project with information from dune.module
 dune_project()
-message("=========================")
-message(${sources})
-message("=========================")
+#message("=========================")
+#message(${sources})
+#message("=========================")
 dune_add_library(dune-localfefunctions)
 
 target_compile_features(dune-localfefunctions PRIVATE cxx_std_20)

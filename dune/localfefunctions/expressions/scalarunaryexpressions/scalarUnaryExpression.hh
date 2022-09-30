@@ -23,11 +23,11 @@
 namespace Dune {
 
   template <typename E1, typename Func>
-  class ScalarUnaryExpression : public UnaryLocalFunctionExpression<ScalarUnaryExpression, E1, Func> {
+  class ScalarUnaryExpr : public UnaryExpr<ScalarUnaryExpr, E1, Func> {
   public:
-    using Base = UnaryLocalFunctionExpression<ScalarUnaryExpression, E1, Func>;
+    using Base = UnaryExpr<ScalarUnaryExpr, E1, Func>;
     using Base::Base;
-    using Traits                   = LocalFunctionTraits<ScalarUnaryExpression>;
+    using Traits                   = LocalFunctionTraits<ScalarUnaryExpr>;
     static constexpr int valueSize = 1;
     static constexpr int gridDim   = Traits::gridDim;
     using ctype                    = typename Traits::ctype;
@@ -97,6 +97,6 @@ namespace Dune {
   };
 
   template <typename E1, typename Func>
-  struct LocalFunctionTraits<ScalarUnaryExpression<E1, Func>> : public LocalFunctionTraits<std::remove_cvref_t<E1>> {};
+  struct LocalFunctionTraits<ScalarUnaryExpr<E1, Func>> : public LocalFunctionTraits<std::remove_cvref_t<E1>> {};
 
 }  // namespace Dune
