@@ -211,32 +211,32 @@ namespace Dune {
   }
 
   template <typename Scalar, int size>
-  auto operator+(const Eigen::DiagonalMatrix<Scalar, size>& a, Dune::DerivativeDirections::DerivativeNoOp) {
+  auto operator+(const Eigen::DiagonalMatrix<Scalar, size>& a, Dune::DerivativeDirections::ZeroMatrix) {
     return a.derived();
   }
 
   template <typename Scalar, int size>
-  auto operator+(Dune::DerivativeDirections::DerivativeNoOp, const Eigen::DiagonalMatrix<Scalar, size>& a) {
+  auto operator+(Dune::DerivativeDirections::ZeroMatrix, const Eigen::DiagonalMatrix<Scalar, size>& a) {
     return a.derived();
   }
 
   template <typename Scalar, int size>
-  auto operator*(const Eigen::DiagonalMatrix<Scalar, size>& a, Dune::DerivativeDirections::DerivativeNoOp) {
-    return Dune::DerivativeDirections::DerivativeNoOp();
+  auto operator*(const Eigen::DiagonalMatrix<Scalar, size>& a, Dune::DerivativeDirections::ZeroMatrix) {
+    return Dune::DerivativeDirections::ZeroMatrix();
   }
 
   template <typename Scalar, int size>
-  auto operator*(Dune::DerivativeDirections::DerivativeNoOp, const Eigen::DiagonalMatrix<Scalar, size>& a) {
-    return Dune::DerivativeDirections::DerivativeNoOp();
+  auto operator*(Dune::DerivativeDirections::ZeroMatrix, const Eigen::DiagonalMatrix<Scalar, size>& a) {
+    return Dune::DerivativeDirections::ZeroMatrix();
   }
 
   template <typename Scalar, int size>
-  auto operator-(const Eigen::DiagonalMatrix<Scalar, size>& a, Dune::DerivativeDirections::DerivativeNoOp) {
+  auto operator-(const Eigen::DiagonalMatrix<Scalar, size>& a, Dune::DerivativeDirections::ZeroMatrix) {
     return a.derived();
   }
 
   template <typename Scalar, int size>
-  auto operator-(Dune::DerivativeDirections::DerivativeNoOp, const Eigen::DiagonalMatrix<Scalar, size>& a) {
+  auto operator-(Dune::DerivativeDirections::ZeroMatrix, const Eigen::DiagonalMatrix<Scalar, size>& a) {
     return a.derived();
   }
 
@@ -248,48 +248,48 @@ namespace Dune {
   }
 
   template <typename Derived>
-  auto operator+(const Eigen::MatrixBase<Derived>& a, Dune::DerivativeDirections::DerivativeNoOp) {
+  auto operator+(const Eigen::MatrixBase<Derived>& a, Dune::DerivativeDirections::ZeroMatrix) {
     return a.derived();
   }
 
   template <typename Derived>
-  auto operator+(Dune::DerivativeDirections::DerivativeNoOp, const Eigen::MatrixBase<Derived>& a) {
+  auto operator+(Dune::DerivativeDirections::ZeroMatrix, const Eigen::MatrixBase<Derived>& a) {
     return a.derived();
   }
 
-  Dune::DerivativeDirections::DerivativeNoOp operator+(Dune::DerivativeDirections::DerivativeNoOp,
-                                                         Dune::DerivativeDirections::DerivativeNoOp);
+  Dune::DerivativeDirections::ZeroMatrix operator+(Dune::DerivativeDirections::ZeroMatrix,
+                                                         Dune::DerivativeDirections::ZeroMatrix);
 
-  Dune::DerivativeDirections::DerivativeNoOp operator-(Dune::DerivativeDirections::DerivativeNoOp,
-                                                         Dune::DerivativeDirections::DerivativeNoOp);
+  Dune::DerivativeDirections::ZeroMatrix operator-(Dune::DerivativeDirections::ZeroMatrix,
+                                                         Dune::DerivativeDirections::ZeroMatrix);
 
   template <typename Derived>
-  auto operator*(const Eigen::MatrixBase<Derived>& a, Dune::DerivativeDirections::DerivativeNoOp) {
-    return Dune::DerivativeDirections::DerivativeNoOp();
+  auto operator*(const Eigen::MatrixBase<Derived>& a, Dune::DerivativeDirections::ZeroMatrix) {
+    return Dune::DerivativeDirections::ZeroMatrix();
   }
 
   template <std::floating_point T>
-  auto operator*(const T&, Dune::DerivativeDirections::DerivativeNoOp) {
-    return Dune::DerivativeDirections::DerivativeNoOp();
+  auto operator*(const T&, Dune::DerivativeDirections::ZeroMatrix) {
+    return Dune::DerivativeDirections::ZeroMatrix();
   }
 
   template <std::floating_point T>
-  auto operator*(Dune::DerivativeDirections::DerivativeNoOp b, const T& a) {
+  auto operator*(Dune::DerivativeDirections::ZeroMatrix b, const T& a) {
     return a * b;
   }
 
   template <typename Derived>
-  auto operator*(Dune::DerivativeDirections::DerivativeNoOp, const Eigen::MatrixBase<Derived>& a) {
-    return Dune::DerivativeDirections::DerivativeNoOp();
+  auto operator*(Dune::DerivativeDirections::ZeroMatrix, const Eigen::MatrixBase<Derived>& a) {
+    return Dune::DerivativeDirections::ZeroMatrix();
   }
 
   template <typename Derived>
-  auto operator-(const Eigen::MatrixBase<Derived>& a, Dune::DerivativeDirections::DerivativeNoOp) {
+  auto operator-(const Eigen::MatrixBase<Derived>& a, Dune::DerivativeDirections::ZeroMatrix) {
     return a.derived();
   }
 
   template <typename Derived>
-  Derived operator-(Dune::DerivativeDirections::DerivativeNoOp, const Eigen::MatrixBase<Derived>& a) {
+  Derived operator-(Dune::DerivativeDirections::ZeroMatrix, const Eigen::MatrixBase<Derived>& a) {
     return -a.derived();
   }
 
@@ -299,14 +299,14 @@ namespace Dune {
   }
 
   template <typename Derived>
-  auto operator+(const Eigen::DiagonalWrapper<Derived>& a, Dune::DerivativeDirections::DerivativeNoOp) {
+  auto operator+(const Eigen::DiagonalWrapper<Derived>& a, Dune::DerivativeDirections::ZeroMatrix) {
     return a;
   }
 
-  Dune::DerivativeDirections::DerivativeNoOp operator-(Dune::DerivativeDirections::DerivativeNoOp);
+  Dune::DerivativeDirections::ZeroMatrix operator-(Dune::DerivativeDirections::ZeroMatrix);
 
   template <typename Derived>
-  auto operator+(Dune::DerivativeDirections::DerivativeNoOp, const Eigen::DiagonalWrapper<Derived>& a) {
+  auto operator+(Dune::DerivativeDirections::ZeroMatrix, const Eigen::DiagonalWrapper<Derived>& a) {
     return a;
   }
 
@@ -367,8 +367,8 @@ namespace Dune {
     return t;
   }
 
-  Dune::DerivativeDirections::DerivativeNoOp transpose(const Dune::DerivativeDirections::DerivativeNoOp&);
-  Dune::DerivativeDirections::DerivativeNoOp eval(const Dune::DerivativeDirections::DerivativeNoOp&);
+  Dune::DerivativeDirections::ZeroMatrix transpose(const Dune::DerivativeDirections::ZeroMatrix&);
+  Dune::DerivativeDirections::ZeroMatrix eval(const Dune::DerivativeDirections::ZeroMatrix&);
 
   template <typename Derived>
   auto transpose(const Eigen::EigenBase<Derived>& A) {

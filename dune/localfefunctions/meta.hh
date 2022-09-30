@@ -48,23 +48,23 @@ namespace Dune {
     return Along<Args&...>{std::forward_as_tuple(std::forward<Args>(args)...)};
   }
 
-  template <typename... Args_>
-  struct TransformWith {
-    using Args = std::tuple<Args_...>;
-    Args args;
+  template <typename T_>
+  struct On {
+    using T = T_;
   };
-
-  template <typename... Args>
-  auto transformWith(Args&&... args) {
-    return TransformWith<Args&&...>{std::forward_as_tuple(std::forward<Args>(args)...)};
-  }
 
   namespace DerivativeDirections {
 
-    struct DerivativeNoOp {};
+    struct ZeroMatrix {};
 
     [[maybe_unused]] static struct SpatialAll {
     } spatialAll;
+
+    [[maybe_unused]] static struct ReferenceElement {
+    } referenceElement;
+
+    [[maybe_unused]] static struct GridElement {
+    } gridElement;
 
     struct SpatialPartial {
       size_t index{};
@@ -110,12 +110,6 @@ namespace Dune {
     struct Counter {
       int coeffDerivatives{};
       int spatialall{};
-      int dynamicspatial{};
-    };
-
-    template <int gridDim, int coeffDerivs = 2>
-    struct NewCounter {
-      std::array<int, gridDim> spatialall{};
       int dynamicspatial{};
     };
 
@@ -194,6 +188,10 @@ namespace Dune {
     concept HasOneSpatial = HasOneSpatialSingle<WrtType> or HasOneSpatialAll<WrtType>;
 
   }  // namespace DerivativeDirections
+
+
+  On<DerivativeDirections::GridElement> on(DerivativeDirections::GridElement);
+  On<DerivativeDirections::ReferenceElement> on(DerivativeDirections::ReferenceElement);
 
   template <typename LF>
   concept IsUnaryExpr = LF::children == 1;

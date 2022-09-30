@@ -19,6 +19,17 @@
 
 #include "meta.hh"
 namespace Dune::DerivativeDirections {
+
+  On<DerivativeDirections::GridElement> on(DerivativeDirections::GridElement)
+  {
+    return On<DerivativeDirections::GridElement>{};
+  }
+
+  On<DerivativeDirections::ReferenceElement>  on(DerivativeDirections::ReferenceElement)
+  {
+    return On<DerivativeDirections::ReferenceElement>{};
+  }
+
   SpatialPartial spatial(size_t i) { return {i}; }
 
   SingleCoeff<0> coeff(size_t i) {

@@ -29,11 +29,10 @@ namespace Dune {
   template <typename LF>
   auto localFunctionName(const LF& lf) {
     std::string name = Dune::className(lf);
-
-    std::regex regexp0("Dune::StandardLocalFunction<(([a-zA-Z0-9_:<, ]*>){10})");
+    std::regex regexp0("Dune::StandardLocalFunction<(([a-zA-Z0-9_:<, ]*>){12})");
     name = regex_replace(name, regexp0, "SLF");
 
-    std::regex regexp1("Dune::ProjectionBasedLocalFunction<(([a-zA-Z0-9_:<, ]*>){10})");
+    std::regex regexp1("Dune::ProjectionBasedLocalFunction<(([a-zA-Z0-9_:<, ]*>){12})");
     name = regex_replace(name, regexp1, "PBLF");
 
     std::regex regexp2("Dune::");

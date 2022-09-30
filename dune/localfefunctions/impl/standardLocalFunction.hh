@@ -101,39 +101,39 @@ namespace Dune {
     const Dune::LocalBasis<DuneBasis>& basis() const { return basis_; }
 
   private:
-    template <typename DomainTypeOrIntegrationPointIndex, typename... TransformArgs>
+    template <typename DomainTypeOrIntegrationPointIndex, typename TransformArgs>
     FunctionReturnType evaluateFunctionImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
-                                            [[maybe_unused]] const TransformWith<TransformArgs...>&) const {
+                                            [[maybe_unused]] const On<TransformArgs>&) const {
       const auto& N = evaluateFunctionWithIPorCoord(ipIndexOrPosition, basis_);
 
       return FunctionReturnType(coeffsAsMat * N);
     }
 
-    template <typename DomainTypeOrIntegrationPointIndex, typename... TransformArgs>
+    template <typename DomainTypeOrIntegrationPointIndex, typename TransformArgs>
     Jacobian evaluateDerivativeWRTSpaceAllImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
-                                               const TransformWith<TransformArgs...>& transArgs) const {
+                                               const On<TransformArgs>& transArgs) const {
       const auto& dNraw = evaluateDerivativeWithIPorCoord(ipIndexOrPosition, basis_);
-      maytransformDerivatives(dNraw, dNTransformed, transArgs);
+      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry,ipIndexOrPosition,basis_);
       return coeffsAsMat
              * dNTransformed
                    .template cast<ctype>();  // The cast here is only necessary since the autodiff types are not working
                                              // otherwise, see Issue https://github.com/autodiff/autodiff/issues/73
     }
 
-    template <typename DomainTypeOrIntegrationPointIndex, typename... TransformArgs>
+    template <typename DomainTypeOrIntegrationPointIndex, typename TransformArgs>
     JacobianColType evaluateDerivativeWRTSpaceSingleImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
                                                          int spaceIndex,
-                                                         const TransformWith<TransformArgs...>& transArgs) const {
+                                                         const On<TransformArgs>& transArgs) const {
       const auto& dNraw = evaluateDerivativeWithIPorCoord(ipIndexOrPosition, basis_);
-      maytransformDerivatives(dNraw, dNTransformed, transArgs);
+      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry,ipIndexOrPosition,basis_);
 
       return coeffsAsMat * dNTransformed.col(spaceIndex);
     }
 
-    template <typename DomainTypeOrIntegrationPointIndex, typename... TransformArgs>
+    template <typename DomainTypeOrIntegrationPointIndex, typename TransformArgs>
     CoeffDerivMatrix evaluateDerivativeWRTCoeffsImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
                                                      int coeffsIndex,
-                                                     const TransformWith<TransformArgs...>& transArgs) const {
+                                                     const On<TransformArgs>& transArgs) const {
       const auto& N = evaluateFunctionWithIPorCoord(ipIndexOrPosition, basis_);
       CoeffDerivMatrix mat;
       mat.setIdentity(valueSize);
@@ -141,12 +141,12 @@ namespace Dune {
       return mat;
     }
 
-    template <typename DomainTypeOrIntegrationPointIndex, typename... TransformArgs>
+    template <typename DomainTypeOrIntegrationPointIndex, typename TransformArgs>
     std::array<CoeffDerivMatrix, gridDim> evaluateDerivativeWRTCoeffsANDSpatialImpl(
         const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition, int coeffsIndex,
-        const TransformWith<TransformArgs...>& transArgs) const {
+        const On<TransformArgs>& transArgs) const {
       const auto& dNraw = evaluateDerivativeWithIPorCoord(ipIndexOrPosition, basis_);
-      maytransformDerivatives(dNraw, dNTransformed, transArgs);
+      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry,ipIndexOrPosition,basis_);
       std::array<CoeffDerivMatrix, gridDim> Warray;
       for (int dir = 0; dir < gridDim; ++dir) {
         Warray[dir].setIdentity(valueSize);
@@ -156,12 +156,12 @@ namespace Dune {
       return Warray;
     }
 
-    template <typename DomainTypeOrIntegrationPointIndex, typename... TransformArgs>
+    template <typename DomainTypeOrIntegrationPointIndex, typename TransformArgs>
     CoeffDerivMatrix evaluateDerivativeWRTCoeffsANDSpatialSingleImpl(
         const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition, int coeffsIndex, int spatialIndex,
-        const TransformWith<TransformArgs...>& transArgs) const {
+        const On<TransformArgs>& transArgs) const {
       const auto& dNraw = evaluateDerivativeWithIPorCoord(ipIndexOrPosition, basis_);
-      maytransformDerivatives(dNraw, dNTransformed, transArgs);
+      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry,ipIndexOrPosition,basis_);
       CoeffDerivMatrix W;
       W.setIdentity(valueSize);
       W.diagonal() *= dNTransformed(coeffsIndex, spatialIndex);

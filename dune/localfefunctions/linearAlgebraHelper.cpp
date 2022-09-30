@@ -20,25 +20,25 @@
 #include "linearAlgebraHelper.hh"
 
 namespace Dune {
-  Dune::DerivativeDirections::DerivativeNoOp transpose(const Dune::DerivativeDirections::DerivativeNoOp&) {
-    return Dune::DerivativeDirections::DerivativeNoOp();
+  Dune::DerivativeDirections::ZeroMatrix transpose(const Dune::DerivativeDirections::ZeroMatrix&) {
+    return Dune::DerivativeDirections::ZeroMatrix();
   }
 
-  Dune::DerivativeDirections::DerivativeNoOp operator+(Dune::DerivativeDirections::DerivativeNoOp,
-                                                         Dune::DerivativeDirections::DerivativeNoOp) {
-    return Dune::DerivativeDirections::DerivativeNoOp();
+  Dune::DerivativeDirections::ZeroMatrix operator+(Dune::DerivativeDirections::ZeroMatrix,
+                                                         Dune::DerivativeDirections::ZeroMatrix) {
+    return Dune::DerivativeDirections::ZeroMatrix();
   }
 
-  Dune::DerivativeDirections::DerivativeNoOp operator-(Dune::DerivativeDirections::DerivativeNoOp,
-                                                         Dune::DerivativeDirections::DerivativeNoOp) {
-    return Dune::DerivativeDirections::DerivativeNoOp();
+  Dune::DerivativeDirections::ZeroMatrix operator-(Dune::DerivativeDirections::ZeroMatrix,
+                                                         Dune::DerivativeDirections::ZeroMatrix) {
+    return Dune::DerivativeDirections::ZeroMatrix();
   }
 
-  Dune::DerivativeDirections::DerivativeNoOp eval(const Dune::DerivativeDirections::DerivativeNoOp&) {
-    return Dune::DerivativeDirections::DerivativeNoOp();
+  Dune::DerivativeDirections::ZeroMatrix eval(const Dune::DerivativeDirections::ZeroMatrix&) {
+    return Dune::DerivativeDirections::ZeroMatrix();
   }
 
-  Dune::DerivativeDirections::DerivativeNoOp operator-(Dune::DerivativeDirections::DerivativeNoOp) {
-    return Dune::DerivativeDirections::DerivativeNoOp();
+  Dune::DerivativeDirections::ZeroMatrix operator-(Dune::DerivativeDirections::ZeroMatrix) {
+    return Dune::DerivativeDirections::ZeroMatrix();
   }
 }  // namespace Dune

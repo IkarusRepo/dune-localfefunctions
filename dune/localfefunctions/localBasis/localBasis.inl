@@ -43,6 +43,14 @@ namespace Dune {
         dN(i, j) = dNdune[i][0][j];
   }
 
+  template <Concepts::LocalBasis DuneLocalBasis>
+  const Dune::QuadraturePoint<typename LocalBasis<DuneLocalBasis>::DomainFieldType, LocalBasis<DuneLocalBasis>::gridDim>& LocalBasis<DuneLocalBasis>::indexToIntegrationPoint(int i) const
+  {
+    if(isBound())
+      return rule.value()[i];
+    else
+      assert(false && "You need to call bind first");
+  }
 
   /*
    * This function returns the second derivatives of the ansatz functions.

@@ -127,7 +127,7 @@ namespace Dune {
     auto viewOverFunctionAndJacobian() const {
       assert(Nbound.value().size() == dNbound.value().size()
              && "Number of intergrationpoint evaluations does not match.");
-      if (Nbound and dNbound)
+      if (isBound())
         return std::views::iota(0UL, Nbound.value().size()) | std::views::transform([&](auto&& i_) {
                  return FunctionAndJacobian(i_, rule.value()[i_], getFunction(i_), getJacobian(i_));
                });
@@ -136,6 +136,8 @@ namespace Dune {
         __builtin_unreachable();
       }
     }
+
+    const Dune::QuadraturePoint<DomainFieldType, gridDim>& indexToIntegrationPoint(int i)const;
 
     struct IntegrationPointsAndIndex {
       long unsigned index{};
@@ -146,7 +148,7 @@ namespace Dune {
     auto viewOverIntegrationPoints() const {  // FIXME dont construct this on the fly
       assert(Nbound && "You have to bind the basis first");
       assert(Nbound.value().size() == dNbound.value().size()
-             && "Number of intergrationpoint evaluations does not match.");
+             && "Number of intergration point evaluations does not match.");
       if (Nbound and dNbound) {
         auto res = std::views::iota(0UL, Nbound.value().size())
                    | std::views::transform([&](auto&& i_) { return IntegrationPointsAndIndex({i_, rule.value()[i_]}); });
