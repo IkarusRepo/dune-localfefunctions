@@ -40,13 +40,13 @@ namespace Dune {
 
   /* Convenient wrapper to store a dune local basis. It is possible to precompute derivatives */
   template <Concepts::LocalBasis DuneLocalBasis>
-  class LocalBasis {
+  class CachedLocalBasis {
     using RangeDuneType    = typename DuneLocalBasis::Traits::RangeType;
     using JacobianDuneType = typename DuneLocalBasis::Traits::JacobianType;
 
   public:
-    constexpr explicit LocalBasis(const DuneLocalBasis& p_basis) : duneLocalBasis{&p_basis} {}
-    LocalBasis() = default;
+    constexpr explicit CachedLocalBasis(const DuneLocalBasis& p_basis) : duneLocalBasis{&p_basis} {}
+    CachedLocalBasis() = default;
 
     static constexpr int gridDim = DuneLocalBasis::Traits::dimDomain;
     static_assert(gridDim <= 3, "This local Basis only works for grids with dimensions<=3");
@@ -55,20 +55,18 @@ namespace Dune {
     using DomainFieldType = typename DuneLocalBasis::Traits::DomainFieldType;
     using RangeFieldType  = typename DuneLocalBasis::Traits::RangeFieldType;
 
-    using JacobianType       = Eigen::Matrix<RangeFieldType, Eigen::Dynamic, gridDim>;
+    using JacobianType       = Dune::FieldVector<RangeFieldType, gridDim>;
+    using SecondDerivativeType       = Dune::FieldVector<RangeFieldType, gridDim*(gridDim + 1) / 2>;
     using AnsatzFunctionType = Eigen::VectorX<RangeFieldType>;
 
     /* Evaluates the ansatz functions into the given Eigen Vector N */
-    template <typename Derived>
-    void evaluateFunction(const DomainType& local, Eigen::PlainObjectBase<Derived>& N) const;
+    void evaluateFunction(const DomainType& local, Dune::BlockVector<RangeFieldType>& N) const;
 
     /* Evaluates the ansatz functions derivatives into the given Eigen Matrix dN */
-    template <typename Derived>
-    void evaluateJacobian(const DomainType& local, Eigen::PlainObjectBase<Derived>& dN) const;
+    void evaluateJacobian(const DomainType& local, Dune::BlockVector<JacobianType>& dN) const;
 
     /* Evaluates the ansatz functions second derivatives into the given Eigen Matrix ddN */
-    template <typename Derived>
-    void evaluateSecondDerivatives(const DomainType& local, Eigen::PlainObjectBase<Derived>& ddN) const;
+    void evaluateSecondDerivatives(const DomainType& local, Dune::BlockVector<SecondDerivativeType>& ddN) const;
 
     /* Evaluates the ansatz functions and derivatives into the given Eigen Vector/Matrix N,dN */
     template <typename Derived1, typename Derived2>
@@ -165,12 +163,12 @@ namespace Dune {
     mutable std::vector<RangeDuneType> Ndune{};
     DuneLocalBasis const* duneLocalBasis;  // FIXME pass shared_ptr around
     std::optional<std::set<int>> boundDerivatives;
-    std::optional<std::vector<Eigen::VectorX<RangeFieldType>>> Nbound{};
-    std::optional<std::vector<Eigen::Matrix<RangeFieldType, Eigen::Dynamic, gridDim>>> dNbound{};
-    std::optional<std::vector<Eigen::Matrix<RangeFieldType, Eigen::Dynamic, gridDim*(gridDim + 1) / 2>>> ddNbound{};
+    std::optional<std::vector<Dune::BlockVector<RangeFieldType>>> Nbound{};
+    std::optional<std::vector<Dune::BlockVector<JacobianType>>> dNbound{};
+    std::optional<std::vector<Dune::BlockVector<Dune::FieldVector<RangeFieldType, gridDim*(gridDim + 1) / 2>>>> ddNbound{};
     std::optional<Dune::QuadratureRule<DomainFieldType, gridDim>> rule;
   };
 
 }  // namespace Dune
 
-#include "localBasis.inl"
+#include "cachedlocalBasis.inl"

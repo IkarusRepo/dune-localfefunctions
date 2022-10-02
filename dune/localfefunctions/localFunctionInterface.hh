@@ -23,7 +23,7 @@
 
 #include <concepts>
 
-#include <dune/localfefunctions/localBasis/localBasis.hh>
+#include <dune/localfefunctions/cachedlocalBasis/cachedlocalBasis.hh>
 #include <dune/localfefunctions/expressions/exprChecks.hh>
 #include <dune/localfefunctions/concepts.hh>
 #include <dune/localfefunctions/linearAlgebraHelper.hh>

@@ -22,8 +22,7 @@
 
 #include <concepts>
 
-#include <dune/localfefunctions/localBasis/localBasis.hh>
-//#include <ikarus/utils/traits.hh>
+#include <dune/localfefunctions/cachedlocalBasis/cachedlocalBasis.hh>
 
 namespace Dune {
 

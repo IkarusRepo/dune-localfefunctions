@@ -1,5 +1,5 @@
 #install headers
 install(FILES
-        localBasis.hh
-        localBasis.inl
+        cachedlocalBasis.hh
+        cachedlocalBasis.inl
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/localfefunctions/localBasis)

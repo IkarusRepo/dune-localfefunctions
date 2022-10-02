@@ -28,7 +28,7 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 
-#include <dune/localfefunctions/localBasis/localBasis.hh>
+#include <dune/localfefunctions/cachedlocalBasis/cachedlocalBasis.hh>
 #include <dune/localfefunctions/localFunctionHelper.hh>
 #include <dune/localfefunctions/localFunctionInterface.hh>
 //#include <ikarus/utils/linearAlgebraHelper.hh>
@@ -44,7 +44,7 @@ namespace Dune {
     friend Interface;
     friend ClonableLocalFunction<StandardLocalFunction>;
 
-    constexpr StandardLocalFunction(const Dune::LocalBasis<DuneBasis>& p_basis, const CoeffContainer& coeffs_, const std::shared_ptr<const Geometry>& geo,
+    constexpr StandardLocalFunction(const Dune::CachedLocalBasis<DuneBasis>& p_basis, const CoeffContainer& coeffs_, const std::shared_ptr<const Geometry>& geo,
                                     Dune::template index_constant<ID> = Dune::template index_constant<std::size_t(0)>{})
         : basis_{p_basis}, coeffs{coeffs_},geometry_{geo}
 //        ,  coeffsAsMat{Dune::viewAsEigenMatrixFixedDyn(coeffs)}
@@ -103,7 +103,7 @@ namespace Dune {
           ID>;
     };
 
-    const Dune::LocalBasis<DuneBasis>& basis() const { return basis_; }
+    const Dune::CachedLocalBasis<DuneBasis>& basis() const { return basis_; }
 
   private:
     template <typename DomainTypeOrIntegrationPointIndex, typename TransformArgs>
@@ -185,7 +185,7 @@ namespace Dune {
     }
 
     mutable AnsatzFunctionJacobian dNTransformed;
-    const Dune::LocalBasis<DuneBasis>& basis_;
+    const Dune::CachedLocalBasis<DuneBasis>& basis_;
     CoeffContainer coeffs;
     std::shared_ptr<const Geometry> geometry_;
 //    const decltype(Dune::viewAsEigenMatrixFixedDyn(coeffs)) coeffsAsMat;
@@ -200,7 +200,7 @@ namespace Dune {
     /** \brief Dimension of the correction size of coeffs */
     static constexpr int correctionSize = CoeffContainer::value_type::correctionSize;
     /** \brief Dimension of the grid */
-    static constexpr int gridDim = Dune::LocalBasis<DuneBasis>::gridDim;
+    static constexpr int gridDim = Dune::CachedLocalBasis<DuneBasis>::gridDim;
     /** \brief The manifold where the function values lives in */
     using Manifold = typename CoeffContainer::value_type;
     /** \brief Type for the return value */
@@ -210,9 +210,9 @@ namespace Dune {
     /** \brief Type for the derivatives wrt. the coeffiecients */
     using CoeffDerivMatrix = Dune::ScaledIdentityMatrix<ctype, valueSize>;
     /** \brief Type for the Jacobian of the ansatz function values */
-    using AnsatzFunctionJacobian = typename Dune::LocalBasis<DuneBasis>::JacobianType;
+    using AnsatzFunctionJacobian = typename Dune::CachedLocalBasis<DuneBasis>::JacobianType;
     /** \brief Type for ansatz function values */
-    using AnsatzFunctionType = typename Dune::LocalBasis<DuneBasis>::AnsatzFunctionType;
+    using AnsatzFunctionType = typename Dune::CachedLocalBasis<DuneBasis>::AnsatzFunctionType;
     /** \brief Type for the points for evaluation, usually the integration points */
     using DomainType = typename DuneBasis::Traits::DomainType;
     /** \brief Type for a column of the Jacobian matrix */

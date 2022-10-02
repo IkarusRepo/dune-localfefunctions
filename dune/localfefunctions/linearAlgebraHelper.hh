@@ -20,7 +20,9 @@
  */
 
 #pragma once
+#if ENABLE_TESTING
 #include <autodiff/forward/dual/dual.hpp>
+#endif
 #include <iosfwd>
 #include <random>
 
@@ -40,6 +42,50 @@
 #include <Eigen/Core>
 
 namespace Dune {
+
+
+#if ENABLE_TESTING
+  /** \brief  eval overload for autodiff scalars */
+  template <typename T>
+    requires autodiff::detail::isDual<T> || autodiff::detail::isExpr<T> || autodiff::detail::isArithmetic<T>
+  auto eval(T&& t) {
+    return autodiff::detail::eval(t);
+  }
+
+  template<> struct IsNumber<autodiff::HigherOrderDual<2,double>>
+      : public std::true_type {
+  };
+
+  /** \brief  Multiply with scalar and autodiff types */
+  template <typename T,int rows,int cols>
+    requires autodiff::detail::isDual<T> || autodiff::detail::isExpr<T> || autodiff::detail::isArithmetic<T>
+  auto operator*(T&& t, const Dune::FieldMatrix<decltype(autodiff::detail::eval(t)),rows,cols>& A) {
+
+    return autodiff::detail::eval(t)*A;
+  }
+
+  /** \brief  Multiply with scalar and autodiff types */
+  template <typename T,int rows,int cols>
+    requires autodiff::detail::isDual<T> || autodiff::detail::isExpr<T> || autodiff::detail::isArithmetic<T>
+  auto operator*(const Dune::FieldMatrix<decltype(autodiff::detail::eval(std::declval<T>())),rows,cols>& A,T&& t) {
+
+    return autodiff::detail::eval(t)*A;
+  }
+
+  /** \brief  Transpose for scalars and autodiff types */
+  template <typename T>
+    requires autodiff::detail::isDual<T> || autodiff::detail::isExpr<T> || autodiff::detail::isArithmetic<T>
+  auto transpose(T&& t) {
+    return t;
+  }
+    template<typename T1,typename T2>
+    requires (autodiff::detail::isDual<T1> || autodiff::detail::isExpr<T1> || autodiff::detail::isArithmetic<T1>
+        || autodiff::detail::isDual<T2> || autodiff::detail::isExpr<T2> || autodiff::detail::isArithmetic<T2> )
+    struct PromotionTraits<T1,T2> {
+      using PromotedType =decltype(autodiff::eval(std::declval<T1>()+std::declval<T2>()));
+
+    };
+#endif
 
   template <typename T>
   auto transposeEvaluated(const T& A)
@@ -71,8 +117,8 @@ namespace Dune {
   /** \brief Computes the inner product (Frobenius) of two matrices  */
   template <typename field_type,typename field_type2, int rows, int cols>
   auto inner(const Dune::FieldMatrix<field_type, rows, cols>& a, const Dune::FieldMatrix<field_type2, rows, cols>& b) {
-    using resultType =decltype(autodiff::eval(std::declval<field_type>()+std::declval<field_type2>()));
-    resultType res{0};
+    using ScalarResultType = typename Dune::PromotionTraits<field_type,field_type2>::PromotedType;
+    ScalarResultType res{0};
 
     for (int i = 0; i < rows; ++i)
       for (int j = 0; j < cols; ++j)
@@ -84,9 +130,9 @@ namespace Dune {
   /** \brief Computes the inner product (Frobenius) of two vector, no complex conjugate here, used .dot instead!  */
   template <typename field_type,typename field_type2, int rows>
   auto inner(const Dune::FieldVector<field_type, rows>& a, const Dune::FieldMatrix<field_type2, rows,1>& b) {
-    using resultType =decltype(autodiff::eval(std::declval<field_type>()+std::declval<field_type2>()));
+    using ScalarResultType = typename Dune::PromotionTraits<field_type,field_type2>::PromotedType;
 
-    resultType res{0};
+    ScalarResultType res{0};
     for (int i = 0; i < rows; ++i)
         res += a[i] * b[i][0];
     return res;
@@ -95,9 +141,9 @@ namespace Dune {
   /** \brief Computes the matrix vector product  */
   template <typename field_type,typename field_type2, int rows,int cols>
   auto operator*( const Dune::FieldMatrix<field_type, rows, cols>& b,const Dune::FieldVector<field_type2, cols>& a) {
-    using resultType =decltype(autodiff::eval(std::declval<field_type>()+std::declval<field_type2>()));
+    using ScalarResultType = typename Dune::PromotionTraits<field_type,field_type2>::PromotedType;
 
-    Dune::FieldVector<resultType, rows> y;
+    Dune::FieldVector<ScalarResultType, rows> y;
     b.mv(a,y);
     return y;
   }
@@ -175,8 +221,8 @@ namespace Dune {
   template <typename field_type,typename field_type2, int rows1>
   auto operator*(field_type a, const Dune::ScaledIdentityMatrix<field_type2,rows1>& b)
   {
-    using resultType =decltype(autodiff::eval(std::declval<field_type>()+std::declval<field_type2>()));
-    Dune::ScaledIdentityMatrix<resultType,rows1> c=b;
+    using ScalarResultType = typename Dune::PromotionTraits<field_type,field_type2>::PromotedType;
+    Dune::ScaledIdentityMatrix<ScalarResultType,rows1> c=b;
     c.scalar()*=a;
     return c;
   }
@@ -190,9 +236,9 @@ namespace Dune {
   template <typename field_type,typename field_type2, int rows1> requires std::is_arithmetic_v<field_type>
   auto operator*(field_type a, const Dune::DiagonalMatrix<field_type2,rows1>& b)
   {
-    using resultType =decltype(autodiff::eval(std::declval<field_type>()+std::declval<field_type2>()));
+    using ScalarResultType = typename Dune::PromotionTraits<field_type,field_type2>::PromotedType;
 
-    Dune::DiagonalMatrix<resultType,rows1> c=b;
+    Dune::DiagonalMatrix<ScalarResultType,rows1> c=b;
     c*=a;
     return c;
   }
@@ -1030,39 +1076,8 @@ namespace Dune {
     return A;
   }
 
-  /** \brief  eval overload for autodiff scalars */
-  template <typename T>
-    requires autodiff::detail::isDual<T> || autodiff::detail::isExpr<T> || autodiff::detail::isArithmetic<T>
-  auto eval(T&& t) {
-    return autodiff::detail::eval(t);
-  }
 
-  /** \brief  Transpose for scalars and autodiff types */
-  template <typename T>
-    requires autodiff::detail::isDual<T> || autodiff::detail::isExpr<T> || autodiff::detail::isArithmetic<T>
-  auto transpose(T&& t) {
-    return t;
-  }
 
-  template<> struct IsNumber<autodiff::HigherOrderDual<2,double>>
-      : public std::true_type {
-  };
-
-  /** \brief  Multiply with scalar and autodiff types */
-  template <typename T,int rows,int cols>
-    requires autodiff::detail::isDual<T> || autodiff::detail::isExpr<T> || autodiff::detail::isArithmetic<T>
-  auto operator*(T&& t, const Dune::FieldMatrix<decltype(autodiff::detail::eval(t)),rows,cols>& A) {
-
-    return autodiff::detail::eval(t)*A;
-  }
-
-  /** \brief  Multiply with scalar and autodiff types */
-  template <typename T,int rows,int cols>
-    requires autodiff::detail::isDual<T> || autodiff::detail::isExpr<T> || autodiff::detail::isArithmetic<T>
-  auto operator*(const Dune::FieldMatrix<decltype(autodiff::detail::eval(std::declval<T>())),rows,cols>& A,T&& t) {
-
-    return autodiff::detail::eval(t)*A;
-  }
 
   /** \brief  eval overload for std::array  */
   template <typename Type, std::size_t d>

@@ -432,7 +432,7 @@ auto localFunctionTestConstructor(const Dune::GeometryType &geometryType, size_t
   using FECache = Dune::PQkLocalFiniteElementCache<double, double, domainDim, order>;
   FECache feCache;
   const auto &fe      = feCache.get(geometryType);
-  auto localBasis     = Dune::LocalBasis(fe.localBasis());
+  auto localBasis     = Dune::CachedLocalBasis(fe.localBasis());
   const size_t nNodes = fe.size();
   Dune::BlockVector<Manifold> testNodalPoints1;
   const int nNodalTestPoints = std::max(nNodalTestPointsI, nNodes);
@@ -622,7 +622,7 @@ auto localFunctionTestConstructor(const Dune::GeometryType &geometryType, size_t
                                                                 Dune::on(DerivativeDirections::referenceElement));
         const MatrixType dkdSijR        = k2.evaluateDerivative(gpIndex, wrt(coeff(_0, iC, _1, jC), spatial(0)),
                                                                 Dune::on(DerivativeDirections::referenceElement));
-        const MatrixType dkdSijExpected =  createScaledIdentityMatrix<MatrixType>(dN(jC, 0) * N[iC] + N[jC] * dN(iC, 0));
+        const MatrixType dkdSijExpected =  createScaledIdentityMatrix<MatrixType>(dN[jC][0] * N[iC] + N[jC] * dN[iC][0]);
         t.check(isApproxSame(dkdSijR, dkdSij, tol));
         t.check(isApproxSame(dkdSijExpected, dkdSij, tol));
       }
