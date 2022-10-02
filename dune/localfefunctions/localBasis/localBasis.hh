@@ -119,7 +119,7 @@ namespace Dune {
       long unsigned index{};
       const Dune::QuadraturePoint<DomainFieldType, gridDim>& ip{};
       const Eigen::VectorX<RangeFieldType>& N{};
-      const Eigen::Matrix<RangeFieldType, Eigen::Dynamic, gridDim>& dN{};
+      const Dune::FieldMatrix<RangeFieldType, Eigen::Dynamic, gridDim>& dN{};
     };
 
     /* Returns a view over the integration point index, the point itself, and the ansatz function and ansatz function

@@ -43,10 +43,10 @@ namespace Dune {
     static constexpr int correctionSize = d;
 
     /** \brief VectorType of the values of the manifold */
-    using CoordinateType = Eigen::Matrix<ctype, valueSize, 1>;
+    using CoordinateType = Dune::FieldVector<ctype, valueSize>;
 
     /** \brief VectorType of the values of the correction living in the tangentspace */
-    using CorrectionType = Eigen::Matrix<ctype, correctionSize, 1>;
+    using CorrectionType = Dune::FieldVector<ctype, correctionSize>;
 
     RealTuple() = default;
     //    RealTuple() = default;
@@ -70,7 +70,7 @@ namespace Dune {
 
     /** \brief Compute an orthonormal basis of the tangent space of R^n.
      * This is simply the identity matrix  */
-    auto orthonormalFrame() const { return Eigen::Matrix<ctype, valueSize, correctionSize>::Identity(); }
+    auto orthonormalFrame() const { return createScaledIdentityMatrix<Dune::FieldMatrix<ctype, valueSize, correctionSize>>(); }
 
     /** \brief Copy-Constructor from the values in terms of coordinateType */
     explicit RealTuple(const CoordinateType &vec) noexcept : var{vec} {}
@@ -101,12 +101,12 @@ namespace Dune {
       return *this;
     }
 
-    Eigen::Matrix<ctype, valueSize, valueSize> weingartenMapEmbedded(const CoordinateType &p) const {
-      return Eigen::Matrix<ctype, valueSize, valueSize>::Zero();
+    Dune::FieldMatrix<ctype, valueSize, valueSize> weingartenMapEmbedded(const CoordinateType &p) const {
+      return createZeroMatrix<ctype, valueSize, valueSize>();
     }
 
-    Eigen::Matrix<ctype, correctionSize, correctionSize> weingartenMap(const CoordinateType &p) const {
-      return Eigen::Matrix<ctype, correctionSize, correctionSize>::Zero();
+    Dune::FieldMatrix<ctype, correctionSize, correctionSize> weingartenMap(const CoordinateType &p) const {
+      return createZeroMatrix<ctype, valueSize, valueSize>();
     }
 
     void addInEmbedding(const CoordinateType &correction) { var += correction; }
@@ -120,7 +120,7 @@ namespace Dune {
     auto end() const { return var.end(); }
 
   private:
-    CoordinateType var{CoordinateType::Zero()};
+    CoordinateType var{createZeroVector<ctype,valueSize>()};
   };
 
   template <typename ctype2, int d2>

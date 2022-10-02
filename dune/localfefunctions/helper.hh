@@ -13,19 +13,18 @@
 #include <Eigen/Core>
 
 namespace Dune {
-  template<typename ST, int size, int Options, int MaxRows, int MaxCols>
-    requires(size > 0 and size <= 3) auto toVoigt(const Eigen::Matrix<ST, size, size,Options,MaxRows,MaxCols>& E) {
-    Eigen::Vector<ST, (size * (size + 1)) / 2> EVoigt;
-    EVoigt.setZero();
+  template<typename ST, int size>
+    requires(size > 0 and size <= 3) auto toVoigt(const Dune::FieldMatrix<ST, size, size>& E) {
+    Dune::FieldVector<ST, (size * (size + 1)) / 2> EVoigt;
     for (int i = 0; i < size; ++i)
-      EVoigt(i) = E(i, i);
+      EVoigt[i] = E[i][i];
 
     if constexpr (size == 2)
-      EVoigt(2) = E(0, 1) * 2;
+      EVoigt[2] = E[0][1] * 2;
     else if constexpr (size == 3) {
-      EVoigt(3) = E(1, 2) * 2;
-      EVoigt(4) = E(0, 2) * 2;
-      EVoigt(5) = E(0, 1) * 2;
+      EVoigt[3] = E[1][2] * 2;
+      EVoigt[4] = E[0][2] * 2;
+      EVoigt[5] = E[0][1] * 2;
     }
     return EVoigt;
   }

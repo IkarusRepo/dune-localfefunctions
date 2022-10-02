@@ -19,6 +19,7 @@
 
 #pragma once
 #include <concepts>
+#include <cmath>
 
 #include <dune/localfefunctions/eigenDuneTransformations.hh>
 
@@ -43,25 +44,25 @@ namespace Dune {
     static constexpr int correctionSize = d - 1;
 
     /** \brief VectorType of the values of the manifold */
-    using CoordinateType = typename Eigen::Vector<ctype, valueSize>;
+    using CoordinateType = typename Dune::FieldVector<ctype, valueSize>;
 
     /** \brief VectorType of the values of the correction living in the tangentspace */
-    using CorrectionType = typename Eigen::Vector<ctype, correctionSize>;
+    using CorrectionType = typename Dune::FieldVector<ctype, correctionSize>;
 
     UnitVector() = default;
 
     /** \brief Copy-Constructor from the values in terms of coordinateType */
-    explicit UnitVector(const CoordinateType &vec) noexcept : var{vec.normalized()} {}
+    explicit UnitVector(const CoordinateType &vec) noexcept : var{vec/two_norm(vec)} {}
 
     /** \brief Move-Constructor from the values in terms of coordinateType */
-    explicit UnitVector(CoordinateType &&vec) noexcept : var{vec.normalized()} {}
+    explicit UnitVector(CoordinateType &&vec) noexcept : var{vec/two_norm(vec)} {}
 
     const CoordinateType &getValue() const { return var; }
 
-    void setValue(const CoordinateType &vec) { var = vec.normalized(); }
+    void setValue(const CoordinateType &vec) { var = vec/two_norm(vec); }
 
     /** \brief Set the coordinates of the manifold by r_value reference */
-    void setValue(CoordinateType &&vec) { var = std::move(vec.normalized()); }
+    void setValue(CoordinateType &&vec) { var = vec/two_norm(vec); }
 
     /** \brief Access to data by const reference */
     const ctype &operator[](int i) const { return var[i]; }
@@ -90,96 +91,96 @@ namespace Dune {
      * This is done using the function orthonormalFrame which returns a 3x2 Matrix */
     void update(const CorrectionType &correction) {
       var += orthonormalFrame() * correction;
-      var.normalize();  // projection-based retraction
+      var = var/two_norm(var);  // projection-based retraction
     }
 
-    static Eigen::Matrix<ctype, valueSize, valueSize> derivativeOfProjectionWRTposition(
-        const Eigen::Vector<ctype, valueSize> &p) {
-      const ctype norm                         = p.norm();
-      const Eigen::Vector<ctype, valueSize> pN = p / norm;
+    static Dune::FieldMatrix<ctype, valueSize, valueSize> derivativeOfProjectionWRTposition(
+        const Dune::FieldVector<ctype, valueSize> &p) {
+      const ctype norm                         = two_norm(p);
+      const Dune::FieldVector<ctype, valueSize> pN = p / norm;
 
-      Eigen::Matrix<ctype, valueSize, valueSize> result
-          = (Eigen::Matrix<ctype, valueSize, valueSize>::Identity() - pN * pN.transpose()) / norm;
+      Dune::FieldMatrix<ctype, valueSize, valueSize> result
+          = (createScaledIdentityMatrix<Dune::FieldMatrix<ctype, valueSize, valueSize>>() - outer(pN ,pN)) / norm;
 
       return result;
     }
 
-    Eigen::Matrix<ctype, valueSize, valueSize> weingartenMapEmbedded(const CoordinateType &p) const {
-      return -var.dot(p) * Eigen::Matrix<ctype, valueSize, valueSize>::Identity();
+    Dune::ScaledIdentityMatrix<ctype, valueSize> weingartenMapEmbedded(const CoordinateType &p) const {
+      return - createScaledIdentityMatrix<Dune::FieldMatrix<ctype, valueSize, valueSize>>(inner(var,p));
     }
 
-    Eigen::Matrix<ctype, correctionSize, correctionSize> weingartenMap(const CoordinateType &p) const {
-      return -var.dot(p) * Eigen::Matrix<ctype, correctionSize, correctionSize>::Identity();
+    Dune::ScaledIdentityMatrix<ctype, correctionSize> weingartenMap(const CoordinateType &p) const {
+      return - createScaledIdentityMatrix<Dune::FieldMatrix<ctype, correctionSize, correctionSize>>(inner(var,p));
     }
 
-    template <typename Derived>
-    static Eigen::Matrix<ctype, valueSize, valueSize> secondDerivativeOfProjectionWRTposition(
-        const Eigen::Vector<ctype, valueSize> &p, const Eigen::MatrixBase<Derived> &along) {
-      const ctype normSquared = p.squaredNorm();
+    static Dune::FieldMatrix<ctype, valueSize, valueSize> secondDerivativeOfProjectionWRTposition(
+        const Dune::FieldVector<ctype, valueSize> &p, const Dune::FieldVector<ctype,valueSize> &along) {
+      const ctype normSquared = two_norm2(p);
       using std::sqrt;
       const ctype norm                         = sqrt(normSquared);
-      const Eigen::Vector<ctype, valueSize> pN = p / norm;
+      const Dune::FieldVector<ctype, valueSize> pN = p / norm;
 
-      Eigen::Matrix<ctype, valueSize, valueSize> Q_along
+      Dune::FieldMatrix<ctype, valueSize, valueSize> Q_along
           = 1 / normSquared
-            * (pN.dot(along) * (3 * pN * pN.transpose() - Eigen::Matrix<ctype, valueSize, valueSize>::Identity())
-               - along * pN.transpose() - pN * along.transpose());
+            * (inner(pN,along) * (3 * outer(pN , pN) - createScaledIdentityMatrix<Dune::FieldMatrix<ctype, valueSize, valueSize>>())
+               - outer(along , pN) - outer(pN ,along));
 
       return Q_along;
     }
 
-    static Eigen::Matrix<ctype, valueSize, valueSize> thirdDerivativeOfProjectionWRTposition(
-        const Eigen::Vector<ctype, valueSize> &p, const Eigen::Ref<const Eigen::Vector<ctype, valueSize>> &along1,
-        const Eigen::Ref<const Eigen::Vector<ctype, valueSize>> &along2) {
-      using FieldMat          = Eigen::Matrix<ctype, valueSize, valueSize>;
-      const ctype normSquared = p.squaredNorm();
+    static Dune::FieldMatrix<ctype, valueSize, valueSize> thirdDerivativeOfProjectionWRTposition(
+        const Dune::FieldVector<ctype, valueSize> &p, const Dune::FieldVector<ctype, valueSize> &along1,
+        const Dune::FieldVector<ctype, valueSize> &along2) {
+      using FieldMat          = Dune::FieldMatrix<ctype, valueSize, valueSize>;
+      const ctype normSquared = two_norm2(p);
       using std::sqrt;
       const ctype norm                         = sqrt(normSquared);
-      const Eigen::Vector<ctype, valueSize> pN = p / norm;
-      const ctype tscala1                      = pN.dot(along1);
-      const ctype tscalwd1                     = pN.dot(along2);
-      const ctype a1scalwd1                    = along1.dot(along2);
+      const Dune::FieldVector<ctype, valueSize> pN = p / norm;
+      const ctype tscala1                      = inner(pN,along1);
+      const ctype tscalwd1                     = inner(pN,along2);
+      const ctype a1scalwd1                    = inner(along1,along2);
       const ctype normwcubinv                  = 1 / (normSquared * norm);
-      const FieldMat a1dyadt                   = along1 * pN.transpose();
-      const FieldMat wd1dyadt                  = along2 * pN.transpose();
-      const FieldMat tDyadict                  = pN * pN.transpose();
-      const FieldMat Id3minus5tdyadt           = FieldMat::Identity() - 5.0 * tDyadict;
+      const FieldMat a1dyadt                   = outer(along1 ,pN);
+      const FieldMat wd1dyadt                  = outer(along2 , pN);
+      const FieldMat tDyadict                  = outer(pN ,pN);
+      const FieldMat Id3minus5tdyadt           = createScaledIdentityMatrix<FieldMat>() - 5.0 * tDyadict;
       FieldMat Chi_along                       = normwcubinv
                            * (3.0 * tscalwd1 * (a1dyadt + 0.5 * tscala1 * Id3minus5tdyadt)
-                              + 3.0 * (0.5 * a1scalwd1 * tDyadict + tscala1 * wd1dyadt) - along1 * along2.transpose()
-                              - a1scalwd1 * 0.5 * FieldMat::Identity());
-      Chi_along = (Chi_along + Chi_along.transpose()).eval();
+                              + 3.0 * (0.5 * a1scalwd1 * tDyadict + tscala1 * wd1dyadt) - outer(along1 ,along2)
+                              - createScaledIdentityMatrix<FieldMat>(a1scalwd1 * 0.5));
+      Chi_along = Chi_along+transposeEvaluated(Chi_along);
       return Chi_along;
     }
 
     /** \brief Compute an orthonormal basis of the tangent space of S^n.
      * Taken from Oliver Sander's dune-gfe */
-    Eigen::Matrix<ctype, valueSize, correctionSize> orthonormalFrame() const {
+    Dune::FieldMatrix<ctype, valueSize, correctionSize> orthonormalFrame() const {
       using ResultType = Eigen::Matrix<ctype, valueSize, correctionSize>;
       ResultType result;
 
       // Coordinates of the stereographic projection
-      Eigen::Matrix<ctype, correctionSize, 1> X;
+      Eigen::Vector<ctype, correctionSize> X;
+      Eigen::Vector<ctype, valueSize> varEigen = toEigenVectorMap(var);
 
       if (var[correctionSize] <= 0)
-        // Stereographic projection from the north pole onto R^{N-1}
-        X = var.template head<correctionSize>() / (1 - var[correctionSize]);
+        // Stereographic projection from the North Pole onto R^{N-1}
+        X = varEigen.template head<correctionSize>() / (1 - var[correctionSize]);
       else
-        // Stereographic projection from the south pole onto R^{N-1}
-        X = var.template head<correctionSize>() / (1 + var[correctionSize]);
+        // Stereographic projection from the South Pole onto R^{N-1}
+        X = varEigen.template head<correctionSize>() / (1 + var[correctionSize]);
 
       result.template topLeftCorner<correctionSize, correctionSize>()
           = (2 * (1 + X.squaredNorm())) * Eigen::Matrix<ctype, correctionSize, correctionSize>::Identity()
             - 4 * X * X.transpose();
       result.template bottomLeftCorner<1, correctionSize>() = 4 * X.transpose();
 
-      // Upper hemisphere: adapt formulas so it is the stereographic projection from the south pole
+      // Upper hemisphere: adapt formulas, so it is the stereographic projection from the South Pole
       if (var[correctionSize] > 0) result.template bottomLeftCorner<1, correctionSize>() *= -1;
 
       // normalize the cols to make the orthogonal basis orthonormal
       result.colwise().normalize();
 
-      return result;
+      return toDune(result);
     }
 
     template <typename ctOther, int dOther>
@@ -201,7 +202,7 @@ namespace Dune {
     void addInEmbedding(const CoordinateType &correction) { var += correction; }
 
   private:
-    CoordinateType var{CoordinateType::UnitX()};
+    CoordinateType var{createOnesVector<ctype,valueSize>()/ two_norm(createOnesVector<ctype,valueSize>())};
   };
 
   template <typename ctype2, int d2>

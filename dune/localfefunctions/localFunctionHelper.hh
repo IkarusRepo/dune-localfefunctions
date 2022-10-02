@@ -87,11 +87,11 @@ namespace Dune {
                   and Geometry::mydimension == Geometry::coorddimension) {
       if constexpr (std::numeric_limits<DomainTypeOrIntegrationPointIndex>::is_integer) {
         const auto& gp  = basis.indexToIntegrationPoint(localOrIpId);
-        const auto jInv = toEigenMatrix(geo->jacobianInverseTransposed(gp.position()));
+        const auto jInv = toEigen(geo->jacobianInverseTransposed(gp.position()));
 
         dNTransformed = dNraw * jInv;
       } else if (std::is_same_v<DomainTypeOrIntegrationPointIndex, typename Basis::DomainType>) {
-        const auto jInv = toEigenMatrix(geo->jacobianInverseTransposed(localOrIpId));
+        const auto jInv = toEigen(geo->jacobianInverseTransposed(localOrIpId));
 
         dNTransformed = dNraw * jInv;
       }

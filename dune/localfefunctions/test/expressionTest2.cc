@@ -53,10 +53,10 @@ int main(int argc, char **argv) {
   const auto &fe      = feCache.get(Dune::GeometryTypes::quadrilateral);
   auto localBasis     = Dune::LocalBasis(fe.localBasis());
 
- Eigen::Matrix<double,Eigen::Dynamic,domainDim> dN;
+ Dune::FieldMatrix<double,Eigen::Dynamic,domainDim> dN;
   localBasis.evaluateJacobian(gp,dN);
   dN = dN*tranformMat.inverse();
-  Eigen::Matrix<double,worldDim,domainDim> JByHand;
+  Dune::FieldMatrix<double,worldDim,domainDim> JByHand;
   std::cout<<"dN"<<std::endl;
   std::cout<<dN<<std::endl;
   JByHand.setZero();
