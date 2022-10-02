@@ -703,10 +703,15 @@ int main(int argc, char **argv) {
   Dune::MPIHelper::instance(argc, argv);
   TestSuite t;
 
+  using namespace std::chrono;
+  using namespace std;
+  auto start = high_resolution_clock::now();
   t.subTest(testExpressionsOnLine());
   t.subTest(testExpressionsOnTriangle());
   t.subTest(testExpressionsOnQuadrilateral());
   t.subTest(testExpressionsOnHexahedron());
-
+  auto stop = high_resolution_clock::now();
+  auto duration = duration_cast<milliseconds>(stop - start);
+  cout << "The test exceution took: "<<duration.count() << endl;
   return t.exit();
 }
