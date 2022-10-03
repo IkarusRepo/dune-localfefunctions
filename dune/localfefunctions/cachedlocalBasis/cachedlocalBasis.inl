@@ -22,16 +22,15 @@
 namespace Dune {
 
   template <Concepts::LocalBasis DuneLocalBasis>
-  void CachedLocalBasis<DuneLocalBasis>::evaluateFunction(const DomainType& local, Dune::BlockVector<RangeFieldType>& N) const {
+  void CachedLocalBasis<DuneLocalBasis>::evaluateFunction(const DomainType& local, AnsatzFunctionType& N) const {
     duneLocalBasis->evaluateFunction(local, Ndune);
-    N.resize(Ndune.size(), 1);
-    N.setZero();
+    N.resize(Ndune.size());
     for (size_t i = 0; i < Ndune.size(); ++i)
       N[i] = Ndune[i][0];
   }
 
   template <Concepts::LocalBasis DuneLocalBasis>
-  void CachedLocalBasis<DuneLocalBasis>::evaluateJacobian(const DomainType& local, Dune::BlockVector<JacobianType>& dN) const {
+  void CachedLocalBasis<DuneLocalBasis>::evaluateJacobian(const DomainType& local, JacobianType& dN) const {
     duneLocalBasis->evaluateJacobian(local, dNdune);
     dN.resize(dNdune.size());
 
@@ -54,7 +53,7 @@ namespace Dune {
    * The assumed order is in Voigt notation, e.g. for 3d ansatzfunctions N_xx,N_yy,N_zz,N_yz,N_xz, N_xy
    */
   template <Concepts::LocalBasis DuneLocalBasis>
-  void CachedLocalBasis<DuneLocalBasis>::evaluateSecondDerivatives(const DomainType& local, Dune::BlockVector<SecondDerivativeType>& ddN) const {
+  void CachedLocalBasis<DuneLocalBasis>::evaluateSecondDerivatives(const DomainType& local, SecondDerivativeType& ddN) const {
     std::array<unsigned int, gridDim> order;
     std::ranges::fill(order, 0);
 

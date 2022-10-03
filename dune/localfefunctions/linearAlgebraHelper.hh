@@ -585,6 +585,18 @@ namespace Dune {
     return a(row,col);
   }
 
+  template <typename RangeFieldType, int size>
+  auto& coeff(Dune::BlockVector<Dune::FieldVector<RangeFieldType, size>>& a, int row, int col) {
+
+    return a[row][col];
+  }
+
+  template <typename RangeFieldType, int size>
+  auto& coeff(const Dune::BlockVector<Dune::FieldVector<RangeFieldType, size>>& a, int row, int col) {
+
+    return a[row][col];
+  }
+
 
   template <typename field_type, int rows>
   void setIdentity(Dune::DiagonalMatrix<field_type, rows>& a)

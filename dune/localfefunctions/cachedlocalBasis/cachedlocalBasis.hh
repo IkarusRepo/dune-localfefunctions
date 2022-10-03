@@ -55,18 +55,18 @@ namespace Dune {
     using DomainFieldType = typename DuneLocalBasis::Traits::DomainFieldType;
     using RangeFieldType  = typename DuneLocalBasis::Traits::RangeFieldType;
 
-    using JacobianType       = Dune::FieldVector<RangeFieldType, gridDim>;
-    using SecondDerivativeType       = Dune::FieldVector<RangeFieldType, gridDim*(gridDim + 1) / 2>;
-    using AnsatzFunctionType = Eigen::VectorX<RangeFieldType>;
+    using JacobianType       = Dune::BlockVector<Dune::FieldVector<RangeFieldType, gridDim>>;
+    using SecondDerivativeType       = Dune::BlockVector<Dune::FieldVector<RangeFieldType, gridDim*(gridDim + 1) / 2>>;
+    using AnsatzFunctionType = Dune::BlockVector<RangeFieldType>;
 
     /* Evaluates the ansatz functions into the given Eigen Vector N */
-    void evaluateFunction(const DomainType& local, Dune::BlockVector<RangeFieldType>& N) const;
+    void evaluateFunction(const DomainType& local, AnsatzFunctionType& N) const;
 
     /* Evaluates the ansatz functions derivatives into the given Eigen Matrix dN */
-    void evaluateJacobian(const DomainType& local, Dune::BlockVector<JacobianType>& dN) const;
+    void evaluateJacobian(const DomainType& local, JacobianType& dN) const;
 
     /* Evaluates the ansatz functions second derivatives into the given Eigen Matrix ddN */
-    void evaluateSecondDerivatives(const DomainType& local, Dune::BlockVector<SecondDerivativeType>& ddN) const;
+    void evaluateSecondDerivatives(const DomainType& local, SecondDerivativeType& ddN) const;
 
     /* Evaluates the ansatz functions and derivatives into the given Eigen Vector/Matrix N,dN */
     template <typename Derived1, typename Derived2>
@@ -89,7 +89,7 @@ namespace Dune {
     void bind(const Dune::QuadratureRule<DomainFieldType, gridDim>& p_rule, std::set<int>&& ints);
 
     /* Returns a reference to the ansatz functions evaluated at the given integration point index
-     * The requires statement is needed to circumvent implicit conversion from FieldVector<double,1>
+     * The "requires" statement is needed to circumvent implicit conversion from FieldVector<double,1>
      * */
     template <typename IndexType>
     requires std::same_as<IndexType, long unsigned> or std::same_as<IndexType, int>
@@ -163,9 +163,9 @@ namespace Dune {
     mutable std::vector<RangeDuneType> Ndune{};
     DuneLocalBasis const* duneLocalBasis;  // FIXME pass shared_ptr around
     std::optional<std::set<int>> boundDerivatives;
-    std::optional<std::vector<Dune::BlockVector<RangeFieldType>>> Nbound{};
-    std::optional<std::vector<Dune::BlockVector<JacobianType>>> dNbound{};
-    std::optional<std::vector<Dune::BlockVector<Dune::FieldVector<RangeFieldType, gridDim*(gridDim + 1) / 2>>>> ddNbound{};
+    std::optional<std::vector<AnsatzFunctionType>> Nbound{};
+    std::optional<std::vector<JacobianType>> dNbound{};
+    std::optional<std::vector<SecondDerivativeType>> ddNbound{};
     std::optional<Dune::QuadratureRule<DomainFieldType, gridDim>> rule;
   };
 

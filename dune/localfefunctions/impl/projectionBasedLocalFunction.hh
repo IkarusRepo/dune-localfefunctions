@@ -223,7 +223,7 @@ namespace Dune {
       std::array<CoeffDerivEukMatrix, gridDim> Warray;
       for (int dir = 0; dir < gridDim; ++dir) {
         const auto Qi = tryToCallSecondDerivativeOfProjectionWRTposition(valE, col(J,dir));
-        Warray[dir]   = Qi * N[coeffsIndex] + Pm * dNTransformed(coeffsIndex, dir);
+        Warray[dir]   = Qi * N[coeffsIndex] + Pm * dNTransformed[coeffsIndex][dir];
       }
 
       return Warray;
@@ -249,7 +249,7 @@ namespace Dune {
       const CoeffDerivEukMatrix Pm  = tryToCallDerivativeOfProjectionWRTposition(valE);
       CoeffDerivEukMatrix W;
       const auto Qi = tryToCallSecondDerivativeOfProjectionWRTposition(valE, Jcol);
-      W             = Qi * N[coeffsIndex] + Pm * dNTransformed(coeffsIndex, spatialIndex);
+      W             = Qi * N[coeffsIndex] + Pm * dNTransformed[coeffsIndex][spatialIndex];
       return W;
     }
 
@@ -277,7 +277,8 @@ namespace Dune {
         const auto& NJ              = N[coeffsIndex[1]];
         const auto& dNIdi           = dNTransformed[coeffsIndex[0]][i];
         const auto& dNJdi           = dNTransformed[coeffsIndex[1]][i];
-        ChiArrayEuk += chi * NI * NJ + S * (dNIdi * NJ + dNJdi * NI);
+        ChiArrayEuk += chi * NI * NJ;
+        ChiArrayEuk +=  S * (dNIdi * NJ + dNJdi * NI);
       }
       if (coeffsIndex[0] == coeffsIndex[1]) {  // Riemannian Hessian Weingarten map correction
         const std::array<CoeffDerivEukMatrix, gridDim> Warray
@@ -309,9 +310,10 @@ namespace Dune {
       const auto chi                = tryToCallThirdDerivativeOfProjectionWRTposition(valE, along, col(J,spatialIndex));
       const auto& NI                = N[coeffsIndex[0]];
       const auto& NJ                = N[coeffsIndex[1]];
-      const auto& dNIdi             = dNTransformed(coeffsIndex[0], spatialIndex);
-      const auto& dNJdi             = dNTransformed(coeffsIndex[1], spatialIndex);
-      CoeffDerivEukMatrix Chi       = chi * NI * NJ + S * (dNIdi * NJ + dNJdi * NI);
+      const auto& dNIdi             = dNTransformed[coeffsIndex[0]][spatialIndex];
+      const auto& dNJdi             = dNTransformed[coeffsIndex[1]][spatialIndex];
+      CoeffDerivEukMatrix Chi       = chi * NI * NJ ;
+      Chi       += S * (dNIdi * NJ + dNJdi * NI);
 
       if (coeffsIndex[0] == coeffsIndex[1]) {  // Riemannian Hessian Weingarten map correction
         const CoeffDerivEukMatrix W = evaluateDerivativeWRTCoeffsANDSpatialSingleEukImpl(
@@ -336,7 +338,6 @@ namespace Dune {
       for (int i = 0; i < coeffs.size(); ++i)
           Jcol[j]+=coeffs[i].getValue()[j]*coeff(dN,i,spaceIndex);
         }
-
 
       return Jcol;
     }
