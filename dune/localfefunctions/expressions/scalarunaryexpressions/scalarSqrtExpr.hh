@@ -25,23 +25,23 @@ namespace Dune {
 
   struct SqrtFunc {
     template <typename ScalarType>
-    static auto value(const ScalarType& v) {
+    static ScalarType value(const ScalarType& v) {
       return sqrt(v);
     }
 
     template <typename ScalarType>
-    static auto derivative(const ScalarType& v) {
+    static ScalarType derivative(const ScalarType& v) {
       return ScalarType(0.5) / sqrt(v);
     }
 
     template <typename ScalarType>
-    static auto secondDerivative(const ScalarType& v) {
+    static ScalarType secondDerivative(const ScalarType& v) {
       using std::pow;
       return ScalarType(-0.25) / pow(v, 1.5);
     }
 
     template <typename ScalarType>
-    static auto thirdDerivative(const ScalarType& v) {
+    static ScalarType thirdDerivative(const ScalarType& v) {
       using std::pow;
       return ScalarType(0.375) / pow(v, 2.5);
     }

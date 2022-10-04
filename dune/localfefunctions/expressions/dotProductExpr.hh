@@ -22,6 +22,7 @@
 
 #include <dune/localfefunctions/expressions/binaryExpr.hh>
 //#include <ikarus/manifolds/realTuple.hh>
+#include <dune/common/transpose.hh>
 #include <dune/localfefunctions/linearAlgebraHelper.hh>
 namespace Dune {
 
@@ -44,7 +45,7 @@ namespace Dune {
     auto evaluateValueOfExpression(const LFArgs &lfArgs) const {
       const auto u = evaluateFunctionImpl(this->l(), lfArgs);
       const auto v = evaluateFunctionImpl(this->r(), lfArgs);
-      return Eigen::Vector<ctype, 1>((u.transpose() * v).trace());
+      return Dune::FieldMatrix<ctype, 1, 1>(inner(u, v));
     }
 
     template <int DerivativeOrder, typename LFArgs>
@@ -55,7 +56,7 @@ namespace Dune {
       {
         const auto u_x = evaluateDerivativeImpl(this->l(), lfArgs);
         const auto v_x = evaluateDerivativeImpl(this->r(), lfArgs);
-        return Dune::eval(v.transpose() * u_x + u.transpose() * v_x);
+        return Dune::eval(leftMultiplyTranspose(v, u_x) + leftMultiplyTranspose(u, v_x));
       } else if constexpr (DerivativeOrder
                            == 2) {  // dd(dot(u,v))/(dxdy) =  u_{x,y} * v + u_x*v_y + u_y* v_x + u * v_{x,y}
         const auto &[u_x, u_y] = evaluateFirstOrderDerivativesImpl(this->l(), lfArgs);
@@ -67,18 +68,19 @@ namespace Dune {
           const auto u_xyAlongv = evaluateDerivativeImpl(this->l(), alongvArgs);
           const auto v_xyAlongu = evaluateDerivativeImpl(this->r(), alonguArgs);
 
-          return Dune::eval(u_xyAlongv + transpose(u_x) * v_y + transpose(v_x) * u_y + v_xyAlongu);
+          return Dune::eval(u_xyAlongv + leftMultiplyTranspose(u_x, v_y) + leftMultiplyTranspose(v_x, u_y)
+                            + v_xyAlongu);
         } else if constexpr (LFArgs::hasOneSpatial and LFArgs::hasSingleCoeff) {
           const auto u_xy = evaluateDerivativeImpl(this->l(), lfArgs);
           const auto v_xy = evaluateDerivativeImpl(this->r(), lfArgs);
           if constexpr (LFArgs::hasOneSpatialSingle and LFArgs::hasSingleCoeff) {
-            return Dune::eval(transpose(v) * u_xy + transpose(u_x) * v_y + transpose(v_x) * u_y
-                                + transpose(u) * v_xy);
+            return Dune::eval(leftMultiplyTranspose(v, u_xy) + leftMultiplyTranspose(u_x, v_y)
+                              + leftMultiplyTranspose(v_x, u_y) + leftMultiplyTranspose(u, v_xy));
           } else if constexpr (LFArgs::hasOneSpatialAll and LFArgs::hasSingleCoeff) {
-            std::array<std::remove_cvref_t<decltype(Dune::eval(transpose(v) * u_xy[0]))>, gridDim> res;
+            std::array<std::remove_cvref_t<decltype(Dune::eval(leftMultiplyTranspose(v, u_xy[0])))>, gridDim> res;
             for (int i = 0; i < gridDim; ++i)
-              res[i] = Dune::eval(transpose(v) * u_xy[i] + transpose(u_x.col(i)) * v_y + transpose(v_x.col(i)) * u_y
-                                    + transpose(u) * v_xy[i]);
+              res[i] = Dune::eval(leftMultiplyTranspose(v, u_xy[i]) + leftMultiplyTranspose(col(u_x, i), v_y)
+                                  + leftMultiplyTranspose(col(v_x, i), u_y) + leftMultiplyTranspose(u, v_xy[i]));
             return res;
           }
         }
@@ -103,35 +105,39 @@ namespace Dune {
           const auto u_yzAlongvx = evaluateDerivativeImpl(this->l(), argsForDyzalongv_xArgs);
           const auto v_yzAlongux = evaluateDerivativeImpl(this->r(), argsForDyzalongu_xArgs);
 
-          return Dune::eval(u_xyzAlongv + transpose(u_xy) * v_z + transpose(u_xz) * v_y + v_yzAlongux + u_yzAlongvx
-                              + transpose(v_xz) * u_y + transpose(v_xy) * u_z + v_xyzAlongu);
+          return Dune::eval(u_xyzAlongv + leftMultiplyTranspose(u_xy, v_z) + leftMultiplyTranspose(u_xz, v_y)
+                            + v_yzAlongux + u_yzAlongvx + leftMultiplyTranspose(v_xz, u_y)
+                            + leftMultiplyTranspose(v_xy, u_z) + v_xyzAlongu);
         } else if constexpr (LFArgs::hasOneSpatialAll) {
           // check that the along argument has the correct size
           const auto &alongMatrix = std::get<0>(lfArgs.alongArgs.args);
-          using AlongMatrix = std::remove_cvref_t<decltype(alongMatrix)>;
-          static_assert(AlongMatrix::ColsAtCompileTime == gridDim);
-          static_assert(AlongMatrix::RowsAtCompileTime == 1);
+          using AlongMatrix       = std::remove_cvref_t<decltype(alongMatrix)>;
+          static_assert(AlongMatrix::rows == 1);
+          static_assert(AlongMatrix::cols == gridDim);
 
-          const auto uTimesA = eval(u * alongMatrix);
-          const auto vTimesA = eval(v * alongMatrix);
+          static_assert(u.dimension == Base::E1Raw::valueSize);
+          static_assert(v.dimension == Base::E1Raw::valueSize);
+
+          const Dune::FieldMatrix<ctype, Base::E1Raw::valueSize, gridDim> uTimesA = u * alongMatrix;
+          const Dune::FieldMatrix<ctype, Base::E2Raw::valueSize, gridDim> vTimesA = v * alongMatrix;
           using uTimesAType = std::remove_cvref_t<decltype(uTimesA)>;
           using vTimesAType = std::remove_cvref_t<decltype(vTimesA)>;
-          static_assert(uTimesAType::RowsAtCompileTime == Base::E1Raw::valueSize);
-          static_assert(vTimesAType::RowsAtCompileTime == Base::E2Raw::valueSize);
-          static_assert(uTimesAType::ColsAtCompileTime == gridDim);
-          static_assert(vTimesAType::ColsAtCompileTime == gridDim);
+          static_assert(uTimesAType::rows == Base::E1Raw::valueSize);
+          static_assert(vTimesAType::rows == Base::E2Raw::valueSize);
+          static_assert(uTimesAType::cols == gridDim);
+          static_assert(vTimesAType::cols == gridDim);
 
           const auto &[gradu, u_c0, u_c1]  = evaluateFirstOrderDerivativesImpl(this->l(), lfArgs);
           const auto &[gradv, v_c0, v_c1]  = evaluateFirstOrderDerivativesImpl(this->r(), lfArgs);
           const auto &[gradu_c0, gradu_c1] = evaluateSecondOrderDerivativesImpl(this->l(), lfArgs);
           const auto &[gradv_c0, gradv_c1] = evaluateSecondOrderDerivativesImpl(this->r(), lfArgs);
 
-          const auto graduTimesA = (gradu * alongMatrix.transpose()).eval();
-          const auto gradvTimesA = (gradv * alongMatrix.transpose()).eval();
-          static_assert(graduTimesA.RowsAtCompileTime == Base::E1Raw::valueSize);
-          static_assert(graduTimesA.ColsAtCompileTime == 1);
-          static_assert(gradvTimesA.RowsAtCompileTime == Base::E2Raw::valueSize);
-          static_assert(gradvTimesA.ColsAtCompileTime == 1);
+          const auto graduTimesA = eval(gradu * transpose(alongMatrix));
+          const auto gradvTimesA = eval(gradv * transpose(alongMatrix));
+          static_assert(graduTimesA.rows == Base::E1Raw::valueSize);
+          static_assert(graduTimesA.cols == 1);
+          static_assert(gradvTimesA.rows == Base::E2Raw::valueSize);
+          static_assert(gradvTimesA.cols == 1);
 
           const auto argsForDyz = lfArgs.extractSecondWrtArgOrFirstNonSpatial();
 
@@ -144,13 +150,13 @@ namespace Dune {
           const auto v_xyzAlongu            = evaluateDerivativeImpl(this->r(), alonguAArgs);
           const auto v_c0c1AlongGraduTimesA = evaluateDerivativeImpl(this->r(), alonggraduTimesAArgs);
           const auto u_c0c1AlongGradvTimesA = evaluateDerivativeImpl(this->l(), alonggradvTimesAArgs);
-          decltype(eval(u_xyzAlongv)) res;
+          std::remove_cvref_t<decltype(eval(u_xyzAlongv))> res;
 
           res = u_xyzAlongv + v_xyzAlongu + v_c0c1AlongGraduTimesA + u_c0c1AlongGradvTimesA;
           for (int i = 0; i < gridDim; ++i)
-            res += (transpose(u_c1) * gradv_c0[i] + transpose(v_c1) * gradu_c0[i] + transpose(v_c0) * gradu_c1[i]
-                    + transpose(u_c0) * gradv_c1[i])
-                   * alongMatrix(0, i);
+            res += (leftMultiplyTranspose(u_c1, gradv_c0[i]) + leftMultiplyTranspose(v_c1, gradu_c0[i])
+                    + leftMultiplyTranspose(v_c0, gradu_c1[i]) + leftMultiplyTranspose(u_c0, gradv_c1[i]))
+                   * coeff(alongMatrix, 0, i);
 
           return res;
         } else
@@ -176,7 +182,7 @@ namespace Dune {
     /** \brief Dimension of the grid */
     static constexpr int gridDim = E1Raw::gridDim;
     /** \brief Dimension of the world where this function is mapped to from the reference element */
-    static constexpr int worldDimension =  E1Raw::worldDimension;
+    static constexpr int worldDimension = E1Raw::worldDimension;
   };
 
   template <typename E1, typename E2>

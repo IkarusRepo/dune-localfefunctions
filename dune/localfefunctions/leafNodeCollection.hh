@@ -64,7 +64,7 @@ namespace Dune {
   }
 
   template <typename LF>
-//  requires LocalFunction<LF>
+  //  requires LocalFunction<LF>
   auto collectNonArithmeticLeafNodes(LF&& a) {
     return Std::makeNestedTupleFlatAndStoreReferences(Impl::collectNonArithmeticLeafNodesImpl(a.impl()));
   }
@@ -74,7 +74,7 @@ namespace Dune {
   requires LocalFunction<LF>
   struct LocalFunctionLeafNodeCollection {
     using LFRaw = std::remove_cvref_t<LF>;
-    /* Since we need to enable perfect forwaring we have to implement this universal constructor. We also constrain it
+    /* Since we need to enable perfect forwarding we have to implement this universal constructor. We also constrain it
      * with requires LocalFunction<LF_> to only allow it for local function types. Without this template and a signature
      * as LocalFunctionLeafNodeCollection( LF&& lf): ... perfect forwarding is not working for constructors. See
      * https://eel.is/c++draft/temp.deduct.call#3
@@ -83,6 +83,8 @@ namespace Dune {
     requires LocalFunction<LF_> LocalFunctionLeafNodeCollection(LF_&& lf)
         : leafNodes{collectNonArithmeticLeafNodes(std::forward<LF_>(lf))} {}
 
+    /** Return the a const reference of the coefficients if the leaf node with id tag I is unique. Otherwise this
+     * function is deactivated */
     template <std::size_t I = 0>
     requires(Std::countType<typename LFRaw::Ids, Dune::index_constant<I>>()
              == 1) auto& coefficientsRef(Dune::index_constant<I> = Dune::index_constant<I>()) {
@@ -92,6 +94,7 @@ namespace Dune {
       return std::get<I>(leafNodes).coefficientsRef();
     }
 
+    /** Returns a const reference of the coefficients. */
     template <std::size_t I = 0>
     const auto& coefficientsRef(Dune::index_constant<I> = Dune::index_constant<0UL>()) const {
       return std::get<I>(leafNodes).coefficientsRef();

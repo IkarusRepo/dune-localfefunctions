@@ -22,29 +22,25 @@
 namespace Dune {
 
   template <Concepts::LocalBasis DuneLocalBasis>
-  template <typename Derived>
-  void LocalBasis<DuneLocalBasis>::evaluateFunction(const DomainType& local, Eigen::PlainObjectBase<Derived>& N) const {
+  void CachedLocalBasis<DuneLocalBasis>::evaluateFunction(const DomainType& local, AnsatzFunctionType& N) const {
     duneLocalBasis->evaluateFunction(local, Ndune);
-    N.resize(Ndune.size(), 1);
-    N.setZero();
+    N.resize(Ndune.size());
     for (size_t i = 0; i < Ndune.size(); ++i)
       N[i] = Ndune[i][0];
   }
 
   template <Concepts::LocalBasis DuneLocalBasis>
-  template <typename Derived>
-  void LocalBasis<DuneLocalBasis>::evaluateJacobian(const DomainType& local, Eigen::PlainObjectBase<Derived>& dN) const {
+  void CachedLocalBasis<DuneLocalBasis>::evaluateJacobian(const DomainType& local, JacobianType& dN) const {
     duneLocalBasis->evaluateJacobian(local, dNdune);
-    dN.setZero();
-    dN.resize(dNdune.size(), gridDim);
+    dN.resize(dNdune.size());
 
     for (auto i = 0U; i < dNdune.size(); ++i)
       for (int j = 0; j < gridDim; ++j)
-        dN(i, j) = dNdune[i][0][j];
+        dN[i][j] = dNdune[i][0][j];
   }
 
   template <Concepts::LocalBasis DuneLocalBasis>
-  const Dune::QuadraturePoint<typename LocalBasis<DuneLocalBasis>::DomainFieldType, LocalBasis<DuneLocalBasis>::gridDim>& LocalBasis<DuneLocalBasis>::indexToIntegrationPoint(int i) const
+  const Dune::QuadraturePoint<typename CachedLocalBasis<DuneLocalBasis>::DomainFieldType, CachedLocalBasis<DuneLocalBasis>::gridDim>& CachedLocalBasis<DuneLocalBasis>::indexToIntegrationPoint(int i) const
   {
     if(isBound())
       return rule.value()[i];
@@ -57,17 +53,15 @@ namespace Dune {
    * The assumed order is in Voigt notation, e.g. for 3d ansatzfunctions N_xx,N_yy,N_zz,N_yz,N_xz, N_xy
    */
   template <Concepts::LocalBasis DuneLocalBasis>
-  template <typename Derived>
-  void LocalBasis<DuneLocalBasis>::evaluateSecondDerivatives(const DomainType& local, Eigen::PlainObjectBase<Derived>& ddN) const {
+  void CachedLocalBasis<DuneLocalBasis>::evaluateSecondDerivatives(const DomainType& local, SecondDerivativeType& ddN) const {
     std::array<unsigned int, gridDim> order;
     std::ranges::fill(order, 0);
-    ddN.setZero(dNdune.size(), Eigen::NoChange);
 
     for (int i = 0; i < gridDim; ++i) { //Diagonal terms
       order[i] = 2;
       duneLocalBasis->partial(order,local, ddNdune);
       for (size_t j = 0; j < ddNdune.size(); ++j)
-        ddN(j,i)=ddNdune[j][0];
+        ddN[j][i]=ddNdune[j][0];
 
       order[i] = 0;
     }
@@ -78,7 +72,7 @@ namespace Dune {
         order[i] = 0;
       duneLocalBasis->partial(order,local, ddNdune);
       for (size_t j = 0; j < ddNdune.size(); ++j)
-        ddN(j,i+gridDim)=ddNdune[j][0];
+        ddN[j][i+gridDim]=ddNdune[j][0];
       order[i] = 1;
     }
 
@@ -86,14 +80,14 @@ namespace Dune {
 
   template <Concepts::LocalBasis DuneLocalBasis>
   template <typename Derived1, typename Derived2>
-  void LocalBasis<DuneLocalBasis>::evaluateFunctionAndJacobian(const DomainType& local, Eigen::PlainObjectBase<Derived1>& N,
+  void CachedLocalBasis<DuneLocalBasis>::evaluateFunctionAndJacobian(const DomainType& local, Eigen::PlainObjectBase<Derived1>& N,
                                    Eigen::PlainObjectBase<Derived2>& dN) const {
     evaluateFunction(local, N);
     evaluateJacobian(local, dN);
   }
 
   template <Concepts::LocalBasis DuneLocalBasis>
-  void LocalBasis<DuneLocalBasis>::bind(const Dune::QuadratureRule<DomainFieldType, gridDim>& p_rule, std::set<int>&& ints) {
+  void CachedLocalBasis<DuneLocalBasis>::bind(const Dune::QuadratureRule<DomainFieldType, gridDim>& p_rule, std::set<int>&& ints) {
     rule             = p_rule;
     boundDerivatives = ints;
     Nbound           = std::make_optional<typename decltype(Nbound)::value_type> ();

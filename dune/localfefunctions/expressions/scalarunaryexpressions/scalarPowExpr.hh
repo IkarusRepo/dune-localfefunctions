@@ -26,22 +26,22 @@ namespace Dune {
   template <int exponent>
   struct PowFunc {
     template <typename ScalarType>
-    static auto value(const ScalarType& v) {
+    static ScalarType value(const ScalarType& v) {
       return Dune::power(v, exponent);
     }
 
     template <typename ScalarType>
-    static auto derivative(const ScalarType& v) {
+    static ScalarType derivative(const ScalarType& v) {
       return Dune::power(v, exponent - 1) * exponent;
     }
 
     template <typename ScalarType>
-    static auto secondDerivative(const ScalarType& v) {
+    static ScalarType secondDerivative(const ScalarType& v) {
       return Dune::power(v, exponent - 2) * exponent * (exponent - 1);
     }
 
     template <typename ScalarType>
-    static auto thirdDerivative(const ScalarType& v) {
+    static ScalarType thirdDerivative(const ScalarType& v) {
       return Dune::power(v, exponent - 3) * exponent * (exponent - 1) * (exponent - 2);
     }
   };

@@ -40,6 +40,9 @@
 /* Define to the revision of dune-localfefunctions */
 #define DUNE_LOCALFEFUNCTIONS_VERSION_REVISION @DUNE_LOCALFEFUNCTIONS_VERSION_REVISION@
 
+/* Defines a variable to disable code that is only needed for testing */
+#define ENABLE_TESTING @ENABLE_TESTING@
+
 /* end dune-localfefunctions
    Everything below here will be overwritten
 */

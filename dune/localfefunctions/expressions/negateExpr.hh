@@ -28,6 +28,7 @@ namespace Dune {
     using Base = UnaryExpr<NegateExpr, E1>;
     using Base::Base;
     using Traits                   = LocalFunctionTraits<NegateExpr>;
+    using ctype                    = typename Traits::ctype;
     static constexpr int valueSize = Traits::valueSize;
 
     template <size_t ID_ = 0>

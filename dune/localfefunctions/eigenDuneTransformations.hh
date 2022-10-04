@@ -42,10 +42,19 @@ namespace Dune {
 
   /** \brief Creates a Eigen::Vector from a given Dune::FieldVector  */
   template <typename ScalarType, int size>
-  Eigen::Vector<ScalarType, size> toEigenVector(const Dune::FieldVector<ScalarType, size>& vec) {
+  Eigen::Vector<ScalarType, size> toEigen(const Dune::FieldVector<ScalarType, size>& vec) {
     Eigen::Vector<ScalarType, size> eigenVector;
     for (int i = 0; i < size; ++i)
       eigenVector(i) = vec[i];
+    return eigenVector;
+  }
+
+  /** \brief Creates a Eigen::Vector from a given Dune::FieldMatrix with one column  */
+  template <typename ScalarType, int size>
+  Eigen::Vector<ScalarType, size> toEigen(const Dune::FieldMatrix<ScalarType, size, 1>& vec) {
+    Eigen::Vector<ScalarType, size> eigenVector;
+    for (int i = 0; i < size; ++i)
+      eigenVector(i) = vec[i][0];
     return eigenVector;
   }
 
@@ -57,7 +66,7 @@ namespace Dune {
 
   /** \brief Creates a Eigen::Matrix from a given Dune::FieldMatrix  */
   template <typename ScalarType, int size1, int size2>
-  Eigen::Matrix<ScalarType, size1, size2> toEigenMatrix(const Dune::FieldMatrix<ScalarType, size1, size2>& mat) {
+  Eigen::Matrix<ScalarType, size1, size2> toEigen(const Dune::FieldMatrix<ScalarType, size1, size2>& mat) {
     Eigen::Matrix<ScalarType, size1, size2> eigenmatrix;
     for (int i = 0; i < size1; ++i)
       for (int j = 0; j < size2; ++j)
@@ -65,11 +74,21 @@ namespace Dune {
     return eigenmatrix;
   }
 
+  /** \brief Creates a Eigen::Matrix from a given Dune::FieldMatrix  */
+  template <typename ScalarType, int size1, int size2>
+  Dune::FieldMatrix<ScalarType, size1, size2> toDune(const Eigen::Matrix<ScalarType, size1, size2>& mat) {
+    Dune::FieldMatrix<ScalarType, size1, size2> duneMatrix;
+    for (int i = 0; i < size1; ++i)
+      for (int j = 0; j < size2; ++j)
+        duneMatrix[i][j] = mat(i, j);
+    return duneMatrix;
+  }
+
   /** \brief Creates a Eigen::Matrix from a given Dune::DiagonalMatrix. This should return Eigen::DiagonalMatrix but
    * Eigen::DiagonalMatrix does not contain e.g. a transpose method. And therefore we would need to specialize user
    * code. Maybe someone whats to do a PR at Eigen? */
   template <typename ScalarType, int size1>
-  Eigen::Matrix<ScalarType, size1, size1> toEigenMatrix(const Dune::DiagonalMatrix<ScalarType, size1>& mat) {
+  Eigen::Matrix<ScalarType, size1, size1> toEigen(const Dune::DiagonalMatrix<ScalarType, size1>& mat) {
     Eigen::Matrix<ScalarType, size1, size1> eigenmatrix;
     eigenmatrix.setZero();
     for (int i = 0; i < size1; ++i)

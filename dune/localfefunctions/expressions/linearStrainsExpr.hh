@@ -34,7 +34,9 @@ namespace Dune {
       const auto gradArgs = replaceWrt(lfArgs, wrt(DerivativeDirections::spatialAll));
       const auto gradM    = evaluateDerivativeImpl(this->m(), gradArgs);
 
-      const auto E      = (0.5 * (gradM.transpose() + gradM)).eval();
+      auto E = gradM;
+      E += transposeEvaluated(E);
+      E *= 0.5;
       const auto EVoigt = toVoigt(E);
       return EVoigt;
     }
@@ -42,51 +44,71 @@ namespace Dune {
     template <int DerivativeOrder, typename LFArgs>
     auto evaluateDerivativeOfExpression(const LFArgs &lfArgs) const {
       if constexpr (DerivativeOrder == 1 and LFArgs::hasSingleCoeff) {
-        Eigen::Matrix<double, strainSize, gridDim> bopI;
+        Dune::FieldMatrix<double, strainSize, gridDim> bopI;
         const auto gradArgs = addWrt(lfArgs, wrt(DerivativeDirections::spatialAll));
         const auto gradUdI  = evaluateDerivativeImpl(this->m(), gradArgs);
         if constexpr (displacementSize == 1) {
-          bopI(0, 0) = gradUdI[0].diagonal()(0);
+          coeff(bopI, 0, 0) = gradUdI[0].scalar();
         } else if constexpr (displacementSize == 2) {
-          bopI.row(0) << gradUdI[0].diagonal()(0), 0;
-          bopI.row(1) << 0, gradUdI[1].diagonal()(1);
-          bopI.row(2) << gradUdI[1].diagonal()(0), gradUdI[0].diagonal()(1);
+          row(bopI, 0)[0] = gradUdI[0].scalar();
+          row(bopI, 0)[1] = 0;
+          row(bopI, 1)[0] = 0;
+          row(bopI, 1)[1] = gradUdI[1].scalar();
+          row(bopI, 2)[0] = gradUdI[1].scalar();
+          row(bopI, 2)[1] = gradUdI[0].scalar();
 
         } else if constexpr (displacementSize == 3) {
-          bopI.row(0) << gradUdI[0].diagonal()(0), 0, 0;
-          bopI.row(1) << 0, gradUdI[1].diagonal()(1), 0;
-          bopI.row(2) << 0, 0, gradUdI[2].diagonal()(2);
-          bopI.row(3) << 0, gradUdI[2].diagonal()(1), gradUdI[1].diagonal()(2);
-          bopI.row(4) << gradUdI[2].diagonal()(0), 0, gradUdI[0].diagonal()(2);
-          bopI.row(5) << gradUdI[1].diagonal()(0), gradUdI[0].diagonal()(1), 0;
+          row(bopI, 0)[0] = gradUdI[0].scalar();
+          row(bopI, 0)[1] = 0;
+          row(bopI, 0)[2] = 0;
+
+          row(bopI, 1)[0] = 0;
+          row(bopI, 1)[1] = gradUdI[1].scalar();
+          row(bopI, 1)[2] = 0;
+
+          row(bopI, 2)[0] = 0;
+          row(bopI, 2)[1] = 0;
+          row(bopI, 2)[2] = gradUdI[2].scalar();
+
+          row(bopI, 3)[0] = 0;
+          row(bopI, 3)[1] = gradUdI[2].scalar();
+          row(bopI, 3)[2] = gradUdI[1].scalar();
+
+          row(bopI, 4)[0] = gradUdI[2].scalar();
+          row(bopI, 4)[1] = 0;
+          row(bopI, 4)[2] = gradUdI[0].scalar();
+
+          row(bopI, 5)[0] = gradUdI[1].scalar();
+          row(bopI, 5)[1] = gradUdI[0].scalar();
+          row(bopI, 5)[2] = 0;
         }
 
         return bopI;
 
       } else if constexpr (DerivativeOrder == 1 and LFArgs::hasOneSpatialAll) {
         DUNE_THROW(Dune::NotImplemented, "Higher spatial derivatives of linear strain expression not implemented.");
-        return Eigen::Matrix<ctype, strainSize, gridDim>::Zero().eval();
+        return createZeroMatrix<ctype, strainSize, gridDim>();
       } else if constexpr (DerivativeOrder == 1 and LFArgs::hasOneSpatialSingle) {
         DUNE_THROW(Dune::NotImplemented, "Higher spatial derivatives of linear strain expression not implemented.");
-        return Eigen::Matrix<ctype, strainSize, 1>::Zero().eval();
+        return createZeroMatrix<ctype, strainSize, 1>();
       } else if constexpr (DerivativeOrder == 2) {
         if constexpr (LFArgs::hasNoSpatial and LFArgs::hasTwoCoeff) {
-          return Eigen::Matrix<ctype, displacementSize, displacementSize>::Zero().eval();
+          return createZeroMatrix<ctype, displacementSize, displacementSize>();
         } else if constexpr (LFArgs::hasOneSpatial and LFArgs::hasSingleCoeff) {
           if constexpr (LFArgs::hasOneSpatialSingle and LFArgs::hasSingleCoeff) {
-            return Eigen::Matrix<ctype, strainSize, displacementSize>::Zero().eval();
+            return createZeroMatrix<ctype, strainSize, displacementSize>();
           } else if constexpr (LFArgs::hasOneSpatialAll and LFArgs::hasSingleCoeff) {
-            std::array<Eigen::Matrix<ctype, strainSize, displacementSize>, gridDim> res;
+            std::array<Dune::FieldMatrix<ctype, strainSize, displacementSize>, gridDim> res;
             for (int i = 0; i < gridDim; ++i)
-              res[i].setZero();
+              setZero(res[i]);
             return res;
           }
         }
       } else if constexpr (DerivativeOrder == 3) {
         if constexpr (LFArgs::hasOneSpatialSingle) {
-          return Eigen::Matrix<ctype, displacementSize, displacementSize>::Zero().eval();
+          return createZeroMatrix<ctype, displacementSize, displacementSize>();
         } else if constexpr (LFArgs::hasOneSpatialAll) {
-          return Eigen::Matrix<ctype, displacementSize, displacementSize>::Zero().eval();
+          return createZeroMatrix<ctype, displacementSize, displacementSize>();
         } else
           static_assert(
               LFArgs::hasOneSpatialSingle or LFArgs::hasOneSpatialAll,
@@ -109,7 +131,7 @@ namespace Dune {
     /** \brief Dimension of the grid */
     static constexpr int gridDim = E1Raw::gridDim;
     /** \brief Dimension of the world where this function is mapped to from the reference element */
-    static constexpr int worldDimension =  E1Raw::worldDimension;
+    static constexpr int worldDimension = E1Raw::worldDimension;
   };
 
   template <typename E1>

@@ -25,22 +25,22 @@ namespace Dune {
 
   struct LogFunc {
     template <typename ScalarType>
-    static auto value(const ScalarType& v) {
+    static ScalarType value(const ScalarType& v) {
       return log(v);
     }
 
     template <typename ScalarType>
-    static auto derivative(const ScalarType& v) {
+    static ScalarType derivative(const ScalarType& v) {
       return ScalarType(1) / v;
     }
 
     template <typename ScalarType>
-    static auto secondDerivative(const ScalarType& v) {
+    static ScalarType secondDerivative(const ScalarType& v) {
       return ScalarType(-1) / (v * v);
     }
 
     template <typename ScalarType>
-    static auto thirdDerivative(const ScalarType& v) {
+    static ScalarType thirdDerivative(const ScalarType& v) {
       return ScalarType(2) / (v * v * v);
     }
   };

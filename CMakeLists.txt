@@ -31,7 +31,7 @@ dune_project()
 dune_add_library(dune-localfefunctions)
 
 target_compile_features(dune-localfefunctions PRIVATE cxx_std_20)
-target_compile_options(dune-localfefunctions PRIVATE -ftemplate-backtrace-limit=0 -fdiagnostics-show-template-tree -fno-elide-type)
+target_compile_options(dune-localfefunctions PRIVATE -ftemplate-backtrace-limit=0 -fdiagnostics-show-template-tree -fno-elide-type -fconcepts-diagnostics-depth=2)
 find_package(Eigen3 3.3.9 REQUIRED)
 
 dune_register_package_flags(
@@ -46,6 +46,7 @@ add_dune_all_flags(${PROJECT_NAME})
 add_subdirectory(dune)
 add_subdirectory(doc)
 add_subdirectory(cmake/modules)
+add_subdirectory(cmake/FormatTarget)
 
 # finalize the dune project, e.g. generating config.h etc.
 finalize_dune_project(GENERATE_CONFIG_H_CMAKE)
