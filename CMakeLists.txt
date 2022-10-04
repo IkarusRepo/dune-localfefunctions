@@ -46,6 +46,7 @@ add_dune_all_flags(${PROJECT_NAME})
 add_subdirectory(dune)
 add_subdirectory(doc)
 add_subdirectory(cmake/modules)
+add_subdirectory(cmake/FormatTarget)
 
 # finalize the dune project, e.g. generating config.h etc.
 finalize_dune_project(GENERATE_CONFIG_H_CMAKE)

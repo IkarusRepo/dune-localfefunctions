@@ -65,7 +65,7 @@ namespace Dune {
     std::regex regexp11("LinearStrainExpr");
     name = regex_replace(name, regexp11, "LinearStrains");
 
-    std::regex regexp12("[ \\t]+$"); // remove trailing white space
+    std::regex regexp12("[ \\t]+$");  // remove trailing white space
     name = regex_replace(name, regexp12, "");
 
     return name;

@@ -51,7 +51,7 @@ namespace Dune {
 
   /** \brief Creates a Eigen::Vector from a given Dune::FieldMatrix with one column  */
   template <typename ScalarType, int size>
-  Eigen::Vector<ScalarType, size> toEigen(const Dune::FieldMatrix<ScalarType, size,1>& vec) {
+  Eigen::Vector<ScalarType, size> toEigen(const Dune::FieldMatrix<ScalarType, size, 1>& vec) {
     Eigen::Vector<ScalarType, size> eigenVector;
     for (int i = 0; i < size; ++i)
       eigenVector(i) = vec[i][0];
@@ -80,7 +80,7 @@ namespace Dune {
     Dune::FieldMatrix<ScalarType, size1, size2> duneMatrix;
     for (int i = 0; i < size1; ++i)
       for (int j = 0; j < size2; ++j)
-        duneMatrix[i][j] = mat(i,j);
+        duneMatrix[i][j] = mat(i, j);
     return duneMatrix;
   }
 

@@ -27,13 +27,20 @@
 #include <Eigen/Core>
 
 template <typename Derived, typename OtherDerived>
-  requires(not Dune::Std::IsSpecializationTypeAndNonTypes<Dune::FieldMatrix, Derived>::value
-           and not Dune::Std::IsSpecializationTypeAndNonTypes<Dune::DiagonalMatrix, Derived>::value
-           and not Dune::Std::IsSpecializationTypeAndNonTypes<Dune::ScaledIdentityMatrix, Derived>::value
-           and not Dune::Std::IsSpecializationTypeAndNonTypes<Dune::FieldVector, Derived>::value
-           and std::convertible_to<Derived, Eigen::EigenBase<Derived> const&>
-           and std::convertible_to<OtherDerived, Eigen::EigenBase<OtherDerived> const&>) bool
-isApproxSame(Derived const& val, OtherDerived const& other, double prec) {
+requires(
+    not Dune::Std::IsSpecializationTypeAndNonTypes<Dune::FieldMatrix, Derived>::value
+    and not Dune::Std::IsSpecializationTypeAndNonTypes<Dune::DiagonalMatrix, Derived>::value
+    and not Dune::Std::IsSpecializationTypeAndNonTypes<Dune::ScaledIdentityMatrix, Derived>::value
+    and not Dune::Std::IsSpecializationTypeAndNonTypes<Dune::FieldVector, Derived>::value
+    and std::convertible_to<
+        Derived,
+        Eigen::EigenBase<
+            Derived> const&> and std::convertible_to<OtherDerived, Eigen::EigenBase<OtherDerived> const&>) bool isApproxSame(Derived const&
+                                                                                                                                 val,
+                                                                                                                             OtherDerived const&
+                                                                                                                                 other,
+                                                                                                                             double
+                                                                                                                                 prec) {
   if constexpr (requires {
                   val.isApprox(other, prec);
                   (val - other).isMuchSmallerThan(1, prec);

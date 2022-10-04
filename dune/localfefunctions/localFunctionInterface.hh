@@ -24,8 +24,8 @@
 #include <concepts>
 
 #include <dune/localfefunctions/cachedlocalBasis/cachedlocalBasis.hh>
-#include <dune/localfefunctions/expressions/exprChecks.hh>
 #include <dune/localfefunctions/concepts.hh>
+#include <dune/localfefunctions/expressions/exprChecks.hh>
 #include <dune/localfefunctions/linearAlgebraHelper.hh>
 
 namespace Dune {
@@ -33,9 +33,9 @@ namespace Dune {
   template <typename LocalFunctionImpl>
   class LocalFunctionInterface {
   public:
-    using Traits                 = LocalFunctionTraits<LocalFunctionImpl>;
-    using DomainType             = typename Traits::DomainType;
-    static constexpr int gridDim = Traits::gridDim;
+    using Traits                        = LocalFunctionTraits<LocalFunctionImpl>;
+    using DomainType                    = typename Traits::DomainType;
+    static constexpr int gridDim        = Traits::gridDim;
     static constexpr int worldDimension = Traits::worldDimension;
 
     template <typename WrtType>
@@ -51,31 +51,35 @@ namespace Dune {
     }
 
     /** \brief Return the function value*/
-    template <typename DomainTypeOrIntegrationPointIndex, typename Transform= DerivativeDirections::GridElement>
+    template <typename DomainTypeOrIntegrationPointIndex, typename Transform = DerivativeDirections::GridElement>
     requires Concepts::IsIntegrationPointIndexOrIntegrationPointPosition<DomainTypeOrIntegrationPointIndex, DomainType>
     auto evaluate(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
-                          const On<Transform>& transform= {}) const {
+                  const On<Transform>& transform = {}) const {
+      checkIfLocalFunctionCanProvideDerivativeTransformation<Transform>();
       const LocalFunctionEvaluationArgs evalArgs(ipIndexOrPosition, wrt(), along(), transform);
       return evaluateFunctionImpl(*this, evalArgs);
     }
 
     /** \brief Deligation function to calculate derivatives */
-    template <typename... WrtArgs, typename Transform= DerivativeDirections::GridElement, typename... AlongArgs,
+    template <typename... WrtArgs, typename Transform = DerivativeDirections::GridElement, typename... AlongArgs,
               typename DomainTypeOrIntegrationPointIndex>
     auto evaluateDerivative(const DomainTypeOrIntegrationPointIndex& localOrIpId, Wrt<WrtArgs...>&& args,
-                            Along<AlongArgs...>&& along,
-                            const On<Transform>& transform= {}) const {
+                            Along<AlongArgs...>&& along, const On<Transform>& transform = {}) const {
+      checkIfLocalFunctionCanProvideDerivativeTransformation<Transform>();
+
       const LocalFunctionEvaluationArgs evalArgs(localOrIpId, std::forward<Wrt<WrtArgs...>>(args),
                                                  std::forward<Along<AlongArgs...>>(along), transform);
       return evaluateDerivativeImpl(*this, evalArgs);
     }
 
     /** \brief Deligation function to calculate derivatives, without providing along arguments */
-    template <typename... WrtArgs, typename Transform= DerivativeDirections::GridElement, typename DomainTypeOrIntegrationPointIndex>
+    template <typename... WrtArgs, typename Transform = DerivativeDirections::GridElement,
+              typename DomainTypeOrIntegrationPointIndex>
     auto evaluateDerivative(const DomainTypeOrIntegrationPointIndex& localOrIpId, Wrt<WrtArgs...>&& args,
                             const On<Transform>& transform = {}) const {
-      return evaluateDerivative(localOrIpId, std::forward<Wrt<WrtArgs...>>(args), along(),
-                                transform);
+      checkIfLocalFunctionCanProvideDerivativeTransformation<Transform>();
+
+      return evaluateDerivative(localOrIpId, std::forward<Wrt<WrtArgs...>>(args), along(), transform);
     }
 
     /** Return the view of the integration points of the bound Basis with id I */
@@ -88,18 +92,9 @@ namespace Dune {
       return node.basis().viewOverIntegrationPoints();
     }
 
-    /** Return the a non const reference of the coefficients if the leaf node with id tag I is unique. Otherwise this
-     * function is deactivated */
     template <std::size_t I = 0>
-    requires(Std::countType<typename LocalFunctionImpl::Ids, Dune::index_constant<I>>()
-             == 1) auto& coefficientsRef(Dune::index_constant<I> = Dune::index_constant<I>()) {
-      return collectLeafNodeLocalFunctions(impl()).coefficientsRef(Dune::index_constant<I>());
-    }
-
-    /** Return the a non const reference of the coefficients of the leaf node with id tag I. */
-    template <std::size_t I = 0>
-    const auto& coefficientsRef(Dune::index_constant<I> = Dune::index_constant<I>()) const {
-      return collectLeafNodeLocalFunctions(impl()).coefficientsRef(Dune::index_constant<I>());
+    auto& node(Dune::index_constant<I> = Dune::index_constant<I>()) const {
+      return collectLeafNodeLocalFunctions(impl()).node(Dune::index_constant<I>());
     }
 
     /** \brief Forward the binding to the local basis */
@@ -110,73 +105,81 @@ namespace Dune {
 
   protected:
     /* Default implementation returns Zero expression if they are not overloaded */
-    template <typename DomainTypeOrIntegrationPointIndex, typename... AlongArgs, typename Transform= DerivativeDirections::GridElement>
+    template <typename DomainTypeOrIntegrationPointIndex, typename... AlongArgs,
+              typename Transform = DerivativeDirections::GridElement>
     auto evaluateSecondDerivativeWRTCoeffsImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
                                                const std::array<size_t, 2>& coeffsIndex,
                                                const Along<AlongArgs...>& alongArgs,
                                                const On<Transform>& transform = {}) const {
       return createZeroMatrix<typename LocalFunctionImpl::ctype, LocalFunctionImpl::correctionSize,
-                           LocalFunctionImpl::correctionSize>();
+                              LocalFunctionImpl::correctionSize>();
     }
 
     /* Default implementation returns Zero expression if they are not overloaded */
-    template <typename DomainTypeOrIntegrationPointIndex, typename... AlongArgs, typename Transform= DerivativeDirections::GridElement>
+    template <typename DomainTypeOrIntegrationPointIndex, typename... AlongArgs,
+              typename Transform = DerivativeDirections::GridElement>
     auto evaluateThirdDerivativeWRTCoeffsTwoTimesAndSpatialSingleImpl(
         const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition, const std::array<size_t, 2>& coeffsIndex,
-        const int spatialIndex, const Along<AlongArgs...>& alongArgs,
-        const On<Transform>& transArgs) const {
+        const int spatialIndex, const Along<AlongArgs...>& alongArgs, const On<Transform>& transArgs) const {
       return createZeroMatrix<typename LocalFunctionImpl::ctype, LocalFunctionImpl::correctionSize,
-                           LocalFunctionImpl::correctionSize>();
+                              LocalFunctionImpl::correctionSize>();
     }
 
     /* Default implementation returns Zero expression if they are not overloaded */
-    template <typename DomainTypeOrIntegrationPointIndex, typename Transform= DerivativeDirections::GridElement>
+    template <typename DomainTypeOrIntegrationPointIndex, typename Transform = DerivativeDirections::GridElement>
     auto evaluateDerivativeWRTSpaceAllImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
                                            const On<Transform>& transArgs) const {
       return createZeroMatrix<typename LocalFunctionImpl::Jacobian>();
     }
 
     /* Default implementation returns Zero expression if they are not overloaded */
-    template <typename DomainTypeOrIntegrationPointIndex, typename Transform= DerivativeDirections::GridElement>
+    template <typename DomainTypeOrIntegrationPointIndex, typename Transform = DerivativeDirections::GridElement>
     auto evaluateDerivativeWRTCoeffsImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition, int coeffsIndex,
                                          const On<Transform>& transArgs) const {
       return createZeroMatrix<typename LocalFunctionImpl::ctype, LocalFunctionImpl::valueSize,
-                           LocalFunctionImpl::correctionSize>();
+                              LocalFunctionImpl::correctionSize>();
     }
 
     /* Default implementation returns Zero expression if they are not overloaded  */
-    template <typename DomainTypeOrIntegrationPointIndex, typename Transform= DerivativeDirections::GridElement>
+    template <typename DomainTypeOrIntegrationPointIndex, typename Transform = DerivativeDirections::GridElement>
     auto evaluateDerivativeWRTCoeffsANDSpatialImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
-                                                   int coeffsIndex,
-                                                   const On<Transform>& transArgs) const {
+                                                   int coeffsIndex, const On<Transform>& transArgs) const {
       return std::array<Dune::DerivativeDirections::ZeroMatrix, gridDim>();
     }
 
     /* Default implementation returns Zero expression if they are not overloaded  */
-    template <typename DomainTypeOrIntegrationPointIndex, typename Transform= DerivativeDirections::GridElement>
+    template <typename DomainTypeOrIntegrationPointIndex, typename Transform = DerivativeDirections::GridElement>
     auto evaluateDerivativeWRTCoeffsANDSpatialSingleImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
                                                          int coeffsIndex, int spatialIndex,
                                                          const On<Transform>& transArgs) const {
       return createZeroMatrix<typename LocalFunctionImpl::ctype, LocalFunctionImpl::valueSize,
-                           LocalFunctionImpl::correctionSize>();
+                              LocalFunctionImpl::correctionSize>();
     }
     /* Default implementation returns Zero expression if they are not overloaded  */
-    template <typename DomainTypeOrIntegrationPointIndex, typename... AlongArgs, typename Transform= DerivativeDirections::GridElement>
+    template <typename DomainTypeOrIntegrationPointIndex, typename... AlongArgs,
+              typename Transform = DerivativeDirections::GridElement>
     auto evaluateThirdDerivativeWRTCoeffsTwoTimesAndSpatialImpl(
         const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition, const std::array<size_t, 2>& coeffsIndex,
         const Along<AlongArgs...>& alongArgs, const On<Transform>& transArgs) const {
       return createZeroMatrix<typename LocalFunctionImpl::ctype, LocalFunctionImpl::correctionSize,
-                           LocalFunctionImpl::correctionSize>();
+                              LocalFunctionImpl::correctionSize>();
     }
 
     /* Default implementation returns Zero expression if they are not overloaded  */
-    template <typename DomainTypeOrIntegrationPointIndex, typename Transform= DerivativeDirections::GridElement>
+    template <typename DomainTypeOrIntegrationPointIndex, typename Transform = DerivativeDirections::GridElement>
     auto evaluateDerivativeWRTSpaceSingleImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
                                               int spaceIndex, const On<Transform>& transArgs) const {
       return createZeroVector<typename LocalFunctionImpl::JacobianColType>();
     }
 
   private:
+    template <typename Transform>
+    static consteval void checkIfLocalFunctionCanProvideDerivativeTransformation() {
+      static_assert((gridDim != worldDimension and std::is_same_v<Transform, DerivativeDirections::ReferenceElement>)
+                        or (gridDim == worldDimension),
+                    "For local functions that are defined on a geometry with a codimension!=0, the derivatives cannot "
+                    "be transformed. Pass Dune::on(DerivativeDirections::referenceElement) instead. ");
+    }
     template <typename LocalFunctionEvaluationArgs_, typename LocalFunctionImpl_>
     friend auto evaluateDerivativeImpl(const LocalFunctionInterface<LocalFunctionImpl_>& f,
                                        const LocalFunctionEvaluationArgs_& localFunctionArgs);
@@ -186,8 +189,8 @@ namespace Dune {
                                      const LocalFunctionEvaluationArgs_& localFunctionArgs);
 
     template <typename LF>
-//      requires LocalFunction<LF>
-    friend auto collectNonArithmeticLeafNodes(LF&& a) ;
+    //      requires LocalFunction<LF>
+    friend auto collectNonArithmeticLeafNodes(LF&& a);
 
     constexpr LocalFunctionImpl const& impl() const  // CRTP
     {
@@ -261,7 +264,8 @@ namespace Dune {
         }
       }
     } else {
-      return f.impl().template evaluateDerivativeOfExpression<LocalFunctionArguments::derivativeOrder>(localFunctionArgs);
+      return f.impl().template evaluateDerivativeOfExpression<LocalFunctionArguments::derivativeOrder>(
+          localFunctionArgs);
     }
   }
 

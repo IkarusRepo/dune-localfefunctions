@@ -38,10 +38,11 @@ namespace Dune {
       const typename Basis::AnsatzFunctionType& N = basis.evaluateFunction(localOrIpId);
       return std::make_tuple(std::ref(N), std::ref(dN));
     } else
-      static_assert(std::is_same_v<DomainTypeOrIntegrationPointIndex, typename Basis::DomainType>
-                        or std::is_same_v<DomainTypeOrIntegrationPointIndex, int>,
-                    "The argument you passed should be an id for the integration point or the point where the "
-                    "derivative should be evaluated");
+      static_assert(
+          std::is_same_v<DomainTypeOrIntegrationPointIndex,
+                         typename Basis::DomainType> or std::is_same_v<DomainTypeOrIntegrationPointIndex, int>,
+          "The argument you passed should be an id for the integration point or the point where the "
+          "derivative should be evaluated");
   }
 
   /** Helper to evaluate the local basis ansatz function gradient with an integration point index or coordinate vector*/
@@ -55,10 +56,11 @@ namespace Dune {
       const typename Basis::JacobianType& dN = basis.evaluateJacobian(localOrIpId);
       return dN;
     } else
-      static_assert(std::is_same_v<DomainTypeOrIntegrationPointIndex, typename Basis::DomainType>
-                        or std::is_same_v<DomainTypeOrIntegrationPointIndex, int>,
-                    "The argument you passed should be an id for the integration point or the point where the "
-                    "derivative should be evaluated");
+      static_assert(
+          std::is_same_v<DomainTypeOrIntegrationPointIndex,
+                         typename Basis::DomainType> or std::is_same_v<DomainTypeOrIntegrationPointIndex, int>,
+          "The argument you passed should be an id for the integration point or the point where the "
+          "derivative should be evaluated");
   }
 
   /** Helper to evaluate the local basis ansatz function with an integration point index or coordinate vector*/
@@ -71,10 +73,11 @@ namespace Dune {
     } else if constexpr (std::numeric_limits<DomainTypeOrIntegrationPointIndex>::is_integer) {
       return basis.evaluateFunction(localOrIpId);
     } else
-      static_assert(std::is_same_v<DomainTypeOrIntegrationPointIndex, typename Basis::DomainType>
-                        or std::is_same_v<DomainTypeOrIntegrationPointIndex, int>,
-                    "The argument you passed should be an id for the integration point or the point where the "
-                    "derivative should be evaluated");
+      static_assert(
+          std::is_same_v<DomainTypeOrIntegrationPointIndex,
+                         typename Basis::DomainType> or std::is_same_v<DomainTypeOrIntegrationPointIndex, int>,
+          "The argument you passed should be an id for the integration point or the point where the "
+          "derivative should be evaluated");
   }
 
   /** Helper to transform the derivatives if the transform argument is DerivativeDirections::GridElement
@@ -83,17 +86,22 @@ namespace Dune {
   void maytransformDerivatives(const auto& dNraw, auto& dNTransformed, const On<TransformArg>& transArgs,
                                const std::shared_ptr<const Geometry>& geo,
                                const DomainTypeOrIntegrationPointIndex& localOrIpId, const Basis& basis) {
-    if constexpr (std::is_same_v<TransformArg, DerivativeDirections::GridElement>
-                  and Geometry::mydimension == Geometry::coorddimension) {
+    if constexpr (std::is_same_v<
+                      TransformArg,
+                      DerivativeDirections::GridElement> and Geometry::mydimension == Geometry::coorddimension) {
       if constexpr (std::numeric_limits<DomainTypeOrIntegrationPointIndex>::is_integer) {
         const auto& gp  = basis.indexToIntegrationPoint(localOrIpId);
         const auto jInv = geo->jacobianInverseTransposed(gp.position());
 
-        dNTransformed = dNraw * jInv;
+        dNTransformed.resize(dNraw.size());
+        for (int i = 0; i < dNraw.size(); ++i)
+          jInv.mv(dNraw[i], dNTransformed[i]);
       } else if (std::is_same_v<DomainTypeOrIntegrationPointIndex, typename Basis::DomainType>) {
         const auto jInv = geo->jacobianInverseTransposed(localOrIpId);
 
-        dNTransformed = dNraw * jInv;
+        dNTransformed.resize(dNraw.size());
+        for (int i = 0; i < dNraw.size(); ++i)
+          jInv.mv(dNraw[i], dNTransformed[i]);
       }
     } else  // DerivativeDirections::ReferenceElement if the quantity should live on the reference element we don't have
             // to transform the derivatives

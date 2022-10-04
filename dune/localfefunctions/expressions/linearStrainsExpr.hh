@@ -48,39 +48,39 @@ namespace Dune {
         const auto gradArgs = addWrt(lfArgs, wrt(DerivativeDirections::spatialAll));
         const auto gradUdI  = evaluateDerivativeImpl(this->m(), gradArgs);
         if constexpr (displacementSize == 1) {
-          coeff(bopI,0, 0) = gradUdI[0].scalar();
+          coeff(bopI, 0, 0) = gradUdI[0].scalar();
         } else if constexpr (displacementSize == 2) {
-          row(bopI,0)[0] = gradUdI[0].scalar();
-          row(bopI,0)[1] =  0;
-          row(bopI,1)[0] = 0;
-          row(bopI,1)[1] = gradUdI[1].scalar();
-          row(bopI,2)[0] = gradUdI[1].scalar();
-          row(bopI,2)[1] = gradUdI[0].scalar();
+          row(bopI, 0)[0] = gradUdI[0].scalar();
+          row(bopI, 0)[1] = 0;
+          row(bopI, 1)[0] = 0;
+          row(bopI, 1)[1] = gradUdI[1].scalar();
+          row(bopI, 2)[0] = gradUdI[1].scalar();
+          row(bopI, 2)[1] = gradUdI[0].scalar();
 
         } else if constexpr (displacementSize == 3) {
-          row(bopI,0)[0] = gradUdI[0].scalar();
-          row(bopI,0)[1] = 0;
-          row(bopI,0)[2] = 0;
+          row(bopI, 0)[0] = gradUdI[0].scalar();
+          row(bopI, 0)[1] = 0;
+          row(bopI, 0)[2] = 0;
 
-          row(bopI,1)[0] = 0;
-          row(bopI,1)[1] = gradUdI[1].scalar();
-          row(bopI,1)[2] = 0;
+          row(bopI, 1)[0] = 0;
+          row(bopI, 1)[1] = gradUdI[1].scalar();
+          row(bopI, 1)[2] = 0;
 
-          row(bopI,2)[0] = 0;
-          row(bopI,2)[1] = 0;
-          row(bopI,2)[2] = gradUdI[2].scalar();
+          row(bopI, 2)[0] = 0;
+          row(bopI, 2)[1] = 0;
+          row(bopI, 2)[2] = gradUdI[2].scalar();
 
-          row(bopI,3)[0] = 0;
-          row(bopI,3)[1] = gradUdI[2].scalar();
-          row(bopI,3)[2] = gradUdI[1].scalar();
+          row(bopI, 3)[0] = 0;
+          row(bopI, 3)[1] = gradUdI[2].scalar();
+          row(bopI, 3)[2] = gradUdI[1].scalar();
 
-          row(bopI,4)[0] = gradUdI[2].scalar();
-          row(bopI,4)[1] = 0;
-          row(bopI,4)[2] = gradUdI[0].scalar();
+          row(bopI, 4)[0] = gradUdI[2].scalar();
+          row(bopI, 4)[1] = 0;
+          row(bopI, 4)[2] = gradUdI[0].scalar();
 
-          row(bopI,5)[0] = gradUdI[1].scalar();
-          row(bopI,5)[1] = gradUdI[0].scalar();
-          row(bopI,5)[2] = 0;
+          row(bopI, 5)[0] = gradUdI[1].scalar();
+          row(bopI, 5)[1] = gradUdI[0].scalar();
+          row(bopI, 5)[2] = 0;
         }
 
         return bopI;
@@ -93,7 +93,7 @@ namespace Dune {
         return createZeroMatrix<ctype, strainSize, 1>();
       } else if constexpr (DerivativeOrder == 2) {
         if constexpr (LFArgs::hasNoSpatial and LFArgs::hasTwoCoeff) {
-          return createZeroMatrix<ctype,displacementSize, displacementSize>();
+          return createZeroMatrix<ctype, displacementSize, displacementSize>();
         } else if constexpr (LFArgs::hasOneSpatial and LFArgs::hasSingleCoeff) {
           if constexpr (LFArgs::hasOneSpatialSingle and LFArgs::hasSingleCoeff) {
             return createZeroMatrix<ctype, strainSize, displacementSize>();
@@ -106,9 +106,9 @@ namespace Dune {
         }
       } else if constexpr (DerivativeOrder == 3) {
         if constexpr (LFArgs::hasOneSpatialSingle) {
-          return createZeroMatrix<ctype,displacementSize, displacementSize>();
+          return createZeroMatrix<ctype, displacementSize, displacementSize>();
         } else if constexpr (LFArgs::hasOneSpatialAll) {
-          return createZeroMatrix<ctype,displacementSize, displacementSize>();
+          return createZeroMatrix<ctype, displacementSize, displacementSize>();
         } else
           static_assert(
               LFArgs::hasOneSpatialSingle or LFArgs::hasOneSpatialAll,
@@ -131,7 +131,7 @@ namespace Dune {
     /** \brief Dimension of the grid */
     static constexpr int gridDim = E1Raw::gridDim;
     /** \brief Dimension of the world where this function is mapped to from the reference element */
-    static constexpr int worldDimension =  E1Raw::worldDimension;
+    static constexpr int worldDimension = E1Raw::worldDimension;
   };
 
   template <typename E1>

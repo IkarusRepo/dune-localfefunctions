@@ -36,15 +36,15 @@ namespace Dune {
 
     template <typename LocalFunctionEvaluationArgs_>
     auto evaluateValueOfExpression(const LocalFunctionEvaluationArgs_& localFunctionArgs) const {
-      auto res=evaluateFunctionImpl(this->r(), localFunctionArgs);
-      res*=this->l().value() ;
+      auto res = evaluateFunctionImpl(this->r(), localFunctionArgs);
+      res *= this->l().value();
       return res;
     }
 
     template <int DerivativeOrder, typename LocalFunctionEvaluationArgs_>
     auto evaluateDerivativeOfExpression(const LocalFunctionEvaluationArgs_& localFunctionArgs) const {
-      auto res=evaluateDerivativeImpl(this->r(), localFunctionArgs);
-      res*=this->l().value() ;
+      auto res = evaluateDerivativeImpl(this->r(), localFunctionArgs);
+      res *= this->l().value();
       return res;
     }
   };

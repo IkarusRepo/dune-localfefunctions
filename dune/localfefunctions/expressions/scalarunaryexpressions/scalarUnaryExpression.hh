@@ -39,7 +39,7 @@ namespace Dune {
 
     template <typename LFArgs>
     auto evaluateValueOfExpression(const LFArgs& lfArgs) const {
-      return Dune::FieldMatrix<ctype, 1,1>(Func::value(evaluateFunctionImpl(this->m(), lfArgs)[0][0]));
+      return Dune::FieldMatrix<ctype, 1, 1>(Func::value(evaluateFunctionImpl(this->m(), lfArgs)[0][0]));
     }
 
     template <int DerivativeOrder, typename LFArgs>
@@ -55,9 +55,9 @@ namespace Dune {
         const auto u_xy           = evaluateDerivativeImpl(this->m(), lfArgs);
         const auto u_yTimesfactor = Dune::eval(u_y * Func::secondDerivative(u));
         if constexpr (LFArgs::hasOneSpatialAll and LFArgs::hasSingleCoeff) {
-          std::array<std::remove_cvref_t<decltype(Dune::eval(col(u_x,0)[0] * u_y))>, gridDim> res;
+          std::array<std::remove_cvref_t<decltype(Dune::eval(col(u_x, 0)[0] * u_y))>, gridDim> res;
           for (int i = 0; i < gridDim; ++i)
-            res[i] = Dune::eval(col(u_x,i)[0] *u_yTimesfactor + u_xy[i] * Func::derivative(u));
+            res[i] = Dune::eval(col(u_x, i)[0] * u_yTimesfactor + u_xy[i] * Func::derivative(u));
           return res;
         } else {  // one spatial and one coeff derivative
           return Dune::eval(leftMultiplyTranspose(u_x, u_yTimesfactor) + u_xy * Func::derivative(u));
@@ -77,8 +77,10 @@ namespace Dune {
           static_assert(decltype(u_x)::cols == 1);
           static_assert(decltype(u_x)::rows == 1);
 
-          return eval(u_xyz * Func::derivative(u) + (u_x[0][0] * leftMultiplyTranspose(u_y,u_z)) * Func::thirdDerivative(u)
-                      + ((leftMultiplyTranspose(u_y, u_xz) + u_x[0][0] * transposeEvaluated(u_yz) + leftMultiplyTranspose(u_xy, u_z)))
+          return eval(u_xyz * Func::derivative(u)
+                      + (u_x[0][0] * leftMultiplyTranspose(u_y, u_z)) * Func::thirdDerivative(u)
+                      + ((leftMultiplyTranspose(u_y, u_xz) + u_x[0][0] * transposeEvaluated(u_yz)
+                          + leftMultiplyTranspose(u_xy, u_z)))
                             * Func::secondDerivative(u));
         } else if constexpr (LFArgs::hasOneSpatialAll) {
           const auto& alongMatrix = std::get<0>(lfArgs.alongArgs.args);
@@ -86,9 +88,10 @@ namespace Dune {
           res = u_xyz * Func::derivative(u);
 
           for (int i = 0; i < gridDim; ++i)
-            res += coeff(alongMatrix,0, i)
+            res += coeff(alongMatrix, 0, i)
                    * (u_x[0][i] * leftMultiplyTranspose(u_y, u_z) * Func::thirdDerivative(u)
-                      + (leftMultiplyTranspose(u_y, u_xz[i]) + u_x[0][i]  * transposeEvaluated(u_yz) + leftMultiplyTranspose(u_xy[i], u_z))
+                      + (leftMultiplyTranspose(u_y, u_xz[i]) + u_x[0][i] * transposeEvaluated(u_yz)
+                         + leftMultiplyTranspose(u_xy[i], u_z))
                             * Func::secondDerivative(u));
           return res;
         }

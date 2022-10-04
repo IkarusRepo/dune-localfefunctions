@@ -25,12 +25,12 @@ namespace Dune {
   }
 
   Dune::DerivativeDirections::ZeroMatrix operator+(Dune::DerivativeDirections::ZeroMatrix,
-                                                         Dune::DerivativeDirections::ZeroMatrix) {
+                                                   Dune::DerivativeDirections::ZeroMatrix) {
     return Dune::DerivativeDirections::ZeroMatrix();
   }
 
   Dune::DerivativeDirections::ZeroMatrix operator-(Dune::DerivativeDirections::ZeroMatrix,
-                                                         Dune::DerivativeDirections::ZeroMatrix) {
+                                                   Dune::DerivativeDirections::ZeroMatrix) {
     return Dune::DerivativeDirections::ZeroMatrix();
   }
 

@@ -52,7 +52,7 @@ namespace Dune {
     //    RealTuple() = default;
 
     template <typename ctOther, int dOther>
-//    requires std::convertible_to<ctOther, ctype>
+    //    requires std::convertible_to<ctOther, ctype>
     friend class RealTuple;
 
     /** \brief Copy assignement if the other type has different underlying type*/
@@ -70,7 +70,9 @@ namespace Dune {
 
     /** \brief Compute an orthonormal basis of the tangent space of R^n.
      * This is simply the identity matrix  */
-    auto orthonormalFrame() const { return createScaledIdentityMatrix<Dune::FieldMatrix<ctype, valueSize, correctionSize>>(); }
+    auto orthonormalFrame() const {
+      return createScaledIdentityMatrix<Dune::FieldMatrix<ctype, valueSize, correctionSize>>();
+    }
 
     /** \brief Copy-Constructor from the values in terms of coordinateType */
     explicit RealTuple(const CoordinateType &vec) noexcept : var{vec} {}
@@ -120,7 +122,7 @@ namespace Dune {
     auto end() const { return var.end(); }
 
   private:
-    CoordinateType var{createZeroVector<ctype,valueSize>()};
+    CoordinateType var{createZeroVector<ctype, valueSize>()};
   };
 
   template <typename ctype2, int d2>

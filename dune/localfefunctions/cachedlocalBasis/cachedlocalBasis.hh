@@ -25,13 +25,11 @@
 #include <dune/common/fmatrix.hh>
 #include <dune/common/fvector.hh>
 #include <dune/geometry/quadraturerules.hh>
+#include <dune/localfefunctions/concepts.hh>
 
 #include <Eigen/Core>
 
-#include <dune/localfefunctions/concepts.hh>
-
 namespace Dune {
-
 
   /* Helper function to pass integers. These indicate which derivatives should be precomputed */
   template <typename... Ints>
@@ -55,9 +53,9 @@ namespace Dune {
     using DomainFieldType = typename DuneLocalBasis::Traits::DomainFieldType;
     using RangeFieldType  = typename DuneLocalBasis::Traits::RangeFieldType;
 
-    using JacobianType       = Dune::BlockVector<Dune::FieldVector<RangeFieldType, gridDim>>;
-    using SecondDerivativeType       = Dune::BlockVector<Dune::FieldVector<RangeFieldType, gridDim*(gridDim + 1) / 2>>;
-    using AnsatzFunctionType = Dune::BlockVector<RangeFieldType>;
+    using JacobianType         = Dune::BlockVector<Dune::FieldVector<RangeFieldType, gridDim>>;
+    using SecondDerivativeType = Dune::BlockVector<Dune::FieldVector<RangeFieldType, gridDim*(gridDim + 1) / 2>>;
+    using AnsatzFunctionType   = Dune::BlockVector<RangeFieldType>;
 
     /* Evaluates the ansatz functions into the given Eigen Vector N */
     void evaluateFunction(const DomainType& local, AnsatzFunctionType& N) const;
@@ -135,7 +133,7 @@ namespace Dune {
       }
     }
 
-    const Dune::QuadraturePoint<DomainFieldType, gridDim>& indexToIntegrationPoint(int i)const;
+    const Dune::QuadraturePoint<DomainFieldType, gridDim>& indexToIntegrationPoint(int i) const;
 
     struct IntegrationPointsAndIndex {
       long unsigned index{};
@@ -148,8 +146,9 @@ namespace Dune {
       assert(Nbound.value().size() == dNbound.value().size()
              && "Number of intergration point evaluations does not match.");
       if (Nbound and dNbound) {
-        auto res = std::views::iota(0UL, Nbound.value().size())
-                   | std::views::transform([&](auto&& i_) { return IntegrationPointsAndIndex({i_, rule.value()[i_]}); });
+        auto res = std::views::iota(0UL, Nbound.value().size()) | std::views::transform([&](auto&& i_) {
+                     return IntegrationPointsAndIndex({i_, rule.value()[i_]});
+                   });
         return res;
       } else {
         assert(false && "You need to call bind first");

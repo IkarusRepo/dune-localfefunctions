@@ -18,8 +18,8 @@
  */
 
 #pragma once
-#include <concepts>
 #include <cmath>
+#include <concepts>
 
 #include <dune/localfefunctions/eigenDuneTransformations.hh>
 
@@ -52,17 +52,17 @@ namespace Dune {
     UnitVector() = default;
 
     /** \brief Copy-Constructor from the values in terms of coordinateType */
-    explicit UnitVector(const CoordinateType &vec) noexcept : var{vec/two_norm(vec)} {}
+    explicit UnitVector(const CoordinateType &vec) noexcept : var{vec / two_norm(vec)} {}
 
     /** \brief Move-Constructor from the values in terms of coordinateType */
-    explicit UnitVector(CoordinateType &&vec) noexcept : var{vec/two_norm(vec)} {}
+    explicit UnitVector(CoordinateType &&vec) noexcept : var{vec / two_norm(vec)} {}
 
     const CoordinateType &getValue() const { return var; }
 
-    void setValue(const CoordinateType &vec) { var = vec/two_norm(vec); }
+    void setValue(const CoordinateType &vec) { var = vec / two_norm(vec); }
 
     /** \brief Set the coordinates of the manifold by r_value reference */
-    void setValue(CoordinateType &&vec) { var = vec/two_norm(vec); }
+    void setValue(CoordinateType &&vec) { var = vec / two_norm(vec); }
 
     /** \brief Access to data by const reference */
     const ctype &operator[](int i) const { return var[i]; }
@@ -91,39 +91,40 @@ namespace Dune {
      * This is done using the function orthonormalFrame which returns a 3x2 Matrix */
     void update(const CorrectionType &correction) {
       var += orthonormalFrame() * correction;
-      var = var/two_norm(var);  // projection-based retraction
+      var = var / two_norm(var);  // projection-based retraction
     }
 
     static Dune::FieldMatrix<ctype, valueSize, valueSize> derivativeOfProjectionWRTposition(
         const Dune::FieldVector<ctype, valueSize> &p) {
-      const ctype norm                         = two_norm(p);
+      const ctype norm                             = two_norm(p);
       const Dune::FieldVector<ctype, valueSize> pN = p / norm;
 
       Dune::FieldMatrix<ctype, valueSize, valueSize> result
-          = (createScaledIdentityMatrix<Dune::FieldMatrix<ctype, valueSize, valueSize>>() - outer(pN ,pN)) / norm;
+          = (createScaledIdentityMatrix<Dune::FieldMatrix<ctype, valueSize, valueSize>>() - outer(pN, pN)) / norm;
 
       return result;
     }
 
     Dune::ScaledIdentityMatrix<ctype, valueSize> weingartenMapEmbedded(const CoordinateType &p) const {
-      return - createScaledIdentityMatrix<Dune::FieldMatrix<ctype, valueSize, valueSize>>(inner(var,p));
+      return -createScaledIdentityMatrix<Dune::FieldMatrix<ctype, valueSize, valueSize>>(inner(var, p));
     }
 
     Dune::ScaledIdentityMatrix<ctype, correctionSize> weingartenMap(const CoordinateType &p) const {
-      return - createScaledIdentityMatrix<Dune::FieldMatrix<ctype, correctionSize, correctionSize>>(inner(var,p));
+      return -createScaledIdentityMatrix<Dune::FieldMatrix<ctype, correctionSize, correctionSize>>(inner(var, p));
     }
 
     static Dune::FieldMatrix<ctype, valueSize, valueSize> secondDerivativeOfProjectionWRTposition(
-        const Dune::FieldVector<ctype, valueSize> &p, const Dune::FieldVector<ctype,valueSize> &along) {
+        const Dune::FieldVector<ctype, valueSize> &p, const Dune::FieldVector<ctype, valueSize> &along) {
       const ctype normSquared = two_norm2(p);
       using std::sqrt;
-      const ctype norm                         = sqrt(normSquared);
+      const ctype norm                             = sqrt(normSquared);
       const Dune::FieldVector<ctype, valueSize> pN = p / norm;
 
       Dune::FieldMatrix<ctype, valueSize, valueSize> Q_along
           = 1 / normSquared
-            * (inner(pN,along) * (3 * outer(pN , pN) - createScaledIdentityMatrix<Dune::FieldMatrix<ctype, valueSize, valueSize>>())
-               - outer(along , pN) - outer(pN ,along));
+            * (inner(pN, along)
+                   * (3 * outer(pN, pN) - createScaledIdentityMatrix<Dune::FieldMatrix<ctype, valueSize, valueSize>>())
+               - outer(along, pN) - outer(pN, along));
 
       return Q_along;
     }
@@ -134,21 +135,21 @@ namespace Dune {
       using FieldMat          = Dune::FieldMatrix<ctype, valueSize, valueSize>;
       const ctype normSquared = two_norm2(p);
       using std::sqrt;
-      const ctype norm                         = sqrt(normSquared);
+      const ctype norm                             = sqrt(normSquared);
       const Dune::FieldVector<ctype, valueSize> pN = p / norm;
-      const ctype tscala1                      = inner(pN,along1);
-      const ctype tscalwd1                     = inner(pN,along2);
-      const ctype a1scalwd1                    = inner(along1,along2);
-      const ctype normwcubinv                  = 1 / (normSquared * norm);
-      const FieldMat a1dyadt                   = outer(along1 ,pN);
-      const FieldMat wd1dyadt                  = outer(along2 , pN);
-      const FieldMat tDyadict                  = outer(pN ,pN);
-      const FieldMat Id3minus5tdyadt           = createScaledIdentityMatrix<FieldMat>() - 5.0 * tDyadict;
-      FieldMat Chi_along                       = normwcubinv
+      const ctype tscala1                          = inner(pN, along1);
+      const ctype tscalwd1                         = inner(pN, along2);
+      const ctype a1scalwd1                        = inner(along1, along2);
+      const ctype normwcubinv                      = 1 / (normSquared * norm);
+      const FieldMat a1dyadt                       = outer(along1, pN);
+      const FieldMat wd1dyadt                      = outer(along2, pN);
+      const FieldMat tDyadict                      = outer(pN, pN);
+      const FieldMat Id3minus5tdyadt               = createScaledIdentityMatrix<FieldMat>() - 5.0 * tDyadict;
+      FieldMat Chi_along                           = normwcubinv
                            * (3.0 * tscalwd1 * (a1dyadt + 0.5 * tscala1 * Id3minus5tdyadt)
-                              + 3.0 * (0.5 * a1scalwd1 * tDyadict + tscala1 * wd1dyadt) - outer(along1 ,along2)
+                              + 3.0 * (0.5 * a1scalwd1 * tDyadict + tscala1 * wd1dyadt) - outer(along1, along2)
                               - createScaledIdentityMatrix<FieldMat>(a1scalwd1 * 0.5));
-      Chi_along = Chi_along+transposeEvaluated(Chi_along);
+      Chi_along = Chi_along + transposeEvaluated(Chi_along);
       return Chi_along;
     }
 
@@ -202,7 +203,7 @@ namespace Dune {
     void addInEmbedding(const CoordinateType &correction) { var += correction; }
 
   private:
-    CoordinateType var{createOnesVector<ctype,valueSize>()/ two_norm(createOnesVector<ctype,valueSize>())};
+    CoordinateType var{createOnesVector<ctype, valueSize>() / two_norm(createOnesVector<ctype, valueSize>())};
   };
 
   template <typename ctype2, int d2>

@@ -64,7 +64,7 @@ namespace Dune {
   }
 
   template <typename LF>
-//  requires LocalFunction<LF>
+  //  requires LocalFunction<LF>
   auto collectNonArithmeticLeafNodes(LF&& a) {
     return Std::makeNestedTupleFlatAndStoreReferences(Impl::collectNonArithmeticLeafNodesImpl(a.impl()));
   }
@@ -83,6 +83,8 @@ namespace Dune {
     requires LocalFunction<LF_> LocalFunctionLeafNodeCollection(LF_&& lf)
         : leafNodes{collectNonArithmeticLeafNodes(std::forward<LF_>(lf))} {}
 
+    /** Return the a const reference of the coefficients if the leaf node with id tag I is unique. Otherwise this
+     * function is deactivated */
     template <std::size_t I = 0>
     requires(Std::countType<typename LFRaw::Ids, Dune::index_constant<I>>()
              == 1) auto& coefficientsRef(Dune::index_constant<I> = Dune::index_constant<I>()) {
@@ -92,6 +94,7 @@ namespace Dune {
       return std::get<I>(leafNodes).coefficientsRef();
     }
 
+    /** Returns a const reference of the coefficients. */
     template <std::size_t I = 0>
     const auto& coefficientsRef(Dune::index_constant<I> = Dune::index_constant<0UL>()) const {
       return std::get<I>(leafNodes).coefficientsRef();

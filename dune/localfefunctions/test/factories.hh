@@ -4,8 +4,9 @@
 
 #pragma once
 
-#include <dune/istl/bvector.hh>
 #include <random>
+
+#include <dune/istl/bvector.hh>
 #include <dune/localfefunctions/linearAlgebraHelper.hh>
 
 namespace Dune {
@@ -16,17 +17,18 @@ namespace Dune {
   public:
     static void construct(Dune::BlockVector<TargetSpace>& values, const int testPointsSize = 10) {
       values.resize(testPointsSize);
-      std::generate(values.begin(),values.end(), []() { return TargetSpace(createRandomVector<typename TargetSpace::CoordinateType>()); });
+      std::generate(values.begin(), values.end(),
+                    []() { return TargetSpace(createRandomVector<typename TargetSpace::CoordinateType>()); });
     }
   };
-
 
   template <int size>
   class CornerFactory {
   public:
-    static void construct(std::vector<Dune::FieldVector<double,size>>& values, const int corners = 10) {
+    static void construct(std::vector<Dune::FieldVector<double, size>>& values, const int corners = 10) {
       values.resize(corners);
-      std::generate(values.begin(),values.end(), []() { return createRandomVector<Dune::FieldVector<double,size>>(); });
+      std::generate(values.begin(), values.end(),
+                    []() { return createRandomVector<Dune::FieldVector<double, size>>(); });
     }
   };
-}  // namespace Ikarus
+}  // namespace Dune

@@ -41,13 +41,13 @@ namespace Dune {
     template <typename LocalFunctionEvaluationArgs_>
     auto evaluateValueOfExpression(const LocalFunctionEvaluationArgs_& localFunctionArgs) const {
       return Dune::eval(evaluateFunctionImpl(this->l(), localFunctionArgs)
-                          + evaluateFunctionImpl(this->r(), localFunctionArgs));
+                        + evaluateFunctionImpl(this->r(), localFunctionArgs));
     }
 
     template <int DerivativeOrder, typename LocalFunctionEvaluationArgs_>
     auto evaluateDerivativeOfExpression(const LocalFunctionEvaluationArgs_& localFunctionArgs) const {
       return Dune::eval(evaluateDerivativeImpl(this->l(), localFunctionArgs)
-                          + evaluateDerivativeImpl(this->r(), localFunctionArgs));
+                        + evaluateDerivativeImpl(this->r(), localFunctionArgs));
     }
   };
 

@@ -24,30 +24,32 @@
 #include <concepts>
 
 #include <dune/common/indices.hh>
-
-#include <Eigen/Core>
-#include <Eigen/Dense>
-
 #include <dune/localfefunctions/cachedlocalBasis/cachedlocalBasis.hh>
 #include <dune/localfefunctions/localFunctionHelper.hh>
 #include <dune/localfefunctions/localFunctionInterface.hh>
+
+#include <Eigen/Core>
+#include <Eigen/Dense>
 //#include <ikarus/utils/linearAlgebraHelper.hh>
 
 namespace Dune {
 
   template <typename DuneBasis, typename CoeffContainer, typename Geometry, std::size_t ID = 0>
-  class StandardLocalFunction : public LocalFunctionInterface<StandardLocalFunction<DuneBasis, CoeffContainer,Geometry, ID>>,
-                                public ClonableLocalFunction<StandardLocalFunction<DuneBasis, CoeffContainer,Geometry, ID>> {
-    using Interface = LocalFunctionInterface<StandardLocalFunction<DuneBasis, CoeffContainer,Geometry, ID>>;
+  class StandardLocalFunction
+      : public LocalFunctionInterface<StandardLocalFunction<DuneBasis, CoeffContainer, Geometry, ID>>,
+        public ClonableLocalFunction<StandardLocalFunction<DuneBasis, CoeffContainer, Geometry, ID>> {
+    using Interface = LocalFunctionInterface<StandardLocalFunction<DuneBasis, CoeffContainer, Geometry, ID>>;
 
   public:
     friend Interface;
     friend ClonableLocalFunction<StandardLocalFunction>;
 
-    constexpr StandardLocalFunction(const Dune::CachedLocalBasis<DuneBasis>& p_basis, const CoeffContainer& coeffs_, const std::shared_ptr<const Geometry>& geo,
+    constexpr StandardLocalFunction(const Dune::CachedLocalBasis<DuneBasis>& p_basis, const CoeffContainer& coeffs_,
+                                    const std::shared_ptr<const Geometry>& geo,
                                     Dune::template index_constant<ID> = Dune::template index_constant<std::size_t(0)>{})
-        : basis_{p_basis}, coeffs{coeffs_},geometry_{geo}
-//        ,  coeffsAsMat{Dune::viewAsEigenMatrixFixedDyn(coeffs)}
+        : basis_{p_basis},
+          coeffs{coeffs_},
+          geometry_{geo}  //        ,  coeffsAsMat{Dune::viewAsEigenMatrixFixedDyn(coeffs)}
     {}
 
     static constexpr bool isLeaf = true;
@@ -64,7 +66,7 @@ namespace Dune {
     friend auto evaluateFunctionImpl(const LocalFunctionInterface<LocalFunctionImpl_>& f,
                                      const LocalFunctionEvaluationArgs_& localFunctionArgs);
 
-    using Traits = LocalFunctionTraits<StandardLocalFunction<DuneBasis, CoeffContainer, Geometry,ID>>;
+    using Traits = LocalFunctionTraits<StandardLocalFunction<DuneBasis, CoeffContainer, Geometry, ID>>;
     /** \brief Type used for coordinates */
     using ctype = typename Traits::ctype;
     //    /** \brief Dimension of the coeffs */
@@ -99,8 +101,8 @@ namespace Dune {
     template <typename OtherType>
     struct Rebind {
       using other = StandardLocalFunction<
-          DuneBasis, typename Std::Rebind<CoeffContainer, typename Manifold::template Rebind<OtherType>::other>::other,Geometry,
-          ID>;
+          DuneBasis, typename Std::Rebind<CoeffContainer, typename Manifold::template Rebind<OtherType>::other>::other,
+          Geometry, ID>;
     };
 
     const Dune::CachedLocalBasis<DuneBasis>& basis() const { return basis_; }
@@ -114,7 +116,7 @@ namespace Dune {
       setZero(res);
       for (int i = 0; i < coeffs.size(); ++i)
         for (int j = 0; j < res.dimension; ++j) {
-          res[j]+=coeffs[i].getValue()[j]*N[i];
+          res[j] += coeffs[i].getValue()[j] * N[i];
         }
 
       return res;
@@ -124,37 +126,35 @@ namespace Dune {
     Jacobian evaluateDerivativeWRTSpaceAllImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
                                                const On<TransformArgs>& transArgs) const {
       const auto& dNraw = evaluateDerivativeWithIPorCoord(ipIndexOrPosition, basis_);
-      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry_,ipIndexOrPosition,basis_);
+      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry_, ipIndexOrPosition, basis_);
       Jacobian J;
       setZero(J);
-        for (int j = 0; j < gridDim; ++j)
-          for (int k = 0; k < valueSize; ++k)
-      for (int i = 0; i < coeffs.size(); ++i)
-            coeff(J,k,j) += coeffs[i].getValue()[k]* coeff(dNTransformed,i,j);
+      for (int j = 0; j < gridDim; ++j)
+        for (int k = 0; k < valueSize; ++k)
+          for (int i = 0; i < coeffs.size(); ++i)
+            coeff(J, k, j) += coeffs[i].getValue()[k] * coeff(dNTransformed, i, j);
       return J;
     }
 
     template <typename DomainTypeOrIntegrationPointIndex, typename TransformArgs>
     JacobianColType evaluateDerivativeWRTSpaceSingleImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
-                                                         int spaceIndex,
-                                                         const On<TransformArgs>& transArgs) const {
+                                                         int spaceIndex, const On<TransformArgs>& transArgs) const {
       const auto& dNraw = evaluateDerivativeWithIPorCoord(ipIndexOrPosition, basis_);
-      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry_,ipIndexOrPosition,basis_);
+      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry_, ipIndexOrPosition, basis_);
 
       JacobianColType Jcol;
       setZero(Jcol);
-        for (int j = 0; j < Jcol.dimension; ++j) {
-      for (int i = 0; i < coeffs.size(); ++i)
-          Jcol[j]+=coeffs[i].getValue()[j]*coeff(dNTransformed,i,spaceIndex);
-        }
+      for (int j = 0; j < Jcol.dimension; ++j) {
+        for (int i = 0; i < coeffs.size(); ++i)
+          Jcol[j] += coeffs[i].getValue()[j] * coeff(dNTransformed, i, spaceIndex);
+      }
 
       return Jcol;
     }
 
     template <typename DomainTypeOrIntegrationPointIndex, typename TransformArgs>
     CoeffDerivMatrix evaluateDerivativeWRTCoeffsImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
-                                                     int coeffsIndex,
-                                                     const On<TransformArgs>& transArgs) const {
+                                                     int coeffsIndex, const On<TransformArgs>& transArgs) const {
       const auto& N = evaluateFunctionWithIPorCoord(ipIndexOrPosition, basis_);
       CoeffDerivMatrix mat(N[coeffsIndex]);
 
@@ -166,7 +166,7 @@ namespace Dune {
         const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition, int coeffsIndex,
         const On<TransformArgs>& transArgs) const {
       const auto& dNraw = evaluateDerivativeWithIPorCoord(ipIndexOrPosition, basis_);
-      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry_,ipIndexOrPosition,basis_);
+      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry_, ipIndexOrPosition, basis_);
       std::array<CoeffDerivMatrix, gridDim> Warray;
       for (int dir = 0; dir < gridDim; ++dir)
         Warray[dir].scalar() = dNTransformed[coeffsIndex][dir];
@@ -179,7 +179,7 @@ namespace Dune {
         const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition, int coeffsIndex, int spatialIndex,
         const On<TransformArgs>& transArgs) const {
       const auto& dNraw = evaluateDerivativeWithIPorCoord(ipIndexOrPosition, basis_);
-      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry_,ipIndexOrPosition,basis_);
+      maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry_, ipIndexOrPosition, basis_);
       CoeffDerivMatrix W(dNTransformed[coeffsIndex][spatialIndex]);
       return W;
     }
@@ -188,10 +188,10 @@ namespace Dune {
     const Dune::CachedLocalBasis<DuneBasis>& basis_;
     CoeffContainer coeffs;
     std::shared_ptr<const Geometry> geometry_;
-//    const decltype(Dune::viewAsEigenMatrixFixedDyn(coeffs)) coeffsAsMat;
+    //    const decltype(Dune::viewAsEigenMatrixFixedDyn(coeffs)) coeffsAsMat;
   };
 
-  template <typename DuneBasis, typename CoeffContainer,typename Geometry,std::size_t ID>
+  template <typename DuneBasis, typename CoeffContainer, typename Geometry, std::size_t ID>
   struct LocalFunctionTraits<StandardLocalFunction<DuneBasis, CoeffContainer, Geometry, ID>> {
     /** \brief Type used for coordinates */
     using ctype = typename CoeffContainer::value_type::ctype;

@@ -25,8 +25,7 @@
 namespace Dune {
 
   /*  Rebinds the underlying local function coeff coordinate type to a new type, if the ids have a match
-   * For binaryExpr
-   * */
+   * For binaryExpr */
   template <template <typename, typename> class Op, typename E1, typename E2, typename OtherType, size_t ID>
   auto rebind(const std::remove_cvref_t<E1>& u, const std::remove_cvref_t<E2>& v,
               Dune::index_constant<ID>&& id = Dune::index_constant<0>()) {
@@ -37,8 +36,7 @@ namespace Dune {
   }
 
   /*  Rebinds the underlying local function coeff coordinate type to a new type, if the ids have a match
-   * For unaryExpr
-   * */
+   * For unaryExpr */
   template <template <typename, typename...> class Op, typename E1, typename OtherType, size_t ID, typename... Args>
   auto rebind(const std::remove_cvref_t<E1>& u, Dune::index_constant<ID>&& id = Dune::index_constant<0>()) {
     return Op<decltype(u.rebindClone(OtherType(), std::forward<Dune::index_constant<ID>>(id))), Args...>(

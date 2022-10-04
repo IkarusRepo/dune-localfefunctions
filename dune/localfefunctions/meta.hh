@@ -18,12 +18,12 @@
  */
 
 #pragma once
+#include "helper.hh"
+
 #include <cstddef>
 
 #include <dune/istl/multitypeblockvector.hh>
 #include <dune/typetree/typetree.hh>
-
-#include "helper.hh"
 namespace Dune {
 
   template <typename... Args_>
@@ -188,7 +188,6 @@ namespace Dune {
     concept HasOneSpatial = HasOneSpatialSingle<WrtType> or HasOneSpatialAll<WrtType>;
 
   }  // namespace DerivativeDirections
-
 
   On<DerivativeDirections::GridElement> on(DerivativeDirections::GridElement);
   On<DerivativeDirections::ReferenceElement> on(DerivativeDirections::ReferenceElement);
