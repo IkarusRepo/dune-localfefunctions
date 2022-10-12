@@ -1070,7 +1070,7 @@ namespace Dune {
 
   Dune::DerivativeDirections::ZeroMatrix transpose(const Dune::DerivativeDirections::ZeroMatrix&);
   Dune::DerivativeDirections::ZeroMatrix eval(const Dune::DerivativeDirections::ZeroMatrix&);
-  
+
 
   template <typename To, typename From>
   requires std::convertible_to<typename From::ctype, To>

@@ -20,10 +20,10 @@
 #pragma once
 
 #include "expressions/dotProductExpr.hh"
+#include "expressions/greenLagrangeStrains.hh"
 #include "expressions/linearStrainsExpr.hh"
 #include "expressions/negateExpr.hh"
 #include "expressions/normSquaredExpr.hh"
-//#include "expressions/gradExpr.hh"
 #include "expressions/scalarunaryexpressions/scalarLogExpr.hh"
 #include "expressions/scalarunaryexpressions/scalarPowExpr.hh"
 #include "expressions/scalarunaryexpressions/scalarSqrtExpr.hh"

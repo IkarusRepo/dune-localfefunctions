@@ -36,48 +36,11 @@ using Dune::TestSuite;
 #include <dune/localfefunctions/manifolds/unitVector.hh>
 
 #include <Eigen/Core>
-// #include <ikarus/utils/linearAlgebraHelper.hh>
-// #include <ikarus/utils/multiIndex.hh>
+
 #include <dune/common/transpose.hh>
 #include <dune/matrix-vector/transpose.hh>
 
-// struct dual2nddummy : public autodiff::HigherOrderDual<2, double> {
-//   using Base       = autodiff::HigherOrderDual<2, double>;
-//   using field_type = dual2nddummy ;
-// };
-//
-// namespace autodiff {
-//   namespace detail {
-//     template <>
-//     struct NumberTraits<dual2nddummy> : NumberTraits<PlainType<typename dual2nddummy::Base>> {};
-//   }  // namespace detail
-// }  // namespace autodiff
-//
-// template <typename Fun, typename... Vars, typename... Args, typename U, typename G, typename H>
-// void hessianDune(const Fun &f, const autodiff::Wrt<Vars...> &wrt, const autodiff::At<Args...> &at, U &u, G &g, H &h)
-// {
-//   static_assert(sizeof...(Vars) >= 1);
-//   static_assert(sizeof...(Args) >= 1);
-//
-//   size_t n = wrt_total_length(wrt);
-//
-//   g.resize(n);
-//   h.setSize(n, n);
-//
-//   auto wrtArg = std::get<0>(wrt.args);
-//
-//   for (int i = 0; i < wrtArg.size(); ++i) {
-//     for (int j = 0; j < wrtArg.size(); ++j) {
-//       if (j >= i) {  // this take advantage of the fact the Hessian matrix is symmetric
-//         u       = eval(f, at,
-//                        autodiff::detail::wrt(
-//                      wrtArg[i], wrtArg[j]));  // evaluate u with xi and xj seeded to produce u0, du/dxi, d2u/dxidxj
-//         g[i]    = derivative<1>(u);                 // get du/dxi from u
-//         h[i][j] = h[j][i] = derivative<2>(u);       // get d2u/dxidxj from u
-//       }
-//     }
-//   }
-// }
+
 
 template <typename LF>
 TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
@@ -452,12 +415,13 @@ auto localFunctionTestConstructor(const Dune::GeometryType &geometryType, size_t
   const auto &fe      = feCache.get(geometryType);
   auto localBasis     = Dune::CachedLocalBasis(fe.localBasis());
   const size_t nNodes = fe.size();
-  Dune::BlockVector<Manifold> testNodalPoints1;
+  Dune::BlockVector<Manifold> testNodalPoints1,testNodalPoints2;
   const int nNodalTestPoints = std::max(nNodalTestPointsI, nNodes);
   Dune::ValueFactory<Manifold>::construct(testNodalPoints1, nNodalTestPoints);
+  Dune::ValueFactory<Manifold>::construct(testNodalPoints2, nNodalTestPoints);
 
-  Dune::BlockVector<Manifold2> testNodalPoints2;
-  Dune::ValueFactory<Manifold2>::construct(testNodalPoints2, nNodalTestPoints);
+  Dune::BlockVector<Manifold2> testNodalPoints3;
+  Dune::ValueFactory<Manifold2>::construct(testNodalPoints3, nNodalTestPoints);
 
   Dune::BlockVector<Manifold> vBlockedLocal(nNodes);
   Dune::BlockVector<Manifold> vBlockedLocal2(nNodes);
@@ -477,8 +441,8 @@ auto localFunctionTestConstructor(const Dune::GeometryType &geometryType, size_t
 
   for (size_t j = 0; j < fe.size(); ++j) {
     vBlockedLocal[j]  = testNodalPoints1[j];
-    vBlockedLocal2[j] = testNodalPoints1[j];
-    vBlockedLocal3[j] = testNodalPoints2[j];
+    vBlockedLocal2[j] = testNodalPoints2[j];
+    vBlockedLocal3[j] = testNodalPoints3[j];
   }
 
   auto f = Dune::StandardLocalFunction(localBasis, vBlockedLocal, geometry);
@@ -521,6 +485,9 @@ auto localFunctionTestConstructor(const Dune::GeometryType &geometryType, size_t
     t.subTest(testLocalFunction(eps));
     static_assert(eps.order() == linear);
   }
+
+  auto membraneS = greenLagrangeStrains(f, g);
+  t.subTest(testLocalFunction(membraneS));
 
   auto k = -dot(f + f, 3.0 * (g / 5.0) * 5.0);
   t.subTest(testLocalFunction(k));
