@@ -341,7 +341,7 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
             transposeEvaluated(BLAi)
                 * blockToDune<coeffValueSize, coeffValueSize>(hessianWRTCoeffs, i * coeffValueSize, j * coeffValueSize)
                 * BLAj
-            + (i == j) * coeffs[i].weingartenMap(segmentToDune<coeffValueSize>(gradienWRTCoeffs, i * coeffValueSize)));
+            + (i == j) * coeffs[i].weingarten(segmentToDune<coeffValueSize>(gradienWRTCoeffs, i * coeffValueSize)));
 
         const bool passed = isApproxSame(jacobianWRTCoeffsTwoTimes, jacobianWRTCoeffsTwoTimesExpected, tol);
         t.check(passed, "Test second derivatives wrt coeffs" + std::string((i == j) ? " for i==j " : " for i!=j"));
@@ -351,7 +351,7 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
                     << jacobianWRTCoeffsTwoTimesExpected << "\n Diff: \n"
                     << jacobianWRTCoeffsTwoTimes - jacobianWRTCoeffsTwoTimesExpected << "\n Weingarten part: \n"
                     << (i == j)
-                           * coeffs[i].weingartenMap(
+                           * coeffs[i].weingarten(
                                segmentToDune<coeffValueSize>(gradienWRTCoeffs, i * coeffValueSize))
                     << std::endl;
         }
@@ -368,7 +368,7 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
                                                                              i * coeffValueSize, j * coeffValueSize)
                                * BLAj
                            + (i == j)
-                                 * coeffs[j].weingartenMap(
+                                 * coeffs[j].weingarten(
                                      segmentToDune<coeffValueSize>(gradienWRTCoeffsSpatialAll, i * coeffValueSize)));
 
           /// if the order of the function value is less then quadratic then this should yield a vanishing derivative
@@ -402,7 +402,7 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
                                                                                i * coeffValueSize, j * coeffValueSize)
                                  * BLAj
                              + (i == j)
-                                   * coeffs[j].weingartenMap(segmentToDune<coeffValueSize>(
+                                   * coeffs[j].weingarten(segmentToDune<coeffValueSize>(
                                        gradientWRTCoeffsTwoTimesSingleSpatial[d], i * coeffValueSize)));
             const bool passed = isApproxSame(jacobianWRTCoeffsTwoTimesSingleSpatial,
                                              jacobianWRTCoeffsTwoTimesSingleSpatialExpected, tol);

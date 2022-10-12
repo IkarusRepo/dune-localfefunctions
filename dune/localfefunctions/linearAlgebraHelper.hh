@@ -20,7 +20,7 @@
  */
 
 #pragma once
-#if ENABLE_TESTING
+#ifdef DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING
 #  include <autodiff/forward/dual/dual.hpp>
 #endif
 #include <iosfwd>
@@ -43,7 +43,7 @@
 
 namespace Dune {
 
-#if ENABLE_TESTING
+#ifdef DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING
   /** \brief  eval overload for autodiff scalars */
   template <typename T>
   requires autodiff::detail::isDual<T> || autodiff::detail::isExpr<T> || autodiff::detail::isArithmetic<T>
@@ -1070,32 +1070,19 @@ namespace Dune {
 
   Dune::DerivativeDirections::ZeroMatrix transpose(const Dune::DerivativeDirections::ZeroMatrix&);
   Dune::DerivativeDirections::ZeroMatrix eval(const Dune::DerivativeDirections::ZeroMatrix&);
-
-  template <typename Derived>
-  auto transpose(const Eigen::EigenBase<Derived>& A) {
-    if constexpr (requires {
-                    A.derived().transpose();
-                  })  // workaround needed since Dune::DiagonalMatrix has no transpose function
-      return A.derived().transpose();
-    else if constexpr (Dune::Std::IsSpecializationTypeAndNonTypes<Dune::DiagonalMatrix, Derived>::value
-                       or Std::isSpecialization<Eigen::DiagonalWrapper, Derived>::value)
-      return A.derived();
-    else
-      static_assert((requires { A.derived().transpose(); })
-                    or Dune::Std::IsSpecializationTypeAndNonTypes<Dune::DiagonalMatrix, Derived>::value
-                    or Std::isSpecialization<Eigen::DiagonalWrapper, Derived>::value);
-  }
+  
 
   template <typename To, typename From>
   requires std::convertible_to<typename From::ctype, To>
   auto convertUnderlying(const Dune::BlockVector<From>& from) {
-    Dune::BlockVector<typename From::template Rebind<To>::other> to;
+    Dune::BlockVector<typename From::template rebind<To>::other> to;
     to.resize(from.size());
     for (std::size_t i = 0; i < to.size(); ++i)
       to[i] = from[i];
 
     return to;
   }
+
 
   /* Enables the += operator for std::array if the underlying objects are addable  */
   template <typename Type, typename Type2, std::size_t d>

@@ -1,6 +1,6 @@
-#install headers
-install(FILES
-        binaryExpr.hh
+# install headers
+install(
+  FILES binaryExpr.hh
         constant.hh
         dotProductExpr.hh
         exprChecks.hh
@@ -10,7 +10,6 @@ install(FILES
         scaleExpr.hh
         sumExpr.hh
         unaryExpr.hh
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/localfefunctions/expressions)
-
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/localfefunctions/expressions)
 
 add_subdirectory(scalarunaryexpressions)

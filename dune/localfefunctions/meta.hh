@@ -145,8 +145,8 @@ namespace Dune {
     consteval ConstExprCounter countDerivativesType() {
       ConstExprCounter counter{};
       using Tuple               = typename WrtType::Args;
-      counter.singleCoeffDerivs = Dune::Std::countTypeSpecialization<SingleCoeff, Tuple>();
-      counter.twoCoeffDerivs    = Dune::Std::countTypeSpecialization<TwoCoeff, Tuple>();
+      counter.singleCoeffDerivs = Dune::Std::countTypeSpecialization_v<Tuple, SingleCoeff>;
+      counter.twoCoeffDerivs    = Dune::Std::countTypeSpecialization_v<Tuple, TwoCoeff>;
       counter.spatialDerivs     = Dune::Std::countType<Tuple, SpatialPartial>();
       counter.spatialAllCounter = Dune::Std::countType<Tuple, SpatialAll>();
       return counter;

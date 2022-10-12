@@ -106,9 +106,9 @@ namespace Dune {
     const Dune::CachedLocalBasis<DuneBasis>& basis() const { return basis_; }
 
     template <typename OtherType>
-    struct Rebind {
+    struct rebind {
       using other = ProjectionBasedLocalFunction<
-          DuneBasis, typename Std::Rebind<CoeffContainer, typename Manifold::template Rebind<OtherType>::other>::other,
+          DuneBasis, typename Std::Rebind<CoeffContainer, typename Manifold::template rebind<OtherType>::other>::other,
           Geometry, ID>;
     };
 

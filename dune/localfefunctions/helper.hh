@@ -253,14 +253,14 @@ namespace Dune {
           < std::tuple_size_v<std::remove_cvref_t<Tuple>>);
     }
 
-    template <template <auto...> class Type, typename Tuple>
+    template < typename Tuple,template <auto...> class Type>
     constexpr bool countTypeSpecialization() {
       return count_if(
           Tuple(), []<typename T>(T &&value) { return IsSpecializationNonTypes<Type, std::remove_cvref_t<T>>::value; });
     }
 
-    template <template <auto...> class Type, typename Tuple>
-    static constexpr bool countTypeSpecialization_v = countTypeSpecialization<Type, Tuple>();
+    template <typename Tuple,template <auto...> class Type>
+    static constexpr bool countTypeSpecialization_v = countTypeSpecialization< Tuple,Type>();
 
     //  template<int N, class Tuple>
     //  constexpr auto makeTupleSubset(Tuple &&t) {

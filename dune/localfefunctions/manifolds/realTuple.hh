@@ -21,6 +21,7 @@
 #include <concepts>
 
 #include <Eigen/Core>
+#include <dune/localfefunctions/linearAlgebraHelper.hh>
 
 namespace Dune {
   /**
@@ -48,11 +49,12 @@ namespace Dune {
     /** \brief VectorType of the values of the correction living in the tangentspace */
     using CorrectionType = Dune::FieldVector<ctype, correctionSize>;
 
+    /** \brief VectorType of the values of the correction living in the tangentspace in the embedding space*/
+    using EmbeddedCorrectionType = CoordinateType;
+
     RealTuple() = default;
-    //    RealTuple() = default;
 
     template <typename ctOther, int dOther>
-    //    requires std::convertible_to<ctOther, ctype>
     friend class RealTuple;
 
     /** \brief Copy assignement if the other type has different underlying type*/
@@ -63,8 +65,13 @@ namespace Dune {
       return *this;
     }
 
+RealTuple<ctype, d>&operator=(const CoordinateType &other) {
+      var = other;
+      return *this;
+    }
+
     template <typename OtherType>
-    struct Rebind {
+    struct rebind {
       using other = RealTuple<OtherType, valueSize>;
     };
 
@@ -92,6 +99,9 @@ namespace Dune {
     /** \brief Update the manifold by an correction vector of size correctionSize */
     void update(const CorrectionType &correction) noexcept { var += correction; }
 
+    /** \brief Update the manifold by an correction vector of size correctionSize */
+    CoordinateType projectOntoNormalSpace(const CoordinateType &val) const noexcept { return val; }
+
     /** \brief Access to data by const reference */
     const ctype &operator[](int i) const { return var[i]; }
 
@@ -103,11 +113,11 @@ namespace Dune {
       return *this;
     }
 
-    Dune::FieldMatrix<ctype, valueSize, valueSize> weingartenMapEmbedded(const CoordinateType &p) const {
+    Dune::FieldMatrix<ctype, valueSize, valueSize> weingartenEmbedded(const CoordinateType &p) const {
       return createZeroMatrix<ctype, valueSize, valueSize>();
     }
 
-    Dune::FieldMatrix<ctype, correctionSize, correctionSize> weingartenMap(const CoordinateType &p) const {
+    Dune::FieldMatrix<ctype, correctionSize, correctionSize> weingarten(const CoordinateType &p) const {
       return createZeroMatrix<ctype, valueSize, valueSize>();
     }
 

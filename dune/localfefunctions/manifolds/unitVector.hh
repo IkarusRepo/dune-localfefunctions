@@ -49,6 +49,9 @@ namespace Dune {
     /** \brief VectorType of the values of the correction living in the tangentspace */
     using CorrectionType = typename Dune::FieldVector<ctype, correctionSize>;
 
+    /** \brief VectorType of the values of the correction living in the tangentspace in the embedding space*/
+    using EmbeddedCorrectionType = CoordinateType;
+
     UnitVector() = default;
 
     /** \brief Copy-Constructor from the values in terms of coordinateType */
@@ -70,6 +73,9 @@ namespace Dune {
     /** \brief Access to data by const reference */
     ctype &operator[](int i) { return var[i]; }
 
+    /** \brief Update the manifold by an correction vector of size correctionSize */
+    CoordinateType projectOntoNormalSpace(const CoordinateType &val) const noexcept { return (var*val)*var; }
+
     /** \brief size */
     [[nodiscard]] size_t size() const { return var.size(); }
 
@@ -80,7 +86,7 @@ namespace Dune {
     auto end() const { return var.end(); }
 
     template <typename OtherType>
-    struct Rebind {
+    struct rebind {
       using other = UnitVector<OtherType, valueSize>;
     };
 
@@ -105,11 +111,11 @@ namespace Dune {
       return result;
     }
 
-    Dune::ScaledIdentityMatrix<ctype, valueSize> weingartenMapEmbedded(const CoordinateType &p) const {
+    Dune::ScaledIdentityMatrix<ctype, valueSize> weingartenEmbedded(const CoordinateType &p) const {
       return -createScaledIdentityMatrix<Dune::FieldMatrix<ctype, valueSize, valueSize>>(inner(var, p));
     }
 
-    Dune::ScaledIdentityMatrix<ctype, correctionSize> weingartenMap(const CoordinateType &p) const {
+    Dune::ScaledIdentityMatrix<ctype, correctionSize> weingarten(const CoordinateType &p) const {
       return -createScaledIdentityMatrix<Dune::FieldMatrix<ctype, correctionSize, correctionSize>>(inner(var, p));
     }
 
@@ -192,6 +198,12 @@ namespace Dune {
     requires std::convertible_to<ctype_, ctype> UnitVector<ctype, d>
     &operator=(const UnitVector<ctype_, d> &other) {
       var = other.var;
+      return *this;
+    }
+
+    UnitVector<ctype, d> &operator=(const CoordinateType &other) {
+      var = other;
+      var /= two_norm(other);
       return *this;
     }
 

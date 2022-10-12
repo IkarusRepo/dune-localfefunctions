@@ -99,9 +99,9 @@ namespace Dune {
     auto& geometry() const { return geometry_; }
 
     template <typename OtherType>
-    struct Rebind {
+    struct rebind {
       using other = StandardLocalFunction<
-          DuneBasis, typename Std::Rebind<CoeffContainer, typename Manifold::template Rebind<OtherType>::other>::other,
+          DuneBasis, typename Std::Rebind<CoeffContainer, typename Manifold::template rebind<OtherType>::other>::other,
           Geometry, ID>;
     };
 
