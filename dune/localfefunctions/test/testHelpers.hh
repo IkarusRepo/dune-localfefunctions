@@ -100,3 +100,17 @@ bool isApproxSame(const Dune::ScaledIdentityMatrix<field_type, rows>& a,
 
   return true;
 }
+
+template <typename field_type, int rows>
+bool isApproxSame(const Dune::ScaledIdentityMatrix<field_type, rows>& a,
+                  const Dune::FieldMatrix<field_type, rows, rows>& b, double prec) {
+  for (int i = 0; i < rows; ++i)
+    for (int j = 0; j < rows; ++j) {
+      if (i == j) {
+        if (not Dune::FloatCmp::eq(a.diagonal(i), b[i][i], prec))
+          if (std::abs(a.diagonal(i) - b[i][i]) > prec) return false;  // Check diagonal of FieldMatrix
+      } else if (not Dune::FloatCmp::eq(b[i][j], 0.0, prec))
+        return false;  // Check off-diagonal of FieldMatrix
+    }
+  return true;
+}

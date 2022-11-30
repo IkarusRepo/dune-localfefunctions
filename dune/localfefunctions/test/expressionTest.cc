@@ -1,19 +1,18 @@
 
 #include <config.h>
-#define DUNE_CHECK_BOUNDS
+
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/common/test/testsuite.hh>
 using Dune::TestSuite;
 
 #include "factories.hh"
+#include "testFacilities.hh"
 #include "testHelpers.hh"
 
 #include <array>
 #include <autodiff/forward/dual.hpp>
 #include <autodiff/forward/dual/eigen.hpp>
 #include <complex>
-#include <ikarus/linearAlgebra/nonLinearOperator.hh>
-#include <ikarus/utils/functionSanityChecks.hh>
 #include <vector>
 
 #include <dune/common/classname.hh>
@@ -21,6 +20,7 @@ using Dune::TestSuite;
 #include <dune/common/fvector.hh>
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/common/test/testsuite.hh>
+#include <dune/common/transpose.hh>
 #include <dune/functions/functionspacebases/basistags.hh>
 #include <dune/functions/functionspacebases/lagrangebasis.hh>
 #include <dune/functions/functionspacebases/powerbasis.hh>
@@ -34,13 +34,9 @@ using Dune::TestSuite;
 #include <dune/localfefunctions/localFunctionName.hh>
 #include <dune/localfefunctions/manifolds/realTuple.hh>
 #include <dune/localfefunctions/manifolds/unitVector.hh>
-
-#include <Eigen/Core>
-
-#include <dune/common/transpose.hh>
 #include <dune/matrix-vector/transpose.hh>
 
-
+#include <Eigen/Core>
 
 template <typename LF>
 TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
@@ -51,6 +47,7 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
   using namespace Dune::DerivativeDirections;
   using namespace autodiff;
   using namespace Dune;
+  using namespace Testing;
   const auto &coeffs     = lf.node().coefficientsRef();
   const size_t coeffSize = coeffs.size();
   auto geometry          = lf.node().geometry();
@@ -107,12 +104,9 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
 
       Eigen::Vector<double, gridDim> ipOffset = (Eigen::Vector<double, gridDim>::Random()).normalized() / 16;
       try {
-        auto nonLinOpSpatialAll
-            = Ikarus::NonLinearOperator(linearAlgebraFunctions(func, spatialDerivAll), parameter(ipOffset));
+        auto nonLinOpSpatialAll = NonLinearOperator(func, spatialDerivAll, ipOffset);
 
-        t.check((checkJacobian<decltype(nonLinOpSpatialAll), Eigen::Vector<double, gridDim>>(
-                    nonLinOpSpatialAll, {.draw = false, .writeSlopeStatementIfFailed = true, .tolerance = 1e-2})),
-                "Check spatial derivative in all directions");
+        t.check(checkJacobian(nonLinOpSpatialAll, 1e-2), "Check spatial derivative in all directions");
       } catch (const Dune::NotImplemented &exception) {
         std::cout
             << "SpatialDerivative in all directions not tested, since it is not implemented by the local function "
@@ -137,11 +131,8 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
         };
 
         try {
-          auto nonLinOpSpatialSingle = Ikarus::NonLinearOperator(linearAlgebraFunctions(funcSingle, derivDerivSingleI),
-                                                                 parameter(ipOffsetSingle));
-          t.check((checkJacobian<decltype(nonLinOpSpatialSingle), Eigen::Vector<double, 1>>(
-                      nonLinOpSpatialSingle, {.draw = false, .writeSlopeStatementIfFailed = true, .tolerance = 1e-2})),
-                  "Check single spatial derivative");
+          auto nonLinOpSpatialSingle = NonLinearOperator(funcSingle, derivDerivSingleI, ipOffsetSingle);
+          t.check(checkJacobian(nonLinOpSpatialSingle, 1e-2), "Check single spatial derivative");
         } catch (const Dune::NotImplemented &exception) {
           std::cout << "Single SpatialDerivative not tested, since it is not implemented by the local function "
                            + ("(" + localFunctionName + ")")
@@ -226,7 +217,11 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
       static_assert(jacobianWRTCoeffs.cols == 1);
       auto jacobianWRTCoeffsAD
           = transposeEvaluated(BLAi) * segmentToDune<coeffValueSize>(gradienWRTCoeffs, i * coeffValueSize);
-      t.require(isApproxSame(jacobianWRTCoeffs, jacobianWRTCoeffsAD, tol), "Test first derivative wrt coeff");
+      t.require(isApproxSame(jacobianWRTCoeffs, jacobianWRTCoeffsAD, tol), "Test first derivative wrt coeff")
+          << "jacobianWRTCoeffs:\n"
+          << jacobianWRTCoeffs << "\n jacobianWRTCoeffsAD: \n"
+          << jacobianWRTCoeffsAD << "\nwithout alongVec:\n"
+          << jacobianWRTCoeffslf;
 
       if (spatialSingleImplemented)
         for (int d = 0; d < gridDim; ++d) {
@@ -314,9 +309,9 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
                     << jacobianWRTCoeffsTwoTimesExpected << "\n Diff: \n"
                     << jacobianWRTCoeffsTwoTimes - jacobianWRTCoeffsTwoTimesExpected << "\n Weingarten part: \n"
                     << (i == j)
-                           * coeffs[i].weingarten(
-                               segmentToDune<coeffValueSize>(gradienWRTCoeffs, i * coeffValueSize))
+                           * coeffs[i].weingarten(segmentToDune<coeffValueSize>(gradienWRTCoeffs, i * coeffValueSize))
                     << std::endl;
+          std::cout << "\n Total Hessian:\n" << hessianWRTCoeffs << std::endl;
         }
 
         if (spatialAllImplemented) {
@@ -415,7 +410,7 @@ auto localFunctionTestConstructor(const Dune::GeometryType &geometryType, size_t
   const auto &fe      = feCache.get(geometryType);
   auto localBasis     = Dune::CachedLocalBasis(fe.localBasis());
   const size_t nNodes = fe.size();
-  Dune::BlockVector<Manifold> testNodalPoints1,testNodalPoints2;
+  Dune::BlockVector<Manifold> testNodalPoints1, testNodalPoints2;
   const int nNodalTestPoints = std::max(nNodalTestPointsI, nNodes);
   Dune::ValueFactory<Manifold>::construct(testNodalPoints1, nNodalTestPoints);
   Dune::ValueFactory<Manifold>::construct(testNodalPoints2, nNodalTestPoints);
@@ -484,10 +479,12 @@ auto localFunctionTestConstructor(const Dune::GeometryType &geometryType, size_t
     auto eps = linearStrains(f);
     t.subTest(testLocalFunction(eps));
     static_assert(eps.order() == linear);
-  }
 
-  auto membraneS = greenLagrangeStrains(f, g);
-  t.subTest(testLocalFunction(membraneS));
+    auto membraneS = greenLagrangeStrains(f);
+    t.subTest(testLocalFunction(membraneS));
+
+    static_assert(membraneS.order() == quadratic);
+  }
 
   auto k = -dot(f + f, 3.0 * (g / 5.0) * 5.0);
   t.subTest(testLocalFunction(k));
@@ -521,20 +518,6 @@ auto localFunctionTestConstructor(const Dune::GeometryType &geometryType, size_t
     static_assert(gP.order() == nonLinear);
     t.subTest(testLocalFunction(gP));
   }
-
-  //  {
-  //    auto localBasisNotBound = Ikarus::LocalBasis(fe.localBasis());
-  //    auto fNotBound          = Ikarus::StandardLocalFunction(localBasisNotBound, vBlockedLocal);
-  //    auto h1                 = f + fNotBound;
-  //    //    (h1.viewOverIntegrationPoints(), "The basis of the leaf nodes are not in the same state.");
-  //
-  //    const auto &ruleHigher                 = Dune::QuadratureRules<double, domainDim>::rule(fe.type(), 7);
-  //    auto localBasisBoundButToDifferentRule = Ikarus::LocalBasis(fe.localBasis());
-  //    localBasisBoundButToDifferentRule.bind(ruleHigher, bindDerivatives(0, 1));
-  //    auto fBoundButHigher = Ikarus::StandardLocalFunction(localBasisBoundButToDifferentRule, vBlockedLocal);
-  ////    auto h2              = f + fBoundButHigher;
-  //    //    (h2.viewOverIntegrationPoints(), "The basis of the leaf nodes are not in the same state.");
-  //  }
 
   using namespace Dune::DerivativeDirections;
 
@@ -625,13 +608,13 @@ auto localFunctionTestConstructor(const Dune::GeometryType &geometryType, size_t
 using namespace Dune::GeometryTypes;
 auto testExpressionsOnLine() {
   TestSuite t("testExpressionsOnLine");
-  //    std::cout << "line with linear ansatz functions and 1d local function" << std::endl;
-  //    localFunctionTestConstructor<1, 1, 1>(line);
+  std::cout << "line with linear ansatz functions and 1d local function" << std::endl;
+  localFunctionTestConstructor<1, 1, 1>(line);
   //  localFunctionTestConstructor<1, 2, 1>(line);  // line with linear ansatz functions and 2d lf
   //  std::cout << "line with linear ansatz functions and 3d local function" << std::endl;
   //  localFunctionTestConstructor<1, 3, 1>(line);
-  //  std::cout << "line with quadratic ansatz functions and 1d local function" << std::endl;
-  //  localFunctionTestConstructor<1, 1, 2>(line);
+  //    std::cout << "line with quadratic ansatz functions and 1d local function" << std::endl;
+  //    localFunctionTestConstructor<1, 1, 2>(line);
   //  localFunctionTestConstructor<1, 2, 2>(line);  // line with quadratic ansatz functions and 2d lf
   std::cout << "line with quadratic ansatz functions and 3d local function" << std::endl;
   t.subTest(localFunctionTestConstructor<1, 3, 2>(line));

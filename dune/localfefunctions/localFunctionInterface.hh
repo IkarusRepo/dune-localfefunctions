@@ -102,6 +102,10 @@ namespace Dune {
     void bind(IntegrationRule&& p_rule, std::set<int>&& ints) {
       impl().basis.bind(std::forward<IntegrationRule>(p_rule), std::forward<std::set<int>>(ints));
     }
+    template <std::size_t I = 0>
+    auto& geometry() {
+      return collectLeafNodeLocalFunctions(impl()).node(Dune::index_constant<I>()).geometry();
+    }
 
   protected:
     /* Default implementation returns Zero expression if they are not overloaded */

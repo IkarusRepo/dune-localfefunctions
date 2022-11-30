@@ -1071,7 +1071,6 @@ namespace Dune {
   Dune::DerivativeDirections::ZeroMatrix transpose(const Dune::DerivativeDirections::ZeroMatrix&);
   Dune::DerivativeDirections::ZeroMatrix eval(const Dune::DerivativeDirections::ZeroMatrix&);
 
-
   template <typename To, typename From>
   requires std::convertible_to<typename From::ctype, To>
   auto convertUnderlying(const Dune::BlockVector<From>& from) {
@@ -1082,7 +1081,6 @@ namespace Dune {
 
     return to;
   }
-
 
   /* Enables the += operator for std::array if the underlying objects are addable  */
   template <typename Type, typename Type2, std::size_t d>

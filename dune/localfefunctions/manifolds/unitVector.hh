@@ -74,7 +74,7 @@ namespace Dune {
     ctype &operator[](int i) { return var[i]; }
 
     /** \brief Update the manifold by an correction vector of size correctionSize */
-    CoordinateType projectOntoNormalSpace(const CoordinateType &val) const noexcept { return (var*val)*var; }
+    CoordinateType projectOntoNormalSpace(const CoordinateType &val) const noexcept { return (var * val) * var; }
 
     /** \brief size */
     [[nodiscard]] size_t size() const { return var.size(); }

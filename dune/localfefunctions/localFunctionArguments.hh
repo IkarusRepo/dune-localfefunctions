@@ -168,15 +168,14 @@ namespace Dune {
                                                                           a.alongArgs, a.transformWithArgs);
   }
 
-  template <typename... WrtArgs, typename... OtherWrtArgs, typename TransformArgs, typename... AlongArgs,
+  template <typename... WrtArgs, typename TransformArgs, typename... AlongArgs,
             typename DomainTypeOrIntegrationPointIndex>
   auto extractWrtArgsTwoCoeffsToSingleCoeff(
       const LocalFunctionEvaluationArgs<Wrt<WrtArgs...>, Along<AlongArgs...>, On<TransformArgs>,
                                         DomainTypeOrIntegrationPointIndex>& a) {
     using namespace Dune::Indices;
-    const auto coeffArg = Std::getSpecialization<DerivativeDirections::TwoCoeff>(a.wrtArgs.args);
-    auto wrtArg0        = wrt(DerivativeDirections::coeff(a.coeffsIndices[_0][_0], a.coeffsIndices[_0][1]));
-    auto wrtArg1        = wrt(DerivativeDirections::coeff(a.coeffsIndices[_1][_0], a.coeffsIndices[_1][1]));
+    auto wrtArg0 = wrt(DerivativeDirections::coeff(a.coeffsIndices[_0][_0], a.coeffsIndices[_0][1]));
+    auto wrtArg1 = wrt(DerivativeDirections::coeff(a.coeffsIndices[_1][_0], a.coeffsIndices[_1][1]));
 
     return std::make_pair(
         LocalFunctionEvaluationArgs(a.integrationPointOrIndex, wrtArg0, a.alongArgs, a.transformWithArgs),
@@ -184,7 +183,7 @@ namespace Dune {
   }
 
   // This function returns the first two args and returns the spatial derivative argument always as first
-  template <typename... WrtArgs, typename... OtherWrtArgs, typename TransformArgs, typename... AlongArgs,
+  template <typename... WrtArgs, typename TransformArgs, typename... AlongArgs,
             typename DomainTypeOrIntegrationPointIndex>
   auto extractFirstTwoArgs(const LocalFunctionEvaluationArgs<Wrt<WrtArgs...>, Along<AlongArgs...>, On<TransformArgs>,
                                                              DomainTypeOrIntegrationPointIndex>& a) {
@@ -231,8 +230,10 @@ namespace Dune {
     using namespace Dune::Indices;
     if constexpr (newArgs.hasSingleCoeff)
       std::get<1>(newArgs.coeffsIndices[_0]._data) = std::get<1>(args.coeffsIndices[_0]._data);
-    if constexpr (newArgs.hasTwoCoeff)
+    if constexpr (newArgs.hasTwoCoeff) {
+      std::get<1>(newArgs.coeffsIndices[_0]._data) = std::get<1>(args.coeffsIndices[_0]._data);
       std::get<1>(newArgs.coeffsIndices[_1]._data) = std::get<1>(args.coeffsIndices[_1]._data);
+    }
     newArgs.spatialPartialIndices = args.spatialPartialIndices;
 
     return newArgs;

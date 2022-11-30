@@ -20,8 +20,9 @@
 #pragma once
 #include <concepts>
 
-#include <Eigen/Core>
 #include <dune/localfefunctions/linearAlgebraHelper.hh>
+
+#include <Eigen/Core>
 
 namespace Dune {
   /**
@@ -65,7 +66,7 @@ namespace Dune {
       return *this;
     }
 
-RealTuple<ctype, d>&operator=(const CoordinateType &other) {
+    RealTuple<ctype, d> &operator=(const CoordinateType &other) {
       var = other;
       return *this;
     }
