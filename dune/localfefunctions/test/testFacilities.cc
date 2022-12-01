@@ -47,7 +47,7 @@ namespace Testing {
 
   double getSlope(const std::function<double(double)>& ftfunc, int slopeOfReference) {
     std::vector<double> t;
-    std::ranges::transform(Eigen::VectorXd::LinSpaced(100,-8, -2), std::back_inserter(t),
+    std::ranges::transform(Eigen::VectorXd::LinSpaced(100, -8, -2), std::back_inserter(t),
                            [](double x) { return pow(10, x); });
     Eigen::Map<Eigen::VectorXd> data(t.data(), t.size());
     std::vector<double> ftevaluated;
@@ -65,4 +65,4 @@ namespace Testing {
                                                        // this case we return infinity
     return poly.coefficients()[1];
   }
-}
+}  // namespace Testing

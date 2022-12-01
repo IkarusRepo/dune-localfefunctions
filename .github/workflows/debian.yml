@@ -4,10 +4,7 @@
 name: Debian
 on:
   push:
-    paths-ignore:
-      - 'docs/**'
-      - '.github/workflows/ghpages.yml'
-      - '.github/workflows/createDockerContainer.yml'
+
 jobs:
   Build:
     name: ${{ matrix.config.name }}
@@ -56,7 +53,7 @@ jobs:
         run: |
           mkdir cmake-build-${{ matrix.config.config }}
           cd cmake-build-${{ matrix.config.config }}
-          cmake ../  -DCMAKE_BUILD_TYPE=${{ matrix.config.config }} -G "Unix Makefiles" -DCMAKE_C_COMPILER=${{ matrix.config.compilerC }} -DCMAKE_CXX_COMPILER=${{ matrix.config.compilerCxx }}
+          cmake ../  -DCMAKE_BUILD_TYPE=${{ matrix.config.config }} -G "Unix Makefiles" -DCMAKE_C_COMPILER=${{ matrix.config.compilerC }} -DCMAKE_CXX_COMPILER=${{ matrix.config.compilerCxx }} -DDUNE_LOCALFEFUNCTIONS_ENABLE_TESTING=1
           cmake --build . --parallel 2 --target build_tests
       - name: Tests
         working-directory: ./repo/cmake-build-${{ matrix.config.config }}
