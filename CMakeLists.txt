@@ -22,8 +22,7 @@ include(DuneMacros)
 
 # start a dune project with information from dune.module
 dune_project()
-# message("=========================") message(${sources})
-# message("=========================")
+
 dune_add_library(dune-localfefunctions)
 
 target_compile_features(dune-localfefunctions PRIVATE cxx_std_20)

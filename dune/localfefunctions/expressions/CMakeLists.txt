@@ -4,6 +4,9 @@ install(
         constant.hh
         dotProductExpr.hh
         exprChecks.hh
+        expressionHelper.hh
+        greenLagrangeStrains.hh
+        linearStrainsExpr.hh
         negateExpr.hh
         normSquaredExpr.hh
         rebind.hh
