@@ -144,7 +144,7 @@ namespace Dune {
     auto viewOverIntegrationPoints() const {  // FIXME dont construct this on the fly
       assert(Nbound && "You have to bind the basis first");
       assert(Nbound.value().size() == dNbound.value().size()
-             && "Number of intergration point evaluations does not match.");
+             && "Number of integration point evaluations does not match.");
       if (Nbound and dNbound) {
         auto res = std::views::iota(0UL, Nbound.value().size()) | std::views::transform([&](auto&& i_) {
                      return IntegrationPointsAndIndex({i_, rule.value()[i_]});

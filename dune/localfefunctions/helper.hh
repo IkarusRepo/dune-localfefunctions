@@ -31,7 +31,7 @@ namespace Dune {
 
   namespace Std {
 
-    // Forward delare functions
+    // Forward declare functions
     template <typename... Types>
     auto makeNestedTupleFlat(std::tuple<Types...> tup);
 
@@ -298,37 +298,6 @@ namespace Dune {
       else
         return Impl::makeNestedTupleFlatAndStoreReferencesImpl(std::forward<Tuple>(tup));
     }
-
-    /*
-     * Get index of type in tuple
-     * Usage:
-     * using  foo_t = std::tuple<int,double, float>;
-     *
-     * static_assert(Index<int,foo_t>::value==0);
-     * static_assert(Index<double,foo_t>::value==1);
-     * static_assert(Index<float,foo_t>::value==2);
-     * static_assert(Index<long double,foo_t>::value==3);
-     *
-     * >If the type is not found the returned indenx is the size of the tuple
-
-     */
-    //  template<class T, class Tuple>
-    //  struct Index;
-    //
-    //  template<class T>
-    //  struct Index<T, std::tuple<>> {
-    //    static const std::size_t value = 0;
-    //  };
-    //
-    //  template<class T, class... Types>
-    //  struct Index<T, std::tuple<T, Types...>> {
-    //    static constexpr std::size_t value = 0;
-    //  };
-    //
-    //  template<class T, class U, class... Types>
-    //  struct Index<T, std::tuple<U, Types...>> {
-    //    static const std::size_t value = 1 + Index<T, std::tuple<Types...>>::value;
-    //  };
 
     /*
      * Rebind the underlying type of containers

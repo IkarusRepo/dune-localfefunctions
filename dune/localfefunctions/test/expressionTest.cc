@@ -682,6 +682,6 @@ int main(int argc, char **argv) {
   t.subTest(testExpressionsOnHexahedron());
   auto stop     = high_resolution_clock::now();
   auto duration = duration_cast<milliseconds>(stop - start);
-  cout << "The test exceution took: " << duration.count() << endl;
+  cout << "The test execution took: " << duration.count() << endl;
   return t.exit();
 }
