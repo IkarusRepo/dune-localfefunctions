@@ -45,10 +45,10 @@ namespace Dune {
     static constexpr int correctionSize = d;
 
     /** \brief VectorType of the values of the manifold */
-    using CoordinateType = Dune::FieldVector<ctype, valueSize>;
+    using CoordinateType = DefaultLinearAlgebra::FixedSizedVector<ctype, valueSize>;
 
     /** \brief VectorType of the values of the correction living in the tangentspace */
-    using CorrectionType = Dune::FieldVector<ctype, correctionSize>;
+    using CorrectionType = DefaultLinearAlgebra::FixedSizedVector<ctype, correctionSize>;
 
     /** \brief VectorType of the values of the correction living in the tangentspace in the embedding space*/
     using EmbeddedCorrectionType = CoordinateType;
@@ -79,7 +79,7 @@ namespace Dune {
     /** \brief Compute an orthonormal basis of the tangent space of R^n.
      * This is simply the identity matrix  */
     auto orthonormalFrame() const {
-      return createScaledIdentityMatrix<Dune::FieldMatrix<ctype, valueSize, correctionSize>>();
+      return createScaledIdentityMatrix<ctype, valueSize, correctionSize>();
     }
 
     /** \brief Copy-Constructor from the values in terms of coordinateType */
@@ -114,11 +114,11 @@ namespace Dune {
       return *this;
     }
 
-    Dune::FieldMatrix<ctype, valueSize, valueSize> weingartenEmbedded(const CoordinateType &p) const {
+    auto weingartenEmbedded(const CoordinateType &p) const {
       return createZeroMatrix<ctype, valueSize, valueSize>();
     }
 
-    Dune::FieldMatrix<ctype, correctionSize, correctionSize> weingarten(const CoordinateType &p) const {
+    auto weingarten(const CoordinateType &p) const {
       return createZeroMatrix<ctype, valueSize, valueSize>();
     }
 

@@ -22,10 +22,11 @@
 #include <dune/localfefunctions/meta.hh>
 namespace Dune {
 
-  template <typename Type>
+  template <typename Type,typename LinAlg>
   requires std::is_arithmetic_v<Type>
-  class ConstantExpr : public LocalFunctionInterface<ConstantExpr<Type>> {
+  class ConstantExpr : public LocalFunctionInterface<ConstantExpr<Type,LinAlg>> {
   public:
+    using LinearAlgebra = LinAlg;
     explicit ConstantExpr(Type val_) : val{val_} {}
 
     const Type& value() const { return val; }
@@ -43,7 +44,7 @@ namespace Dune {
 
     template <typename OtherType>
     struct Rebind {
-      using other = ConstantExpr<OtherType>;
+      using other = ConstantExpr<OtherType,LinAlg>;
     };
 
     static constexpr bool isLeaf = true;
@@ -55,11 +56,11 @@ namespace Dune {
     Type val;
   };
 
-  template <typename Type>
-  struct LocalFunctionTraits<ConstantExpr<Type>> {
+  template <typename Type,typename LinAlg>
+  struct LocalFunctionTraits<ConstantExpr<Type,LinAlg>> {
     static constexpr int valueSize = 1;
     /** \brief Type for the points for evaluation, usually the integration points */
-    using DomainType = Dune::FieldVector<double, 0>;
+    using DomainType = typename LinAlg::template FixedSizedVector<double, 0>;
   };
 
 }  // namespace Dune

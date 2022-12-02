@@ -31,6 +31,7 @@ namespace Dune {
     static constexpr int valueSize = 1;
     static constexpr int gridDim   = Traits::gridDim;
     using ctype                    = typename Traits::ctype;
+    using LinearAlgebra = typename Base::E1Raw::LinearAlgebra;
 
     using E1Raw = std::remove_cvref_t<E1>;
 
@@ -39,7 +40,7 @@ namespace Dune {
 
     template <typename LFArgs>
     auto evaluateValueOfExpression(const LFArgs& lfArgs) const {
-      return Dune::FieldMatrix<ctype, 1, 1>(Func::value(evaluateFunctionImpl(this->m(), lfArgs)[0][0]));
+      return typename LinearAlgebra::FixedSizedMatrix<ctype, 1, 1>(Func::value(evaluateFunctionImpl(this->m(), lfArgs)[0][0]));
     }
 
     template <int DerivativeOrder, typename LFArgs>

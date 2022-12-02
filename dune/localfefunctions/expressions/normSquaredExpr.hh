@@ -31,6 +31,7 @@ namespace Dune {
     using Base = UnaryExpr<NormSquaredExpr, E1>;
     using Base::Base;
     using Traits = LocalFunctionTraits<NormSquaredExpr>;
+    using LinearAlgebra = typename Base::E1Raw::LinearAlgebra;
     /** \brief Type used for coordinates */
     using ctype                    = typename Traits::ctype;
     static constexpr int valueSize = 1;
@@ -42,7 +43,7 @@ namespace Dune {
     template <typename LFArgs>
     auto evaluateValueOfExpression(const LFArgs &lfArgs) const {
       const auto m = evaluateFunctionImpl(this->m(), lfArgs);
-      return Dune::FieldMatrix<ctype, 1, 1>(two_norm2(m));
+      return typename DefaultLinearAlgebra::template FixedSizedMatrix<ctype, 1, 1>(two_norm2(m));
     }
 
     template <int DerivativeOrder, typename LFArgs>
@@ -51,14 +52,14 @@ namespace Dune {
       if constexpr (DerivativeOrder == 1)  // d(squaredNorm(u))/dx = 2 * u_x * u
       {
         const auto u_x = evaluateDerivativeImpl(this->m(), lfArgs);
-        auto res       = leftMultiplyTranspose(u, u_x);
+        auto res       = leftMultiplyTranspose(u, u_x).eval();
         res *= 2;
         return res;
       } else if constexpr (DerivativeOrder == 2) {  // dd(squaredNorm(u))/(dxdy) =  2 *u_{x,y} * u + 2*u_x*u_y
         const auto &[u_x, u_y] = evaluateFirstOrderDerivativesImpl(this->m(), lfArgs);
         if constexpr (LFArgs::hasNoSpatial and LFArgs::hasTwoCoeff) {
           const auto alonguArgs = replaceAlong(lfArgs, along(u));
-          const auto u_xyAlongu = evaluateDerivativeImpl(this->m(), alonguArgs);
+          const auto u_xyAlongu = eval(evaluateDerivativeImpl(this->m(), alonguArgs));
 
           auto res = u_xyAlongu;
           res += leftMultiplyTranspose(u_x, u_y);
@@ -94,23 +95,22 @@ namespace Dune {
         } else if constexpr (LFArgs::hasOneSpatialAll) {
           // check that the along argument has the correct size
           const auto &alongMatrix = std::get<0>(lfArgs.alongArgs.args);
-          using AlongMatrix       = std::remove_cvref_t<decltype(alongMatrix)>;
 
-          static_assert(AlongMatrix::cols == gridDim);
-          static_assert(AlongMatrix::rows == 1);
+//          static_assert(cols(alongMatrix) == gridDim);
+//          static_assert(rows(alongMatrix) == 1);
 
-          const Dune::FieldMatrix<ctype, Base::E1Raw::valueSize, gridDim> uTimesA = u * alongMatrix;
-          static_assert(uTimesA.rows == Base::E1Raw::valueSize);
-          static_assert(uTimesA.cols == gridDim);
+          const typename DefaultLinearAlgebra::template FixedSizedMatrix<ctype, Base::E1Raw::valueSize, gridDim> uTimesA = u * alongMatrix;
+          static_assert(rows(uTimesA) == Base::E1Raw::valueSize);
+          static_assert(cols(uTimesA) == gridDim);
 
           const auto &[gradu, u_c0, u_c1]  = evaluateFirstOrderDerivativesImpl(this->m(), lfArgs);
           const auto &[gradu_c0, gradu_c1] = evaluateSecondOrderDerivativesImpl(this->m(), lfArgs);
 
           const auto graduTimesA = Dune::eval(gradu * transpose(alongMatrix));
-          using graduTimesAType  = std::remove_cvref_t<decltype(graduTimesA)>;
+//          using graduTimesAType  = std::remove_cvref_t<decltype(graduTimesA)>;
 
-          static_assert(graduTimesAType::rows == Base::E1Raw::valueSize);
-          static_assert(graduTimesAType::cols == 1);
+          static_assert(rows(graduTimesA) == Base::E1Raw::valueSize);
+          static_assert(cols(graduTimesA) == 1);
 
           const auto argsForDyz = lfArgs.extractSecondWrtArgOrFirstNonSpatial();
 

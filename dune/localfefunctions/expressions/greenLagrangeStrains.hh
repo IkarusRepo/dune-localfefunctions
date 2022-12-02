@@ -17,6 +17,7 @@ namespace Dune {
     using Base = UnaryExpr<GreenLagrangeStrains, E1>;
     using Base::Base;
     using Traits = LocalFunctionTraits<GreenLagrangeStrains>;
+    using LinearAlgebra = typename Base::E1Raw::LinearAlgebra;
 
     /** \brief Type used for coordinates */
     using ctype                           = typename Traits::ctype;
@@ -34,12 +35,12 @@ namespace Dune {
     auto evaluateValueOfExpression(const LFArgs& lfArgs) const {
       const auto integrationPointPosition
           = returnIntegrationPointPosition(lfArgs.integrationPointOrIndex, this->m().basis());
-      const auto referenceJacobian = this->m().geometry()->jacobianTransposed(integrationPointPosition);
+      const auto referenceJacobian = maybeToEigen(this->m().geometry()->jacobianTransposed(integrationPointPosition));
       static_assert(std::is_same_v<typename decltype(referenceJacobian)::value_type, double>);
       const auto gradArgs = replaceWrt(lfArgs, wrt(DerivativeDirections::spatialAll));
       const auto gradu    = transposeEvaluated(evaluateDerivativeImpl(this->m(), gradArgs));
 
-      Dune::FieldVector<ctype, strainSize> E;
+      typename LinearAlgebra::template FixedSizedVector<ctype, strainSize> E;
       for (int i = 0; i < gridDim; ++i)
         E[i] = referenceJacobian[i] * gradu[i] + 0.5 * gradu[i].two_norm2();
 
@@ -49,15 +50,15 @@ namespace Dune {
         const ctype v3 = gradu[0] * gradu[1];
         E[2]           = v1 + v2 + v3;
       } else if constexpr (gridDim == 3) {
-        Dune::FieldVector<ctype, gridDim> a1 = referenceJacobian[0];
-        a1 += gradu[0];
-        Dune::FieldVector<ctype, gridDim> a2 = referenceJacobian[1];
-        a2 += gradu[1];
-        Dune::FieldVector<ctype, gridDim> a3 = referenceJacobian[2];
-        a3 += gradu[2];
-        E[3] = a2 * a3;
-        E[4] = a1 * a3;
-        E[5] = a1 * a2;
+        typename LinearAlgebra::template FixedSizedVector<ctype, gridDim> a1 = row(referenceJacobian,0);
+        a1 += row(gradu,0);
+        typename LinearAlgebra::template FixedSizedVector<ctype, gridDim> a2 = row(referenceJacobian,1);
+        a2 += row(gradu,1);
+        typename LinearAlgebra::template FixedSizedVector<ctype, gridDim> a3 = row(referenceJacobian,2);
+        a3 += row(gradu,2);
+        E[3] = inner(a2, a3);
+        E[4] = inner(a1, a3);
+        E[5] = inner(a1, a2);
       }
 
       return E;
@@ -76,13 +77,13 @@ namespace Dune {
         const auto gradArgsdI = addWrt(lfArgs, wrt(DerivativeDirections::spatialAll));
         const auto gradUdI    = evaluateDerivativeImpl(this->m(), gradArgsdI);  // derivative of grad u wrt I-th coeff
 
-        Dune::FieldMatrix<double, strainSize, gridDim> bopI{};
-        Dune::FieldVector<ctype, gridDim> g1 = referenceJacobian[0];
+        typename LinearAlgebra::template FixedSizedMatrix<double, strainSize, gridDim> bopI{};
+        typename LinearAlgebra::template FixedSizedVector<ctype, gridDim> g1 = row(referenceJacobian,0);
         g1 += gradu[0];
         if constexpr (displacementSize == 1) {
           coeff(bopI, 0, 0) = gradUdI[0].scalar() * g1[0];
         } else if constexpr (displacementSize == 2) {
-          Dune::FieldVector<ctype, gridDim> g2 = referenceJacobian[1];
+          typename DefaultLinearAlgebra::template FixedSizedVector<ctype, gridDim> g2 = row(referenceJacobian,1);
           g2 += gradu[1];
           const auto& dNIdT1 = gradUdI[0].scalar();
           const auto& dNIdT2 = gradUdI[1].scalar();
@@ -90,9 +91,9 @@ namespace Dune {
           row(bopI, 1)       = dNIdT2 * g2;                // dE22_dCIx,dE22_dCIy
           row(bopI, 2)       = dNIdT2 * g1 + dNIdT1 * g2;  // 2*dE12_dCIx,2*dE12_dCIy
         } else if constexpr (displacementSize == 3) {
-          Dune::FieldVector<ctype, gridDim> g2 = referenceJacobian[1];
+          typename DefaultLinearAlgebra::template FixedSizedVector<ctype, gridDim> g2 = row(referenceJacobian,1);
           g2 += gradu[1];
-          Dune::FieldVector<ctype, gridDim> g3 = referenceJacobian[2];
+          typename DefaultLinearAlgebra::template FixedSizedVector<ctype, gridDim> g3 = row(referenceJacobian,2);
           g3 += gradu[2];
           const auto& dNIdT1 = gradUdI[0].scalar();
           const auto& dNIdT2 = gradUdI[1].scalar();
@@ -153,7 +154,7 @@ namespace Dune {
             return createZeroMatrix<ctype, strainSize, displacementSize>();
           } else if constexpr (LFArgs::hasOneSpatialAll and LFArgs::hasSingleCoeff) {
             DUNE_THROW(Dune::NotImplemented, "Higher spatial derivatives of linear strain expression not implemented.");
-            return std::array<Dune::FieldMatrix<ctype, strainSize, displacementSize>, gridDim>{};
+            return std::array<typename DefaultLinearAlgebra::template FixedSizedMatrix<ctype, strainSize, displacementSize>, gridDim>{};
           }
         }
       } else if constexpr (DerivativeOrder == 3) {

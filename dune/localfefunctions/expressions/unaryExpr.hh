@@ -34,6 +34,8 @@ namespace Dune {
     template <size_t ID_ = 0>
     static constexpr int orderID = Op<E1, Args...>::template orderID<ID_>;
 
+    using LinearAlgebra = typename E1Raw::LinearAlgebra;
+
     const E1& m() const { return std::get<0>(expr); }
 
     E1& m() { return std::get<0>(expr); }

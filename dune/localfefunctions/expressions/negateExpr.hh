@@ -30,6 +30,7 @@ namespace Dune {
     using Traits                   = LocalFunctionTraits<NegateExpr>;
     using ctype                    = typename Traits::ctype;
     static constexpr int valueSize = Traits::valueSize;
+    using LinearAlgebra = typename Base::E1Raw::LinearAlgebra;
 
     template <size_t ID_ = 0>
     static constexpr int orderID = Base::E1Raw::template orderID<ID_>;

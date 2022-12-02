@@ -18,7 +18,7 @@ namespace Dune {
     static void construct(Dune::BlockVector<TargetSpace>& values, const int testPointsSize = 10) {
       values.resize(testPointsSize);
       std::generate(values.begin(), values.end(),
-                    []() { return TargetSpace(createRandomVector<typename TargetSpace::CoordinateType>()); });
+                    []() { return TargetSpace(createRandomVector<typename TargetSpace::field_type,TargetSpace::valueSize>()); });
     }
   };
 
@@ -28,7 +28,14 @@ namespace Dune {
     static void construct(std::vector<Dune::FieldVector<double, size>>& values, const int corners = 10) {
       values.resize(corners);
       std::generate(values.begin(), values.end(),
-                    []() { return createRandomVector<Dune::FieldVector<double, size>>(); });
+                    []() {
+                      std::random_device rd;
+        std::mt19937 mt(rd());
+        std::uniform_real_distribution< double> dist(-1, 1);
+        auto rand = [&dist, &mt]() { return dist(mt); };
+        Dune::FieldVector<double, size> vec;
+        std::generate(vec.begin(), vec.end(), rand);
+        return vec; });
     }
   };
 }  // namespace Dune

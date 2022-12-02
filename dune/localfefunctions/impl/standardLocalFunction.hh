@@ -23,6 +23,7 @@
 
 #include <concepts>
 
+#include <dune/localfefunctions/linalgconcepts.hh>
 #include <dune/common/indices.hh>
 #include <dune/localfefunctions/cachedlocalBasis/cachedlocalBasis.hh>
 #include <dune/localfefunctions/localFunctionHelper.hh>
@@ -34,11 +35,11 @@
 
 namespace Dune {
 
-  template <typename DuneBasis, typename CoeffContainer, typename Geometry, std::size_t ID = 0>
+  template <typename DuneBasis, typename CoeffContainer, typename Geometry, std::size_t ID = 0,typename LinAlg= Dune::DefaultLinearAlgebra>
   class StandardLocalFunction
-      : public LocalFunctionInterface<StandardLocalFunction<DuneBasis, CoeffContainer, Geometry, ID>>,
-        public ClonableLocalFunction<StandardLocalFunction<DuneBasis, CoeffContainer, Geometry, ID>> {
-    using Interface = LocalFunctionInterface<StandardLocalFunction<DuneBasis, CoeffContainer, Geometry, ID>>;
+      : public LocalFunctionInterface<StandardLocalFunction<DuneBasis, CoeffContainer, Geometry, ID,LinAlg>>,
+        public ClonableLocalFunction<StandardLocalFunction<DuneBasis, CoeffContainer, Geometry, ID,LinAlg>> {
+    using Interface = LocalFunctionInterface<StandardLocalFunction>;
 
   public:
     friend Interface;
@@ -55,6 +56,8 @@ namespace Dune {
     static constexpr bool isLeaf = true;
     using Ids                    = Dune::index_constant<ID>;
 
+    using LinearAlgebra = LinAlg;
+
     template <size_t ID_ = 0>
     static constexpr int orderID = ID_ == ID ? linear : constant;
 
@@ -66,7 +69,7 @@ namespace Dune {
     friend auto evaluateFunctionImpl(const LocalFunctionInterface<LocalFunctionImpl_>& f,
                                      const LocalFunctionEvaluationArgs_& localFunctionArgs);
 
-    using Traits = LocalFunctionTraits<StandardLocalFunction<DuneBasis, CoeffContainer, Geometry, ID>>;
+    using Traits = LocalFunctionTraits<StandardLocalFunction>;
     /** \brief Type used for coordinates */
     using ctype = typename Traits::ctype;
     //    /** \brief Dimension of the coeffs */
@@ -102,7 +105,7 @@ namespace Dune {
     struct rebind {
       using other = StandardLocalFunction<
           DuneBasis, typename Std::Rebind<CoeffContainer, typename Manifold::template rebind<OtherType>::other>::other,
-          Geometry, ID>;
+          Geometry, ID,LinAlg>;
     };
 
     const Dune::CachedLocalBasis<DuneBasis>& basis() const { return basis_; }
@@ -115,7 +118,7 @@ namespace Dune {
       FunctionReturnType res;
       setZero(res);
       for (int i = 0; i < coeffs.size(); ++i)
-        for (int j = 0; j < res.dimension; ++j) {
+        for (int j = 0; j < rows(res); ++j) {
           res[j] += coeffs[i].getValue()[j] * N[i];
         }
 
@@ -144,7 +147,7 @@ namespace Dune {
 
       JacobianColType Jcol;
       setZero(Jcol);
-      for (int j = 0; j < Jcol.dimension; ++j) {
+      for (int j = 0; j < rows(Jcol); ++j) {
         for (int i = 0; i < coeffs.size(); ++i)
           Jcol[j] += coeffs[i].getValue()[j] * coeff(dNTransformed, i, spaceIndex);
       }
@@ -156,7 +159,7 @@ namespace Dune {
     CoeffDerivMatrix evaluateDerivativeWRTCoeffsImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
                                                      int coeffsIndex, const On<TransformArgs>& transArgs) const {
       const auto& N = evaluateFunctionWithIPorCoord(ipIndexOrPosition, basis_);
-      CoeffDerivMatrix mat(N[coeffsIndex]);
+      CoeffDerivMatrix mat= createScaledIdentityMatrix<ctype,valueSize,valueSize>(N[coeffsIndex]);
 
       return mat;
     }
@@ -168,8 +171,10 @@ namespace Dune {
       const auto& dNraw = evaluateDerivativeWithIPorCoord(ipIndexOrPosition, basis_);
       maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry_, ipIndexOrPosition, basis_);
       std::array<CoeffDerivMatrix, gridDim> Warray;
-      for (int dir = 0; dir < gridDim; ++dir)
-        Warray[dir].scalar() = dNTransformed[coeffsIndex][dir];
+      for (int dir = 0; dir < gridDim; ++dir) {
+        setZero(Warray[dir]);
+        setDiagonal(Warray[dir], dNTransformed[coeffsIndex][dir]);
+      }
 
       return Warray;
     }
@@ -180,7 +185,7 @@ namespace Dune {
         const On<TransformArgs>& transArgs) const {
       const auto& dNraw = evaluateDerivativeWithIPorCoord(ipIndexOrPosition, basis_);
       maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry_, ipIndexOrPosition, basis_);
-      CoeffDerivMatrix W(dNTransformed[coeffsIndex][spatialIndex]);
+      CoeffDerivMatrix W = createScaledIdentityMatrix<ctype,valueSize,valueSize>(dNTransformed[coeffsIndex][spatialIndex]);
       return W;
     }
 
@@ -191,8 +196,8 @@ namespace Dune {
     //    const decltype(Dune::viewAsEigenMatrixFixedDyn(coeffs)) coeffsAsMat;
   };
 
-  template <typename DuneBasis, typename CoeffContainer, typename Geometry, std::size_t ID>
-  struct LocalFunctionTraits<StandardLocalFunction<DuneBasis, CoeffContainer, Geometry, ID>> {
+  template <typename DuneBasis, typename CoeffContainer, typename Geometry, std::size_t ID,typename LinAlg>
+  struct LocalFunctionTraits<StandardLocalFunction<DuneBasis, CoeffContainer, Geometry, ID,LinAlg>> {
     /** \brief Type used for coordinates */
     using ctype = typename CoeffContainer::value_type::ctype;
     /** \brief Dimension of the coeffs */
@@ -206,9 +211,9 @@ namespace Dune {
     /** \brief Type for the return value */
     using FunctionReturnType = typename Manifold::CoordinateType;
     /** \brief Type for the Jacobian matrix */
-    using Jacobian = Dune::FieldMatrix<ctype, valueSize, gridDim>;
+    using Jacobian = typename LinAlg::template FixedSizedMatrix<ctype, valueSize, gridDim>;
     /** \brief Type for the derivatives wrt. the coefficients */
-    using CoeffDerivMatrix = Dune::ScaledIdentityMatrix<ctype, valueSize>;
+    using CoeffDerivMatrix = typename LinAlg::template FixedSizedScaledIdentityMatrix<ctype, valueSize>;
     /** \brief Type for the Jacobian of the ansatz function values */
     using AnsatzFunctionJacobian = typename Dune::CachedLocalBasis<DuneBasis>::JacobianType;
     /** \brief Type for ansatz function values */
@@ -216,9 +221,9 @@ namespace Dune {
     /** \brief Type for the points for evaluation, usually the integration points */
     using DomainType = typename DuneBasis::Traits::DomainType;
     /** \brief Type for a column of the Jacobian matrix */
-    using JacobianColType = Dune::FieldVector<ctype, valueSize>;
+    using JacobianColType = typename LinAlg::template FixedSizedVector<ctype, valueSize>;
     /** \brief Type for the directional derivatives */
-    using AlongType = Dune::FieldVector<ctype, valueSize>;
+    using AlongType =  typename LinAlg::template FixedSizedVector<ctype, valueSize>;
     /** \brief Dimension of the world where this function is mapped to from the reference element */
     static constexpr int worldDimension = Geometry::coorddimension;
   };

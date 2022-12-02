@@ -33,11 +33,11 @@
 
 namespace Dune {
 
-  template <typename DuneBasis, typename CoeffContainer, typename Geometry, std::size_t ID = 0>
+  template <typename DuneBasis, typename CoeffContainer, typename Geometry, std::size_t ID = 0,typename LinAlg= Dune::DefaultLinearAlgebra>
   class ProjectionBasedLocalFunction
-      : public LocalFunctionInterface<ProjectionBasedLocalFunction<DuneBasis, CoeffContainer, Geometry, ID>>,
-        public ClonableLocalFunction<ProjectionBasedLocalFunction<DuneBasis, CoeffContainer, Geometry, ID>> {
-    using Interface = LocalFunctionInterface<ProjectionBasedLocalFunction<DuneBasis, CoeffContainer, Geometry, ID>>;
+      : public LocalFunctionInterface<ProjectionBasedLocalFunction<DuneBasis, CoeffContainer, Geometry, ID,LinAlg>>,
+        public ClonableLocalFunction<ProjectionBasedLocalFunction<DuneBasis, CoeffContainer, Geometry, ID,LinAlg>> {
+    using Interface = LocalFunctionInterface<ProjectionBasedLocalFunction>;
 
     template <size_t ID_ = 0>
     static constexpr int orderID = ID_ == ID ? nonLinear : constant;
@@ -58,6 +58,8 @@ namespace Dune {
 
     static constexpr bool isLeaf = true;
     using Ids                    = Dune::index_constant<ID>;
+
+    using LinearAlgebra = LinAlg;
 
     template <typename LocalFunctionEvaluationArgs_, typename LocalFunctionImpl_>
     friend auto evaluateDerivativeImpl(const LocalFunctionInterface<LocalFunctionImpl_>& f,
@@ -93,7 +95,7 @@ namespace Dune {
     using CoeffDerivEukMatrix = typename Traits::CoeffDerivEukMatrix;
     /** \brief Type for the derivatives wrT the coefficients in the embedding space on the left and in the tangent space
      * basis on the right*/
-    using CoeffDerivEukRieMatrix = Dune::FieldMatrix<ctype, valueSize, correctionSize>;
+    using CoeffDerivEukRieMatrix = typename DefaultLinearAlgebra::template FixedSizedMatrix<ctype, valueSize, correctionSize>;
     /** \brief Type for ansatz function values */
     using AnsatzFunctionType = typename Traits::AnsatzFunctionType;
     /** \brief Type for the Jacobian of the ansatz function values */
@@ -109,7 +111,7 @@ namespace Dune {
     struct rebind {
       using other = ProjectionBasedLocalFunction<
           DuneBasis, typename Std::Rebind<CoeffContainer, typename Manifold::template rebind<OtherType>::other>::other,
-          Geometry, ID>;
+          Geometry, ID,LinAlg>;
     };
 
   private:
@@ -369,8 +371,8 @@ namespace Dune {
     //    const decltype(Dune::viewAsEigenMatrixFixedDyn(coeffs)) coeffsAsMat;
   };
 
-  template <typename DuneBasis, typename CoeffContainer, typename Geometry, std::size_t ID>
-  struct LocalFunctionTraits<ProjectionBasedLocalFunction<DuneBasis, CoeffContainer, Geometry, ID>> {
+  template <typename DuneBasis, typename CoeffContainer, typename Geometry, std::size_t ID,typename LinAlg>
+  struct LocalFunctionTraits<ProjectionBasedLocalFunction<DuneBasis, CoeffContainer, Geometry,ID, LinAlg>> {
     /** \brief Type used for coordinates */
     using ctype = typename CoeffContainer::value_type::ctype;
     /** \brief Dimension of the coeffs */
@@ -384,11 +386,11 @@ namespace Dune {
     /** \brief Type for the return value */
     using FunctionReturnType = typename Manifold::CoordinateType;
     /** \brief Type for the Jacobian matrix */
-    using Jacobian = Dune::FieldMatrix<ctype, valueSize, gridDim>;
+    using Jacobian = typename DefaultLinearAlgebra::template FixedSizedMatrix<ctype, valueSize, gridDim>;
     /** \brief Type for the derivatives wrt. the coefficients */
-    using CoeffDerivMatrix = Dune::FieldMatrix<ctype, correctionSize, correctionSize>;
+    using CoeffDerivMatrix = typename DefaultLinearAlgebra::template FixedSizedMatrix<ctype, correctionSize, correctionSize>;
     /** \brief Type for the derivatives wrt. the coefficients */
-    using CoeffDerivEukMatrix = Dune::FieldMatrix<ctype, valueSize, valueSize>;
+    using CoeffDerivEukMatrix = typename DefaultLinearAlgebra::template FixedSizedMatrix<ctype, valueSize, valueSize>;
     /** \brief Type for the Jacobian of the ansatz function values */
     using AnsatzFunctionJacobian = typename Dune::CachedLocalBasis<DuneBasis>::JacobianType;
     /** \brief Type for ansatz function values */

@@ -37,6 +37,7 @@
 #include <dune/localfefunctions/helper.hh>
 #include <dune/localfefunctions/manifolds/manifoldInterface.hh>
 #include <dune/localfefunctions/meta.hh>
+#include <dune/localfefunctions/linalgconcepts.hh>
 #include <dune/matrix-vector/transpose.hh>
 
 #include <Eigen/Core>
@@ -79,7 +80,11 @@ namespace Dune {
   };
 #endif
 
-  template <typename T>
+#if DUNE_LOCALFEFUNCTIONS_USE_EIGEN == 0
+  template <typename T> requires (Std::IsSpecializationTypeAndNonTypes<Dune::FieldVector, T>::value
+             or Std::IsSpecializationTypeAndNonTypes<Dune::FieldMatrix, T>::value
+             or Std::IsSpecializationTypeAndNonTypes<Dune::ScaledIdentityMatrix, T>::value
+             or Std::IsSpecializationTypeAndNonTypes<Dune::DiagonalMatrix, T>::value)
   auto transposeEvaluated(const T& A) {
     if constexpr (Std::IsSpecializationTypeAndNonTypes<Dune::FieldVector, T>::value) {
       Dune::FieldMatrix<typename T::value_type, 1, T::dimension> aT;
@@ -93,6 +98,22 @@ namespace Dune {
       return AT;
     }
   }
+#endif
+
+  template <typename Derived>
+  auto transposeEvaluated(const Eigen::MatrixBase<Derived>& A) {
+    return A.transpose().eval();
+  }
+
+  template <typename Derived>
+  auto transpose(const Eigen::MatrixBase<Derived>& A) {
+    return A.transpose();
+  }
+
+  template <typename field_type, int rows, int cols>
+  auto transpose(const Eigen::Matrix<field_type, rows, cols>& A) {
+    return A.transpose();
+  }
 
   /** \brief Get the requested column of fieldmatrix */
   template <typename field_type, int rows, int cols>
@@ -105,7 +126,26 @@ namespace Dune {
     return col;
   }
 
-  /** \brief Computes the inner product (Frobenius) of two matrices  */
+  /** \brief Get the requested column of fieldmatrix */
+  template <typename field_type, int rows, int cols>
+  auto& row(const Dune::FieldMatrix<field_type, rows, cols>& mat, const int requestedRow) {
+
+    return mat[requestedRow];
+  }
+
+  /** \brief Get the requested column of fieldmatrix */
+  template <typename field_type, int rows, int cols>
+  auto row(const Eigen::Matrix<field_type, rows, cols>& mat, const int requestedRow) {
+    return mat.row(requestedRow);
+  }
+
+  /** \brief Get the requested column of fieldmatrix */
+  template <typename field_type, int rows, int cols>
+  auto col(const Eigen::Matrix<field_type, rows, cols>& mat, const int requestedRow) {
+    return mat.col(requestedRow);
+  }
+
+  /** \brief Computes the inner product (Frobenius) of two matrices, no complex conjugate here, use .dot instead!  */
   template <typename field_type, typename field_type2, int rows, int cols>
   auto inner(const Dune::FieldMatrix<field_type, rows, cols>& a, const Dune::FieldMatrix<field_type2, rows, cols>& b) {
     using ScalarResultType = typename Dune::PromotionTraits<field_type, field_type2>::PromotedType;
@@ -113,12 +153,12 @@ namespace Dune {
 
     for (int i = 0; i < rows; ++i)
       for (int j = 0; j < cols; ++j)
-        res += a[i][j] * b[i][j];
+        res += a[j][i] * b[i][j];
 
     return res;
   }
 
-  /** \brief Computes the inner product (Frobenius) of two vector, no complex conjugate here, used .dot instead!  */
+  /** \brief Computes the inner product (Frobenius) of two vector, no complex conjugate here, use .dot instead!  */
   template <typename field_type, typename field_type2, int rows>
   auto inner(const Dune::FieldVector<field_type, rows>& a, const Dune::FieldMatrix<field_type2, rows, 1>& b) {
     using ScalarResultType = typename Dune::PromotionTraits<field_type, field_type2>::PromotedType;
@@ -127,6 +167,12 @@ namespace Dune {
     for (int i = 0; i < rows; ++i)
       res += a[i] * b[i][0];
     return res;
+  }
+
+  /** \brief Computes the inner product (Frobenius) of two matrices, no complex conjugate here  */
+  template <typename Derived,typename Derived2>
+  typename Dune::PromotionTraits<typename Derived::Scalar, typename Derived2::Scalar>::PromotedType inner(const Eigen::MatrixBase<Derived>& a, const Eigen::MatrixBase<Derived2>& b) {
+    return (a.transpose()*b).trace();
   }
 
   /** \brief Computes the matrix vector product  */
@@ -158,6 +204,12 @@ namespace Dune {
   template <typename field_type, int rows, int cols>
   auto two_norm2(const Dune::FieldMatrix<field_type, rows, cols>& a) {
     return a.frobenius_norm2();
+  }
+
+  /** \brief Computes norm squared (Frobenius) of the matrix  */
+  template <typename Derived>
+  auto two_norm2(const Eigen::MatrixBase<Derived>& a) {
+    return a.squaredNorm();
   }
 
   /** \brief Outer product between two vector */
@@ -289,10 +341,7 @@ namespace Dune {
     return y;
   }
 
-  template <typename field_type, int size>
-  auto leftMultiplyTranspose(const Dune::FieldVector<field_type, size>&, Dune::DerivativeDirections::ZeroMatrix) {
-    return Dune::DerivativeDirections::ZeroMatrix();
-  }
+
 
   template <typename field_type, int rows, int cols>
   auto leftMultiplyTranspose(const Dune::FieldMatrix<field_type, rows, cols>& A,
@@ -309,6 +358,12 @@ namespace Dune {
     Dune::MatrixVector::transpose(B, BT);
 
     return BT * A;
+  }
+
+  template <typename Derived, typename Derived2>
+  auto leftMultiplyTranspose(const Eigen::MatrixBase<Derived>& B,
+                             const Eigen::MatrixBase<Derived2>& A) {
+    return B.transpose() * A;
   }
 
   template <typename field_type, int rows, int cols1>
@@ -382,14 +437,26 @@ namespace Dune {
   }
 
   /** \brief Generates FieldVector with random entries in the range -1..1 */
-  template <typename FieldVectorT>
-  auto createRandomVector(typename FieldVectorT::value_type lower = -1, typename FieldVectorT::value_type upper = 1) {
+  template <typename ScalarType,int size>
+  auto createRandomVector( ScalarType lower = -1,  ScalarType upper = 1) {
     std::random_device rd;
     std::mt19937 mt(rd());
-    std::uniform_real_distribution<typename FieldVectorT::value_type> dist(lower, upper);
+    std::uniform_real_distribution< ScalarType> dist(lower, upper);
     auto rand = [&dist, &mt]() { return dist(mt); };
-    FieldVectorT vec;
+    typename DefaultLinearAlgebra::template FixedSizedVector<ScalarType,size> vec;
     std::generate(vec.begin(), vec.end(), rand);
+    return vec;
+  }
+
+  /** \brief Generates FieldVector with random entries in the range -1..1 */
+  template <typename ScalarType,int rows,int cols>
+  auto createRandomMatrix( ScalarType lower = -1,  ScalarType upper = 1) {
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_real_distribution< ScalarType> dist(lower, upper);
+    auto rand = [&dist, &mt]() { return dist(mt); };
+    typename DefaultLinearAlgebra::template FixedSizedMatrix<ScalarType,rows,cols> vec;
+    std::generate(vec.reshaped().begin(), vec.reshaped().end(), rand);
     return vec;
   }
 
@@ -401,18 +468,27 @@ namespace Dune {
     return res;
   }
 
+#if DUNE_LOCALFEFUNCTIONS_USE_EIGEN == 0
   /** \brief Return a static sized segment of a Eigen::Vector as FieldVector from lower up to lower+size-1 */
   template <int size, typename field_type>
-  static FieldVector<field_type, size> segmentToDune(const Eigen::VectorX<field_type>& v, int lower) {
+  static FieldVector<field_type, size> segment(const Eigen::VectorX<field_type>& v, int lower) {
     FieldVector<field_type, size> res;
     std::copy(v.begin() + lower, v.begin() + lower + size, res.begin());
     return res;
   }
+#else
+  /** \brief Return a static sized segment of a Eigen::Vector as FieldVector from lower up to lower+size-1 */
+  template <int size, typename field_type>
+  auto segment(const Eigen::VectorX<field_type>& v, int lower) {
+    return v.template segment<size>(lower);
+  }
+#endif
 
+#if DUNE_LOCALFEFUNCTIONS_USE_EIGEN == 0
   /** \brief Return a static sized block of a EigenMatrix  (lower1...lower1+size1-1,lower2...lower2+size2-1) as
    * FieldMatrix */
   template <int size1, int size2, typename field_type>
-  static auto blockToDune(const Eigen::MatrixX<field_type>& v, int lower1, int lower2) {
+  static auto block(const Eigen::MatrixX<field_type>& v, int lower1, int lower2) {
     assert(lower1 + size1 <= v.rows() && lower2 + size2 <= v.cols() && "Size mismatch for Block!");
     FieldMatrix<field_type, size1, size2> res;
 
@@ -421,11 +497,25 @@ namespace Dune {
         res[i - lower1][j - lower2] = v(i, j);
     return res;
   }
-
+#else
+  /** \brief Return a static sized block of a EigenMatrix  (lower1...lower1+size1-1,lower2...lower2+size2-1) as
+   * EigenMatrix */
+  template <int size1, int size2, typename field_type>
+  static auto block(const Eigen::MatrixX<field_type>& v, int lower1, int lower2) {
+    assert(lower1 + size1 <= v.rows() && lower2 + size2 <= v.cols() && "Size mismatch for Block!");
+    return v.template block<size1,size2>(lower1,lower2);
+  }
+#endif
   /** \brief sets a matrix to zero */
   template <typename field_type, int rows, int cols>
   void setZero(Dune::FieldMatrix<field_type, rows, cols>& a) {
     a = 0;
+  }
+
+  /** \brief sets a matrix to zero */
+  template <typename field_type, int rows, int cols>
+  void setZero(Eigen::Matrix<field_type, rows, cols>& a) {
+    a .setZero();
   }
 
   /** \brief sets a vector to zero */
@@ -434,81 +524,59 @@ namespace Dune {
     a = 0;
   }
 
+  /** \brief sets a vector to zero */
+  template <typename field_type, int rows>
+  void setZero(Eigen::Vector<field_type, rows>& a) {
+    a.setZero();
+  }
+
   /** \brief sets a matrix to zero with given templates*/
   template <typename field_type, int rows, int cols>
   auto createZeroMatrix() {
-    return Dune::FieldMatrix<field_type, rows, cols>(0);
+    return DefaultLinearAlgebra::createZeroMatrix<field_type, rows,cols>();
   }
 
   /** \brief sets a matrix to zero with given templates*/
   template <typename field_type, int rows>
   auto createZeroVector() {
-    return Dune::FieldVector<field_type, rows>(0);
+    return DefaultLinearAlgebra::createZeroVector<field_type, rows>();
   }
 
-  template <typename field_type, int rows, int cols>
-  auto leftMultiplyTranspose(const Dune::FieldMatrix<field_type, rows, cols>&,
-                             const Dune::DerivativeDirections::ZeroMatrix&) {
-    return Dune::DerivativeDirections::ZeroMatrix();
-  }
 
-  template <typename field_type, int rows, int cols>
+  template <typename MatrixOrVector>
   auto leftMultiplyTranspose(const Dune::DerivativeDirections::ZeroMatrix&,
-                             const Dune::FieldMatrix<field_type, rows, cols>&) {
+                             const MatrixOrVector&) {
     return Dune::DerivativeDirections::ZeroMatrix();
   }
 
-  template <typename field_type, int rows>
-  auto leftMultiplyTranspose(const Dune::DerivativeDirections::ZeroMatrix&,
-                             const Dune::DiagonalMatrix<field_type, rows>&) {
-    return Dune::DerivativeDirections::ZeroMatrix();
-  }
-
-  template <typename field_type, int rows>
-  auto leftMultiplyTranspose(const Dune::DerivativeDirections::ZeroMatrix&,
-                             const Dune::ScaledIdentityMatrix<field_type, rows>&) {
-    return Dune::DerivativeDirections::ZeroMatrix();
-  }
-
-  template <typename field_type, int rows>
-  auto leftMultiplyTranspose(const Dune::DiagonalMatrix<field_type, rows>&,
-                             const Dune::DerivativeDirections::ZeroMatrix& A) {
-    return Dune::DerivativeDirections::ZeroMatrix();
-  }
-
-  template <typename field_type, int rows>
-  auto leftMultiplyTranspose(const Dune::ScaledIdentityMatrix<field_type, rows>&,
+  template <typename MatrixOrVector>
+  auto leftMultiplyTranspose(const MatrixOrVector&,
                              const Dune::DerivativeDirections::ZeroMatrix& A) {
     return Dune::DerivativeDirections::ZeroMatrix();
   }
 
   template <typename field_type, int rows, int cols>
   auto createOnesMatrix() {
-    return Dune::FieldMatrix<field_type, rows, cols>(1);
+    return DefaultLinearAlgebra::createOnesMatrix<field_type, rows,cols>();
   }
 
   template <typename field_type, int rows>
   auto createOnesVector() {
-    return Dune::FieldVector<field_type, rows>(1);
+    return DefaultLinearAlgebra::createOnesVector<field_type, rows>();
   }
 
   /** \brief Creates an identity matrix with given FieldMatrix */
   template <typename FieldMatrixT>
   auto createZeroMatrix() {
-    return Dune::FieldMatrix<typename FieldMatrixT::value_type, FieldMatrixT::rows, FieldMatrixT::cols>(0);
+    return createZeroMatrix<typename FieldMatrixT::value_type, FieldMatrixT::rows, FieldMatrixT::cols>();
   }
 
   /** \brief Creates an identity matrix with given templates */
-  template <int rows, int cols, typename field_type>
-  auto createScaledIdentityMatrix(field_type val) {
-    return Dune::ScaledIdentityMatrix<field_type, rows>(val);
+  template < typename field_type,int rows, int cols>
+  auto createScaledIdentityMatrix(const field_type& val=field_type{1.0}) {
+     return DefaultLinearAlgebra::createScaledIdentityMatrix<field_type, rows>(val);
   }
 
-  /** \brief Creates an identity matrix with given FieldMatrix */
-  template <typename FieldMatrixT>
-  auto createScaledIdentityMatrix(typename FieldMatrixT::value_type val = typename FieldMatrixT::value_type{1}) {
-    return Dune::ScaledIdentityMatrix<typename FieldMatrixT::value_type, FieldMatrixT::rows>(val);
-  }
 
   /** \brief Returns a reference to a row. This is easily done since Dune  simply returns a reference to the stacked
    * FieldVector But again to stay compatible with a possible Eigen replacement we can not use operator[] for both
@@ -592,6 +660,12 @@ namespace Dune {
   template <typename field_type, int rows, int cols>
   auto two_norm(const Dune::FieldMatrix<field_type, rows, cols>& a) {
     return a.frobenius_norm();
+  }
+
+  /** \brief Computes the two_norm as free function */
+  template <typename Derived>
+  auto two_norm(const Eigen::MatrixBase<Derived>& A) {
+    return A.norm();
   }
 
   /** \brief Computes the two_norm2 as free function */
@@ -714,12 +788,12 @@ namespace Dune {
   /* Enables the += operator for Dune::BlockVector += Eigen::Vector */
   template <typename Type, typename Derived>
   Dune::BlockVector<Type>& operator+=(Dune::BlockVector<Type>& a, const Eigen::MatrixBase<Derived>& b) requires(
-      Dune::Concepts::AddAssignAble<Type, decltype(segmentToDune<Type::correctionSize>(b, 0))>and requires() {
+      Dune::Concepts::AddAssignAble<Type, decltype(segment<Type::correctionSize>(b, 0))>and requires() {
         Type::correctionSize;
       }) {
     assert(correctionSize(a) == static_cast<size_t>(b.size()) && " The passed vector has wrong size");
     for (auto i = 0U; i < a.size(); ++i)
-      a[i] += segmentToDune<Type::correctionSize>(b, i * Type::correctionSize);
+      a[i] += segment<Type::correctionSize>(b, i * Type::correctionSize);
     return a;
   }
 
@@ -755,7 +829,7 @@ namespace Dune {
     auto& bE = b.derived().eval();  // useless copy
     assert(valueSize(a) == static_cast<size_t>(bE.size()) && " The passed vector has wrong size");
     for (auto i = 0U; i < a.size(); ++i)
-      a[i].addInEmbedding(segmentToDune<Type::valueSize>(bE, i * Type::valueSize));
+      a[i].addInEmbedding(segment<Type::valueSize>(bE, i * Type::valueSize));
     return a;
   }
 
@@ -935,6 +1009,26 @@ namespace Dune {
   }
 
   template <typename Scalar, int size>
+  void setDiagonal( Dune::ScaledIdentityMatrix<Scalar, size>& a, const  Scalar& val) {
+    a.scalar()=val;
+  }
+
+  template <typename Scalar, int size>
+  void setDiagonal( Eigen::Matrix<Scalar, size, size>& a, const  Scalar& val) {
+    a.diagonal().array()=val;
+  }
+
+  template <typename Scalar, int size>
+  auto getDiagonalEntry( Dune::ScaledIdentityMatrix<Scalar, size>& a, const  int& ) {
+    return a.scalar();
+  }
+
+  template <typename Scalar, int size>
+  void getDiagonalEntry( Eigen::Matrix<Scalar, size, size>& a, const  int& i) {
+    return a.diagonal()[i];
+  }
+
+  template <typename Scalar, int size>
   Eigen::DiagonalMatrix<Scalar, size> operator-(Dune::DerivativeDirections::ZeroMatrix,
                                                 const Eigen::DiagonalMatrix<Scalar, size>& a) {
     return -a.derived();
@@ -1039,12 +1133,24 @@ namespace Dune {
     return 0.5 * (A - A.transpose());
   }
 
+  template <typename Derived>
+  consteval auto cols(const Eigen::MatrixBase<Derived>&)
+  {
+    return Eigen::MatrixBase<Derived>::ColsAtCompileTime;
+  }
+
+  template <typename Derived>
+  consteval auto rows(const Eigen::MatrixBase<Derived>& A)
+  {
+    return Eigen::MatrixBase<Derived>::RowsAtCompileTime;
+  }
+
   /** \brief Evaluates Eigen expressions */
   template <typename Derived>
   auto eval(const Eigen::EigenBase<Derived>& A) {
     if constexpr (static_cast<bool>(
                       Eigen::internal::is_diagonal<Derived>::ret))  // workaround needed since Eigen::DiagonalWrapper
-                                                                    // does not has a eval function
+                                                                    // does not have an eval function
     {
       using Scalar = typename Derived::Scalar;
       using namespace Eigen;
@@ -1158,5 +1264,7 @@ namespace Dune {
    */
   template <int dim>
   constexpr auto voigtNotationContainer = std::get<dim - 1>(Impl::voigtIndices);
+
+
 
 }  // namespace Dune

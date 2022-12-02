@@ -2,7 +2,6 @@ if(DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING)
   find_package(autodiff REQUIRED)
   find_package(Eigen3 3.3.9 REQUIRED)
 
-  option(DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING 0)
   option(ENABLE_TEST_COVERAGE "Enable test coverage" OFF)
   dune_add_test(
     NAME
@@ -18,7 +17,13 @@ if(DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING)
     target_compile_options(expressiontest PUBLIC -O0 -g -fprofile-arcs
                                                  -ftest-coverage)
     target_link_options(expressiontest PUBLIC -fprofile-arcs -ftest-coverage)
+
   endif()
+   if(DUNE_LOCALFEFUNCTIONS_USE_EIGEN)
+    MESSAGE(STATUS "Eigen Linear Algebra")
+    target_compile_definitions(dune-localfefunctions PUBLIC DUNE_LOCALFEFUNCTIONS_USE_EIGEN)
+  endif()
+  target_compile_definitions(dune-localfefunctions PUBLIC DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING)
   target_compile_options(
     expressiontest
     PRIVATE -ftemplate-backtrace-limit=0 -fdiagnostics-show-template-tree

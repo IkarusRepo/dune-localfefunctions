@@ -44,10 +44,10 @@ namespace Dune {
     static constexpr int correctionSize = d - 1;
 
     /** \brief VectorType of the values of the manifold */
-    using CoordinateType = typename Dune::FieldVector<ctype, valueSize>;
+    using CoordinateType = DefaultLinearAlgebra::FixedSizedVector<ctype, valueSize>;
 
     /** \brief VectorType of the values of the correction living in the tangentspace */
-    using CorrectionType = typename Dune::FieldVector<ctype, correctionSize>;
+    using CorrectionType = DefaultLinearAlgebra::FixedSizedVector<ctype, correctionSize>;
 
     /** \brief VectorType of the values of the correction living in the tangentspace in the embedding space*/
     using EmbeddedCorrectionType = CoordinateType;
@@ -100,49 +100,49 @@ namespace Dune {
       var = var / two_norm(var);  // projection-based retraction
     }
 
-    static Dune::FieldMatrix<ctype, valueSize, valueSize> derivativeOfProjectionWRTposition(
-        const Dune::FieldVector<ctype, valueSize> &p) {
+    static auto derivativeOfProjectionWRTposition(
+        const DefaultLinearAlgebra::FixedSizedVector<ctype, valueSize> &p) {
       const ctype norm                             = two_norm(p);
-      const Dune::FieldVector<ctype, valueSize> pN = p / norm;
+      const DefaultLinearAlgebra::FixedSizedVector<ctype, valueSize> pN = p / norm;
 
-      Dune::FieldMatrix<ctype, valueSize, valueSize> result
-          = (createScaledIdentityMatrix<Dune::FieldMatrix<ctype, valueSize, valueSize>>() - outer(pN, pN)) / norm;
+      DefaultLinearAlgebra::FixedSizedMatrix<ctype, valueSize, valueSize> result
+          = (createScaledIdentityMatrix<ctype, valueSize, valueSize>() - outer(pN, pN)) / norm;
 
       return result;
     }
 
-    Dune::ScaledIdentityMatrix<ctype, valueSize> weingartenEmbedded(const CoordinateType &p) const {
-      return -createScaledIdentityMatrix<Dune::FieldMatrix<ctype, valueSize, valueSize>>(inner(var, p));
+    auto weingartenEmbedded(const CoordinateType &p) const {
+      return -createScaledIdentityMatrix<ctype, valueSize, valueSize>(inner(var, p));
     }
 
-    Dune::ScaledIdentityMatrix<ctype, correctionSize> weingarten(const CoordinateType &p) const {
-      return -createScaledIdentityMatrix<Dune::FieldMatrix<ctype, correctionSize, correctionSize>>(inner(var, p));
+    auto weingarten(const CoordinateType &p) const {
+      return -createScaledIdentityMatrix<ctype, correctionSize, correctionSize>(inner(var, p));
     }
 
-    static Dune::FieldMatrix<ctype, valueSize, valueSize> secondDerivativeOfProjectionWRTposition(
-        const Dune::FieldVector<ctype, valueSize> &p, const Dune::FieldVector<ctype, valueSize> &along) {
+    static DefaultLinearAlgebra::FixedSizedMatrix<ctype, valueSize, valueSize> secondDerivativeOfProjectionWRTposition(
+        const DefaultLinearAlgebra::FixedSizedVector<ctype, valueSize> &p, const DefaultLinearAlgebra::FixedSizedVector<ctype, valueSize> &along) {
       const ctype normSquared = two_norm2(p);
       using std::sqrt;
       const ctype norm                             = sqrt(normSquared);
-      const Dune::FieldVector<ctype, valueSize> pN = p / norm;
+      const DefaultLinearAlgebra::FixedSizedVector<ctype, valueSize> pN = p / norm;
 
-      Dune::FieldMatrix<ctype, valueSize, valueSize> Q_along
+      DefaultLinearAlgebra::FixedSizedMatrix<ctype, valueSize, valueSize> Q_along
           = 1 / normSquared
             * (inner(pN, along)
-                   * (3 * outer(pN, pN) - createScaledIdentityMatrix<Dune::FieldMatrix<ctype, valueSize, valueSize>>())
+                   * (3 * outer(pN, pN) - createScaledIdentityMatrix<ctype, valueSize, valueSize>())
                - outer(along, pN) - outer(pN, along));
 
       return Q_along;
     }
 
-    static Dune::FieldMatrix<ctype, valueSize, valueSize> thirdDerivativeOfProjectionWRTposition(
-        const Dune::FieldVector<ctype, valueSize> &p, const Dune::FieldVector<ctype, valueSize> &along1,
-        const Dune::FieldVector<ctype, valueSize> &along2) {
-      using FieldMat          = Dune::FieldMatrix<ctype, valueSize, valueSize>;
+    static DefaultLinearAlgebra::FixedSizedMatrix<ctype, valueSize, valueSize> thirdDerivativeOfProjectionWRTposition(
+        const DefaultLinearAlgebra::FixedSizedVector<ctype, valueSize> &p, const DefaultLinearAlgebra::FixedSizedVector<ctype, valueSize> &along1,
+        const DefaultLinearAlgebra::FixedSizedVector<ctype, valueSize> &along2) {
+      using FieldMat          = DefaultLinearAlgebra::FixedSizedMatrix<ctype, valueSize, valueSize>;
       const ctype normSquared = two_norm2(p);
       using std::sqrt;
       const ctype norm                             = sqrt(normSquared);
-      const Dune::FieldVector<ctype, valueSize> pN = p / norm;
+      const DefaultLinearAlgebra::FixedSizedVector<ctype, valueSize> pN = p / norm;
       const ctype tscala1                          = inner(pN, along1);
       const ctype tscalwd1                         = inner(pN, along2);
       const ctype a1scalwd1                        = inner(along1, along2);
@@ -150,18 +150,18 @@ namespace Dune {
       const FieldMat a1dyadt                       = outer(along1, pN);
       const FieldMat wd1dyadt                      = outer(along2, pN);
       const FieldMat tDyadict                      = outer(pN, pN);
-      const FieldMat Id3minus5tdyadt               = createScaledIdentityMatrix<FieldMat>() - 5.0 * tDyadict;
+      const FieldMat Id3minus5tdyadt               = createScaledIdentityMatrix<ctype, valueSize, valueSize>() - 5.0 * tDyadict;
       FieldMat Chi_along                           = normwcubinv
                            * (3.0 * tscalwd1 * (a1dyadt + 0.5 * tscala1 * Id3minus5tdyadt)
                               + 3.0 * (0.5 * a1scalwd1 * tDyadict + tscala1 * wd1dyadt) - outer(along1, along2)
-                              - createScaledIdentityMatrix<FieldMat>(a1scalwd1 * 0.5));
+                              - createScaledIdentityMatrix<ctype, valueSize, valueSize>(a1scalwd1 * 0.5));
       Chi_along = Chi_along + transposeEvaluated(Chi_along);
       return Chi_along;
     }
 
     /** \brief Compute an orthonormal basis of the tangent space of S^n.
      * Taken from Oliver Sander's dune-gfe */
-    Dune::FieldMatrix<ctype, valueSize, correctionSize> orthonormalFrame() const {
+    DefaultLinearAlgebra::FixedSizedMatrix<ctype, valueSize, correctionSize> orthonormalFrame() const {
       using ResultType = Eigen::Matrix<ctype, valueSize, correctionSize>;
       ResultType result;
 
@@ -187,7 +187,7 @@ namespace Dune {
       // normalize the cols to make the orthogonal basis orthonormal
       result.colwise().normalize();
 
-      return toDune(result);
+      return maybeToDune(result);
     }
 
     template <typename ctOther, int dOther>

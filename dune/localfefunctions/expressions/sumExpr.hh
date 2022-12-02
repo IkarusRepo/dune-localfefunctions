@@ -30,6 +30,7 @@ namespace Dune {
     using Base = BinaryExpr<SumExpr, E1, E2>;
     using Base::Base;
     using Traits = LocalFunctionTraits<SumExpr>;
+    using LinearAlgebra = typename Base::E1Raw::LinearAlgebra;
 
     template <size_t ID_ = 0>
     static constexpr int orderID = std::max(Base::E1Raw::template order<ID_>(), Base::E1Raw::template order<ID_>());

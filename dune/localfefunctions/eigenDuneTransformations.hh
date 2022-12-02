@@ -49,6 +49,12 @@ namespace Dune {
     return eigenVector;
   }
 
+  /** \brief Does nothing if Matrix is already eigen */
+  template <typename ScalarType, int rows,int cols>
+  auto toEigen(const Eigen::Matrix<ScalarType, rows,cols>& mat) {
+    return mat;
+  }
+
   /** \brief Creates a Eigen::Vector from a given Dune::FieldMatrix with one column  */
   template <typename ScalarType, int size>
   Eigen::Vector<ScalarType, size> toEigen(const Dune::FieldMatrix<ScalarType, size, 1>& vec) {
@@ -56,6 +62,24 @@ namespace Dune {
     for (int i = 0; i < size; ++i)
       eigenVector(i) = vec[i][0];
     return eigenVector;
+  }
+
+  /** \brief Depending on the Selected LinearAlgebra the Dune::Fieldmatrix is converted to an Eigen::Matrix */
+  template <typename LinAlg,typename ScalarType, int size>
+  auto maybeToEigen(const Dune::FieldMatrix<ScalarType, size, 1>& vec) {
+    if constexpr(std::is_same_v<LinAlg,EigenLinearAlgebra>)
+      return toEigen(vec);
+
+    return vec;
+  }
+
+  /** \brief Depending on the Selected LinearAlgebra the Eigen::Matrix is converted to an Dune::FieldMatrix */
+  template <typename LinAlg,typename ScalarType, int size>
+  auto maybeToDune(const Eigen::Matrix<ScalarType, size, 1>& mat) {
+    if constexpr(std::is_same_v<LinAlg,EigenLinearAlgebra>)
+      return mat;
+
+    return toDune(mat);
   }
 
   /** \brief Views a  dune fieldvector as a Eigen::Vector, no copies take place! */

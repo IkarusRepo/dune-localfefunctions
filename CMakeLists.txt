@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.18)
 project(dune-localfefunctions CXX)
 
+option(DUNE_LOCALFEFUNCTIONS_USE_EIGEN "Use Eigen" ON)
+
+
+
 if(NOT
    (dune-common_DIR
     OR dune-common_ROOT
@@ -24,6 +28,10 @@ include(DuneMacros)
 dune_project()
 
 dune_add_library(dune-localfefunctions)
+if(DUNE_LOCALFEFUNCTIONS_USE_EIGEN)
+    MESSAGE(STATUS "Eigen Linear Algebra")
+    target_compile_definitions(dune-localfefunctions PUBLIC DUNE_LOCALFEFUNCTIONS_USE_EIGEN)
+endif()
 
 target_compile_features(dune-localfefunctions PRIVATE cxx_std_20)
 target_compile_options(

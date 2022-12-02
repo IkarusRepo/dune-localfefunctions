@@ -3,6 +3,8 @@
 //
 
 #pragma once
+#include "linalgconcepts.hh"
+
 #include <concepts>
 #include <tuple>
 #include <type_traits>
@@ -14,8 +16,8 @@
 
 namespace Dune {
   template <typename ST, int size>
-  requires(size > 0 and size <= 3) auto toVoigt(const Dune::FieldMatrix<ST, size, size> &E) {
-    Dune::FieldVector<ST, (size * (size + 1)) / 2> EVoigt;
+  requires(size > 0 and size <= 3) auto toVoigt(const DefaultLinearAlgebra::template FixedSizedMatrix<ST, size, size> &E) {
+    typename DefaultLinearAlgebra::template FixedSizedVector<ST, (size * (size + 1)) / 2> EVoigt;
     for (int i = 0; i < size; ++i)
       EVoigt[i] = E[i][i];
 

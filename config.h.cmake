@@ -43,6 +43,9 @@
 /* Defines a variable to disable code that is only needed for testing */
 #define DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING @DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING@
 
+/* Defines a variable to use Eigen for LinearAlgebra */
+#define DUNE_LOCALFEFUNCTIONS_USE_EIGEN @DUNE_LOCALFEFUNCTIONS_USE_EIGEN@
+
 /* end dune-localfefunctions
    Everything below here will be overwritten
 */

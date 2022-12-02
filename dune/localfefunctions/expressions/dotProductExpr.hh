@@ -36,6 +36,7 @@ namespace Dune {
     using ctype                    = typename Traits::ctype;
     static constexpr int valueSize = Traits::valueSize;
     static constexpr int gridDim   = Traits::gridDim;
+    using LinearAlgebra = typename Base::E1Raw::LinearAlgebra;
 
     template <size_t ID_ = 0>
     static constexpr int orderID
@@ -45,7 +46,7 @@ namespace Dune {
     auto evaluateValueOfExpression(const LFArgs &lfArgs) const {
       const auto u = evaluateFunctionImpl(this->l(), lfArgs);
       const auto v = evaluateFunctionImpl(this->r(), lfArgs);
-      return Dune::FieldMatrix<ctype, 1, 1>(inner(u, v));
+      return typename LinearAlgebra::template FixedSizedMatrix<ctype, 1, 1>(inner(u, v));
     }
 
     template <int DerivativeOrder, typename LFArgs>
@@ -118,8 +119,8 @@ namespace Dune {
           static_assert(u.dimension == Base::E1Raw::valueSize);
           static_assert(v.dimension == Base::E1Raw::valueSize);
 
-          const Dune::FieldMatrix<ctype, Base::E1Raw::valueSize, gridDim> uTimesA = u * alongMatrix;
-          const Dune::FieldMatrix<ctype, Base::E2Raw::valueSize, gridDim> vTimesA = v * alongMatrix;
+          const typename LinearAlgebra::template FixedSizedMatrix<ctype, Base::E1Raw::valueSize, gridDim> uTimesA = u * alongMatrix;
+          const typename LinearAlgebra::template FixedSizedMatrix<ctype, Base::E2Raw::valueSize, gridDim> vTimesA = v * alongMatrix;
           using uTimesAType = std::remove_cvref_t<decltype(uTimesA)>;
           using vTimesAType = std::remove_cvref_t<decltype(vTimesA)>;
           static_assert(uTimesAType::rows == Base::E1Raw::valueSize);
