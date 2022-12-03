@@ -46,7 +46,8 @@ jobs:
             lib: "",
             enableEigen: 0
           }
-          : "GCC-Debug-Eigen",
+          - {
+            name: "GCC-Debug-Eigen",
             config: Debug,
             compilerC: gcc-12,
             compilerCxx: g++-12,
