@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2022 The Ikarus Developers mueller@ibb.uni-stuttgart.de
 # SPDX-License-Identifier: CC0-1.0
 
-name: Debian
+name: Debian with Dune types
 on:
   push:
 
@@ -31,18 +31,35 @@ jobs:
 #            lib: "-stdlib=libc++",
 #           }
           - {
-            name: "GCC-Debug",
+            name: "GCC-Debug-Dune",
             config: Debug,
             compilerC: gcc-12,
             compilerCxx: g++-12,
-            lib: ""
+            lib: "",
+            enableEigen: 0
           }
           - {
-            name: "GCC-Release",
+            name: "GCC-Release-Dune",
             config: Release,
             compilerC: gcc-12,
             compilerCxx: g++-12,
-            lib: ""
+            lib: "",
+            enableEigen: 0
+          }
+          : "GCC-Debug-Eigen",
+            config: Debug,
+            compilerC: gcc-12,
+            compilerCxx: g++-12,
+            lib: "",
+            enableEigen: 1
+          }
+          - {
+            name: "GCC-Release-Eigen",
+            config: Release,
+            compilerC: gcc-12,
+            compilerCxx: g++-12,
+            lib: 1,
+            enableEigen: 1
           }
     steps:
       - uses: actions/checkout@v2
@@ -53,7 +70,7 @@ jobs:
         run: |
           mkdir cmake-build-${{ matrix.config.config }}
           cd cmake-build-${{ matrix.config.config }}
-          cmake ../  -DCMAKE_BUILD_TYPE=${{ matrix.config.config }} -G "Unix Makefiles" -DCMAKE_C_COMPILER=${{ matrix.config.compilerC }} -DCMAKE_CXX_COMPILER=${{ matrix.config.compilerCxx }} -DDUNE_LOCALFEFUNCTIONS_ENABLE_TESTING=1
+          cmake ../  -DCMAKE_BUILD_TYPE=${{ matrix.config.config }} -G "Unix Makefiles" -DCMAKE_C_COMPILER=${{ matrix.config.compilerC }} -DCMAKE_CXX_COMPILER=${{ matrix.config.compilerCxx }} -DDUNE_LOCALFEFUNCTIONS_USE_EIGEN=${{ matrix.config.enableEigen }} -DDUNE_LOCALFEFUNCTIONS_ENABLE_TESTING=1
           cmake --build . --parallel 2 --target build_tests
       - name: Tests
         working-directory: ./repo/cmake-build-${{ matrix.config.config }}
