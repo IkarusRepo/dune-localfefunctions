@@ -65,20 +65,32 @@ namespace Dune {
   }
 
   /** \brief Depending on the Selected LinearAlgebra the Dune::Fieldmatrix is converted to an Eigen::Matrix */
-  template <typename LinAlg,typename ScalarType, int size>
-  auto maybeToEigen(const Dune::FieldMatrix<ScalarType, size, 1>& vec) {
+  template <typename ScalarType, int rows,int cols,typename LinAlg=DefaultLinearAlgebra>
+  auto maybeToEigen(const Dune::FieldMatrix<ScalarType, rows, cols>& vec) {
+#if DUNE_LOCALFEFUNCTIONS_USE_EIGEN == 1
     if constexpr(std::is_same_v<LinAlg,EigenLinearAlgebra>)
       return toEigen(vec);
-
+#endif
     return vec;
   }
 
+  /** \brief Creates a Eigen::Matrix from a given Dune::FieldMatrix  */
+  template <typename ScalarType, int size1, int size2>
+  Dune::FieldMatrix<ScalarType, size1, size2> toDune(const Eigen::Matrix<ScalarType, size1, size2>& mat) {
+    Dune::FieldMatrix<ScalarType, size1, size2> duneMatrix;
+    for (int i = 0; i < size1; ++i)
+      for (int j = 0; j < size2; ++j)
+        duneMatrix[i][j] = mat(i, j);
+    return duneMatrix;
+  }
+  
   /** \brief Depending on the Selected LinearAlgebra the Eigen::Matrix is converted to an Dune::FieldMatrix */
-  template <typename LinAlg,typename ScalarType, int size>
-  auto maybeToDune(const Eigen::Matrix<ScalarType, size, 1>& mat) {
+  template <typename ScalarType, int rows,int cols,typename LinAlg=DefaultLinearAlgebra>
+  auto maybeToDune(const Eigen::Matrix<ScalarType, rows, cols>& mat) {
+#if DUNE_LOCALFEFUNCTIONS_USE_EIGEN == 1
     if constexpr(std::is_same_v<LinAlg,EigenLinearAlgebra>)
       return mat;
-
+#endif
     return toDune(mat);
   }
 
@@ -98,15 +110,7 @@ namespace Dune {
     return eigenmatrix;
   }
 
-  /** \brief Creates a Eigen::Matrix from a given Dune::FieldMatrix  */
-  template <typename ScalarType, int size1, int size2>
-  Dune::FieldMatrix<ScalarType, size1, size2> toDune(const Eigen::Matrix<ScalarType, size1, size2>& mat) {
-    Dune::FieldMatrix<ScalarType, size1, size2> duneMatrix;
-    for (int i = 0; i < size1; ++i)
-      for (int j = 0; j < size2; ++j)
-        duneMatrix[i][j] = mat(i, j);
-    return duneMatrix;
-  }
+
 
   /** \brief Creates a Eigen::Matrix from a given Dune::DiagonalMatrix. This should return Eigen::DiagonalMatrix but
    * Eigen::DiagonalMatrix does not contain e.g. a transpose method. And therefore we would need to specialize user

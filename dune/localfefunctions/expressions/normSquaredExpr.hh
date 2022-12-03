@@ -52,7 +52,7 @@ namespace Dune {
       if constexpr (DerivativeOrder == 1)  // d(squaredNorm(u))/dx = 2 * u_x * u
       {
         const auto u_x = evaluateDerivativeImpl(this->m(), lfArgs);
-        auto res       = leftMultiplyTranspose(u, u_x).eval();
+        auto res       = Dune::eval(leftMultiplyTranspose(u, u_x));
         res *= 2;
         return res;
       } else if constexpr (DerivativeOrder == 2) {  // dd(squaredNorm(u))/(dxdy) =  2 *u_{x,y} * u + 2*u_x*u_y

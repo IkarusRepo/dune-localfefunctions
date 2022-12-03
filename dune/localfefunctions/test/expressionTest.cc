@@ -246,7 +246,7 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
               "Check that passing in different order does not change anything for the derivatives (spatial single)");
 
           auto jacoWrtCoeffAndSpatialExpected
-              = transpose(BLAi)
+              = transposeEvaluated(BLAi)
                 * segment<coeffValueSize>(gradientWRTCoeffsTwoTimesSingleSpatial[d], i * coeffValueSize);
           t.check(isApproxSame(jacoWrtCoeffAndSpatial, jacoWrtCoeffAndSpatialExpected, tol),
                   "Test mixed first derivative wrt coeff and first derivative wrt single spatial");
@@ -272,7 +272,7 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
                     tol),
                 "Test spatiall all and coeff derivative")<<"jacoWrtSpatialAllAndCoeffProd\n"<<jacoWrtSpatialAllAndCoeffProd<<
             "\ntransposeEvaluated(transposeEvaluated(BLAi) \n"<<transposeEvaluated(BLAi)<<
-            "\nsegment<coeffValueSize>(gradienWRTCoeffsSpatialAll, i * coeffValueSize)\n"<< segment<coeffValueSize>(gradienWRTCoeffsSpatialAll, i * coeffValueSize) ;
+            "\nsegment<coeffValueSize>(gradienWRTCoeffsSpatialAll, i * coeffValueSize)\n"<< segment<coeffValueSize>(gradienWRTCoeffsSpatialAll, i * coeffValueSize) <<"\n gradienWRTCoeffsSpatialAll\n"<<gradienWRTCoeffsSpatialAll;
 
         // Check if spatialAll returns the same as the single spatial derivatives
         const auto Warray  = lf.evaluateDerivative(ipIndex, Dune::wrt(coeff(i), spatialAll),
@@ -477,132 +477,132 @@ auto localFunctionTestConstructor(const Dune::GeometryType &geometryType, size_t
   auto mf = -f;
   t.subTest(testLocalFunction(mf));
   static_assert(f.order() == mf.order());
-//
-//  if constexpr (domainDim == worldDim) {
-//    auto eps = linearStrains(f);
-//    t.subTest(testLocalFunction(eps));
-//    static_assert(eps.order() == linear);
-//
-//    auto gls = greenLagrangeStrains(f);
-//    t.subTest(testLocalFunction(gls));
-//
-//    static_assert(gls.order() == quadratic);
-//  }
-//
-//  auto k = -dot(f + f, 3.0 * (g / 5.0) * 5.0);
-//  t.subTest(testLocalFunction(k));
-//  static_assert(k.order() == quadratic);
-//  static_assert(std::tuple_size_v<decltype(collectNonArithmeticLeafNodes(k))> == 3);
-//  static_assert(countNonArithmeticLeafNodes(k) == 3);
-//
-//  auto dotfg = dot(f, g);
-//  t.subTest(testLocalFunction(dotfg));
-//  static_assert(countNonArithmeticLeafNodes(dotfg) == 2);
-//  static_assert(dotfg.order() == quadratic);
-//  static_assert(
-//      std::is_same_v<typename decltype(dotfg)::Ids, std::tuple<Dune::index_constant<0>, Dune::index_constant<0>>>);
-//
+
+  if constexpr (domainDim == worldDim) {
+    auto eps = linearStrains(f);
+    t.subTest(testLocalFunction(eps));
+    static_assert(eps.order() == linear);
+
+    auto gls = greenLagrangeStrains(f);
+    t.subTest(testLocalFunction(gls));
+
+    static_assert(gls.order() == quadratic);
+  }
+
+  auto k = -dot(f + f, 3.0 * (g / 5.0) * 5.0);
+  t.subTest(testLocalFunction(k));
+  static_assert(k.order() == quadratic);
+  static_assert(std::tuple_size_v<decltype(collectNonArithmeticLeafNodes(k))> == 3);
+  static_assert(countNonArithmeticLeafNodes(k) == 3);
+
+  auto dotfg = dot(f, g);
+  t.subTest(testLocalFunction(dotfg));
+  static_assert(countNonArithmeticLeafNodes(dotfg) == 2);
+  static_assert(dotfg.order() == quadratic);
+  static_assert(
+      std::is_same_v<typename decltype(dotfg)::Ids, std::tuple<Dune::index_constant<0>, Dune::index_constant<0>>>);
+
   auto normSq = normSquared(f);
   t.subTest(testLocalFunction(normSq));
   static_assert(normSq.order() == quadratic);
-//
-//  auto logg = log(dotfg);
-//  t.subTest(testLocalFunction(logg));
-//
-//  auto powf = pow<3>(dotfg);
-//  t.subTest(testLocalFunction(powf));
-//
-//  auto powfgsqrtdotfg = sqrt(powf);
-//  t.subTest(testLocalFunction(powfgsqrtdotfg));
-//
-//  if constexpr (size > 1)  // Projection-Based only makes sense in 2d+
-//  {
-//    auto gP = Dune::ProjectionBasedLocalFunction(localBasis, vBlockedLocal3, geometry);
-//    static_assert(gP.order() == nonLinear);
-//    t.subTest(testLocalFunction(gP));
-//  }
-//
-//  using namespace Dune::DerivativeDirections;
-//
-//  const double tol = 1e-13;
-//
-//  auto f2 = Dune::StandardLocalFunction(localBasis, vBlockedLocal, geometry, _0);
-//  auto g2 = Dune::StandardLocalFunction(localBasis, vBlockedLocal2, geometry, _1);
-//  static_assert(countNonArithmeticLeafNodes(f2) == 1);
-//  static_assert(countNonArithmeticLeafNodes(g2) == 1);
-//
-//  auto k2 = dot(f2 + g2, g2);
-//  static_assert(countNonArithmeticLeafNodes(k2) == 3);
-//  static_assert(std::is_same_v<typename decltype(k2)::Ids,
-//                               std::tuple<Dune::index_constant<0>, Dune::index_constant<1>, Dune::index_constant<1>>>);
-//
-//  auto b2 = collectNonArithmeticLeafNodes(k2);
-//  static_assert(std::tuple_size_v<decltype(b2)> == 3);
-//
-//  for (int gpIndex = 0; [[maybe_unused]] auto &gp : rule) {
-//    const auto &N  = localBasis.evaluateFunction(gpIndex);
-//    const auto &dN = localBasis.evaluateJacobian(gpIndex);
-//    t.check(Dune::FloatCmp::eq(inner(f2.evaluate(gpIndex, Dune::on(DerivativeDirections::referenceElement))
-//                                         + g2.evaluate(gpIndex, Dune::on(DerivativeDirections::referenceElement)),
-//                                     g2.evaluate(gpIndex, Dune::on(DerivativeDirections::referenceElement))),
-//                               k2.evaluate(gpIndex, Dune::on(DerivativeDirections::referenceElement))[0][0]),
-//            "Check function value");
-//    auto df2 = f2.evaluateDerivative(gpIndex, wrt(spatial(0)), Dune::on(DerivativeDirections::referenceElement));
-//    auto dg2 = g2.evaluateDerivative(gpIndex, wrt(spatial(0)), Dune::on(DerivativeDirections::referenceElement));
-//    auto g2E = g2.evaluate(gpIndex, Dune::on(DerivativeDirections::referenceElement));
-//    auto f2E = f2.evaluate(gpIndex, Dune::on(DerivativeDirections::referenceElement));
-//    auto resSingleSpatial = Dune::eval(inner(df2 + dg2, g2E) + inner(f2E + g2E, dg2));
-//    t.check(Dune::FloatCmp::eq(
-//        resSingleSpatial,
-//        k2.evaluateDerivative(gpIndex, wrt(spatial(0)), Dune::on(DerivativeDirections::referenceElement))[0][0], tol));
-//
-//    auto df2A = f2.evaluateDerivative(gpIndex, wrt(spatialAll), Dune::on(DerivativeDirections::referenceElement));
-//    auto dg2A = g2.evaluateDerivative(gpIndex, wrt(spatialAll), Dune::on(DerivativeDirections::referenceElement));
-//
-//    auto resSpatialAll
-//        = eval(transposeEvaluated(leftMultiplyTranspose(df2A + dg2A, g2E)) + leftMultiplyTranspose(f2E + g2E, dg2A));
-//    static_assert(resSpatialAll.cols == domainDim);
-//    static_assert(resSpatialAll.rows == 1);
-//
-//    t.check(isApproxSame(
-//        resSpatialAll,
-//        k2.evaluateDerivative(gpIndex, wrt(spatialAll), Dune::on(DerivativeDirections::referenceElement)), tol));
-//
-//    for (size_t iC = 0; iC < fe.size(); ++iC) {
-//      const VectorType dfdi = g2.evaluate(gpIndex, Dune::on(DerivativeDirections::referenceElement)) * N[iC];
-//
-//      const auto dkdi = transposeEvaluated(
-//          k2.evaluateDerivative(gpIndex, wrt(coeff(_0, iC)), Dune::on(DerivativeDirections::referenceElement)));
-//
-//      t.check(isApproxSame(dfdi, dkdi, tol));
-//
-//      for (size_t jC = 0; jC < fe.size(); ++jC) {
-//        const MatrixType dkdij         = k2.evaluateDerivative(gpIndex, wrt(coeff(_0, iC, _1, jC)),
-//                                                               Dune::on(DerivativeDirections::referenceElement));
-//        const MatrixType dkdijExpected = createScaledIdentityMatrix<MatrixType>(N[jC] * N[iC]);
-//        t.check(isApproxSame(dkdijExpected, dkdij, tol));
-//
-//        const MatrixType dkdij2         = k2.evaluateDerivative(gpIndex, wrt(coeff(_0, iC, _0, jC)),
-//                                                                Dune::on(DerivativeDirections::referenceElement));
-//        const MatrixType dkdijExpected2 = createZeroMatrix<MatrixType>();
-//        t.check(isApproxSame(dkdijExpected2, dkdij2, tol));
-//        const MatrixType dkdij3         = k2.evaluateDerivative(gpIndex, wrt(coeff(_1, iC, _1, jC)),
-//                                                                Dune::on(DerivativeDirections::referenceElement));
-//        const MatrixType dkdijExpected3 = createScaledIdentityMatrix<MatrixType>(2 * N[iC] * N[jC]);
-//        t.check(isApproxSame(dkdijExpected3, dkdij3, tol));
-//
-//        const MatrixType dkdSij         = k2.evaluateDerivative(gpIndex, wrt(spatial(0), coeff(_0, iC, _1, jC)),
-//                                                                Dune::on(DerivativeDirections::referenceElement));
-//        const MatrixType dkdSijR        = k2.evaluateDerivative(gpIndex, wrt(coeff(_0, iC, _1, jC), spatial(0)),
-//                                                                Dune::on(DerivativeDirections::referenceElement));
-//        const MatrixType dkdSijExpected = createScaledIdentityMatrix<MatrixType>(dN[jC][0] * N[iC] + N[jC] * dN[iC][0]);
-//        t.check(isApproxSame(dkdSijR, dkdSij, tol));
-//        t.check(isApproxSame(dkdSijExpected, dkdSij, tol));
-//      }
+
+  auto logg = log(dotfg);
+  t.subTest(testLocalFunction(logg));
+
+  auto powf = pow<3>(dotfg);
+  t.subTest(testLocalFunction(powf));
+
+  auto powfgsqrtdotfg = sqrt(powf);
+  t.subTest(testLocalFunction(powfgsqrtdotfg));
+
+  if constexpr (size > 1)  // Projection-Based only makes sense in 2d+
+  {
+    auto gP = Dune::ProjectionBasedLocalFunction(localBasis, vBlockedLocal3, geometry);
+    static_assert(gP.order() == nonLinear);
+    t.subTest(testLocalFunction(gP));
+  }
+
+  using namespace Dune::DerivativeDirections;
+
+  const double tol = 1e-13;
+
+  auto f2 = Dune::StandardLocalFunction(localBasis, vBlockedLocal, geometry, _0);
+  auto g2 = Dune::StandardLocalFunction(localBasis, vBlockedLocal2, geometry, _1);
+  static_assert(countNonArithmeticLeafNodes(f2) == 1);
+  static_assert(countNonArithmeticLeafNodes(g2) == 1);
+
+  auto k2 = dot(f2 + g2, g2);
+  static_assert(countNonArithmeticLeafNodes(k2) == 3);
+  static_assert(std::is_same_v<typename decltype(k2)::Ids,
+                               std::tuple<Dune::index_constant<0>, Dune::index_constant<1>, Dune::index_constant<1>>>);
+
+  auto b2 = collectNonArithmeticLeafNodes(k2);
+  static_assert(std::tuple_size_v<decltype(b2)> == 3);
+
+  for (int gpIndex = 0; [[maybe_unused]] auto &gp : rule) {
+    const auto &N  = localBasis.evaluateFunction(gpIndex);
+    const auto &dN = localBasis.evaluateJacobian(gpIndex);
+    t.check(Dune::FloatCmp::eq(inner(f2.evaluate(gpIndex, Dune::on(DerivativeDirections::referenceElement))
+                                         + g2.evaluate(gpIndex, Dune::on(DerivativeDirections::referenceElement)),
+                                     g2.evaluate(gpIndex, Dune::on(DerivativeDirections::referenceElement))),
+                               k2.evaluate(gpIndex, Dune::on(DerivativeDirections::referenceElement))[0][0]),
+            "Check function value");
+    auto df2 = f2.evaluateDerivative(gpIndex, wrt(spatial(0)), Dune::on(DerivativeDirections::referenceElement));
+    auto dg2 = g2.evaluateDerivative(gpIndex, wrt(spatial(0)), Dune::on(DerivativeDirections::referenceElement));
+    auto g2E = g2.evaluate(gpIndex, Dune::on(DerivativeDirections::referenceElement));
+    auto f2E = f2.evaluate(gpIndex, Dune::on(DerivativeDirections::referenceElement));
+    auto resSingleSpatial = Dune::eval(inner(df2 + dg2, g2E) + inner(f2E + g2E, dg2));
+    t.check(Dune::FloatCmp::eq(
+        resSingleSpatial,
+        k2.evaluateDerivative(gpIndex, wrt(spatial(0)), Dune::on(DerivativeDirections::referenceElement))[0][0], tol));
+
+    auto df2A = f2.evaluateDerivative(gpIndex, wrt(spatialAll), Dune::on(DerivativeDirections::referenceElement));
+    auto dg2A = g2.evaluateDerivative(gpIndex, wrt(spatialAll), Dune::on(DerivativeDirections::referenceElement));
+
+    auto resSpatialAll
+        = eval(transposeEvaluated(leftMultiplyTranspose(df2A + dg2A, g2E)) + leftMultiplyTranspose(f2E + g2E, dg2A));
+    static_assert(resSpatialAll.cols == domainDim);
+    static_assert(resSpatialAll.rows == 1);
+
+    t.check(isApproxSame(
+        resSpatialAll,
+        k2.evaluateDerivative(gpIndex, wrt(spatialAll), Dune::on(DerivativeDirections::referenceElement)), tol));
+
+    for (size_t iC = 0; iC < fe.size(); ++iC) {
+      const VectorType dfdi = g2.evaluate(gpIndex, Dune::on(DerivativeDirections::referenceElement)) * N[iC];
+
+      const auto dkdi = transposeEvaluated(
+          k2.evaluateDerivative(gpIndex, wrt(coeff(_0, iC)), Dune::on(DerivativeDirections::referenceElement)));
+
+      t.check(isApproxSame(dfdi, dkdi, tol));
+
+      for (size_t jC = 0; jC < fe.size(); ++jC) {
+        const MatrixType dkdij         = k2.evaluateDerivative(gpIndex, wrt(coeff(_0, iC, _1, jC)),
+                                                               Dune::on(DerivativeDirections::referenceElement));
+        const MatrixType dkdijExpected = createScaledIdentityMatrix<double, worldDim, worldDim>(N[jC] * N[iC]);
+        t.check(isApproxSame(dkdijExpected, dkdij, tol));
+
+        const MatrixType dkdij2         = k2.evaluateDerivative(gpIndex, wrt(coeff(_0, iC, _0, jC)),
+                                                                Dune::on(DerivativeDirections::referenceElement));
+        const MatrixType dkdijExpected2 = createZeroMatrix<double, worldDim, worldDim>();
+        t.check(isApproxSame(dkdijExpected2, dkdij2, tol));
+        const MatrixType dkdij3         = k2.evaluateDerivative(gpIndex, wrt(coeff(_1, iC, _1, jC)),
+                                                                Dune::on(DerivativeDirections::referenceElement));
+        const MatrixType dkdijExpected3 = createScaledIdentityMatrix<double, worldDim, worldDim>(2 * N[iC] * N[jC]);
+        t.check(isApproxSame(dkdijExpected3, dkdij3, tol));
+
+        const MatrixType dkdSij         = k2.evaluateDerivative(gpIndex, wrt(spatial(0), coeff(_0, iC, _1, jC)),
+                                                                Dune::on(DerivativeDirections::referenceElement));
+        const MatrixType dkdSijR        = k2.evaluateDerivative(gpIndex, wrt(coeff(_0, iC, _1, jC), spatial(0)),
+                                                                Dune::on(DerivativeDirections::referenceElement));
+        const MatrixType dkdSijExpected = createScaledIdentityMatrix<double, worldDim, worldDim>(dN[jC][0] * N[iC] + N[jC] * dN[iC][0]);
+        t.check(isApproxSame(dkdSijR, dkdSij, tol));
+        t.check(isApproxSame(dkdSijExpected, dkdSij, tol));
+      }
+    }
+    ++gpIndex;
+  }
 //    }
-//    ++gpIndex;
-//  }
-  //  }
   return t;
 }
 

@@ -127,7 +127,7 @@ namespace Dune {
             const auto& dNIdT1 = gradUdI[0].scalar();
             const auto& dNJdT1 = gradUdJ[0].scalar();
             const ctype val    = S[0] * dNIdT1 * dNJdT1;
-            return createScaledIdentityMatrix<displacementSize, displacementSize>(val);
+            return createScaledIdentityMatrix<ctype,displacementSize, displacementSize>(val);
           } else if constexpr (displacementSize == 2) {
             const auto& dNIdT1 = gradUdI[0].scalar();
             const auto& dNIdT2 = gradUdI[1].scalar();
@@ -135,7 +135,7 @@ namespace Dune {
             const auto& dNJdT2 = gradUdJ[1].scalar();
             const ctype val
                 = S[0] * dNIdT1 * dNJdT1 + S[1] * dNIdT2 * dNJdT2 + S[2] * (dNIdT1 * dNJdT2 + dNJdT1 * dNIdT2);
-            return createScaledIdentityMatrix<displacementSize, displacementSize>(val);
+            return createScaledIdentityMatrix<ctype,displacementSize, displacementSize>(val);
           } else if constexpr (displacementSize == 3) {
             const auto& dNIdT1 = gradUdI[0].scalar();
             const auto& dNIdT2 = gradUdI[1].scalar();
@@ -146,7 +146,7 @@ namespace Dune {
             const ctype val    = S[0] * dNIdT1 * dNJdT1 + S[1] * dNIdT2 * dNJdT2 + S[2] * dNIdT3 * dNJdT3
                               + S[3] * (dNIdT2 * dNJdT3 + dNJdT2 * dNIdT3) + S[4] * (dNIdT1 * dNJdT3 + dNJdT1 * dNIdT3)
                               + S[5] * (dNIdT1 * dNJdT2 + dNJdT1 * dNIdT2);
-            return createScaledIdentityMatrix<displacementSize, displacementSize>(val);
+            return createScaledIdentityMatrix<ctype,displacementSize, displacementSize>(val);
           }
         } else if constexpr (LFArgs::hasOneSpatial and LFArgs::hasSingleCoeff) {
           if constexpr (LFArgs::hasOneSpatialSingle and LFArgs::hasSingleCoeff) {

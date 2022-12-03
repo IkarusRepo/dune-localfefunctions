@@ -153,7 +153,7 @@ namespace Dune {
 
     for (int i = 0; i < rows; ++i)
       for (int j = 0; j < cols; ++j)
-        res += a[j][i] * b[i][j];
+        res += a[i][j] * b[i][j];
 
     return res;
   }
@@ -428,7 +428,7 @@ namespace Dune {
 
   template <typename field_type, int rows>
   Dune::DiagonalMatrix<field_type, rows> leftMultiplyTranspose(const Dune::DiagonalMatrix<field_type, rows>& B,
-                                                               const Dune::DiagonalMatrix<field_type, rows>& A) {
+                                                                                               const Dune::DiagonalMatrix<field_type, rows>& A) {
     Dune::DiagonalMatrix<field_type, rows> C = B;
     for (int i = 0; i < rows; ++i) {
       C[i][i] *= A[i][i];
@@ -455,9 +455,13 @@ namespace Dune {
     std::mt19937 mt(rd());
     std::uniform_real_distribution< ScalarType> dist(lower, upper);
     auto rand = [&dist, &mt]() { return dist(mt); };
-    typename DefaultLinearAlgebra::template FixedSizedMatrix<ScalarType,rows,cols> vec;
-    std::generate(vec.reshaped().begin(), vec.reshaped().end(), rand);
-    return vec;
+    typename DefaultLinearAlgebra::template FixedSizedMatrix<ScalarType,rows,cols> mat;
+#if DUNE_LOCALFEFUNCTIONS_USE_EIGEN == 1
+    std::generate(mat.reshaped().begin(), mat.reshaped().end(), rand);
+#else
+std::generate(mat.begin(), mat.end(), rand);
+#endif
+    return mat;
   }
 
   /** \brief Return a segment of a FieldVector from lower up to lower+size-1 */
@@ -510,6 +514,11 @@ namespace Dune {
   template <typename field_type, int rows, int cols>
   void setZero(Dune::FieldMatrix<field_type, rows, cols>& a) {
     a = 0;
+  }
+
+  template <typename field_type, int rows>
+  void setZero(Dune::ScaledIdentityMatrix<field_type, rows>& a) {
+    a.scalar() = 0;
   }
 
   /** \brief sets a matrix to zero */
@@ -1019,12 +1028,22 @@ namespace Dune {
   }
 
   template <typename Scalar, int size>
-  auto getDiagonalEntry( Dune::ScaledIdentityMatrix<Scalar, size>& a, const  int& ) {
+  auto& getDiagonalEntry( Dune::ScaledIdentityMatrix<Scalar, size>& a,   int ) {
     return a.scalar();
   }
 
   template <typename Scalar, int size>
-  void getDiagonalEntry( Eigen::Matrix<Scalar, size, size>& a, const  int& i) {
+  auto& getDiagonalEntry(const  Dune::ScaledIdentityMatrix<Scalar, size>& a,   int ) {
+    return a.scalar();
+  }
+
+  template <typename Scalar, int size>
+  auto& getDiagonalEntry( Eigen::Matrix<Scalar, size, size>& a,   int i) {
+    return a.diagonal()[i];
+  }
+
+  template <typename Scalar, int size>
+  auto& getDiagonalEntry(const Eigen::Matrix<Scalar, size, size>& a,   int i) {
     return a.diagonal()[i];
   }
 
@@ -1139,10 +1158,46 @@ namespace Dune {
     return Eigen::MatrixBase<Derived>::ColsAtCompileTime;
   }
 
+  template <typename Scalar, int rows, int cols_>
+  consteval auto cols(const Dune::FieldMatrix<Scalar,rows,cols_>&)
+  {
+    return cols_;
+  }
+
+  template <typename Scalar, int cols_>
+  consteval auto cols(const Dune::ScaledIdentityMatrix<Scalar,cols_>&)
+  {
+    return cols_;
+  }
+
+  template <typename Scalar, int rows_>
+  consteval auto cols(const Dune::FieldVector<Scalar,rows_>&)
+  {
+    return 1;
+  }
+
   template <typename Derived>
   consteval auto rows(const Eigen::MatrixBase<Derived>& A)
   {
     return Eigen::MatrixBase<Derived>::RowsAtCompileTime;
+  }
+
+  template <typename Scalar, int rows_, int cols>
+  consteval auto rows(const Dune::FieldMatrix<Scalar,rows_,cols>&)
+  {
+    return rows_;
+  }
+
+  template <typename Scalar, int cols_>
+  consteval auto rows(const Dune::ScaledIdentityMatrix<Scalar,cols_>&)
+  {
+    return cols_;
+  }
+
+  template <typename Scalar, int rows_>
+  consteval auto rows(const Dune::FieldVector<Scalar,rows_>&)
+  {
+    return rows_;
   }
 
   /** \brief Evaluates Eigen expressions */
@@ -1227,12 +1282,19 @@ namespace Dune {
   }
 
   template <std::size_t d, typename Scalar, typename Type>
-  requires Concepts::MultiplyAble<Scalar, Type>
-  auto operator*=(std::array<Type, d>& a, Scalar b) {
+    requires Concepts::MultiplyAble<Scalar, Type>
+  auto operator*=( std::array<Type, d>& a,Scalar b) {
     for (size_t i = 0U; i < d; ++i)
-      a[i] *= b;
+      a[i] *= b ;
     return a;
   }
+
+  template<typename Scalar1,int size>
+  auto transpose( const Dune::ScaledIdentityMatrix<Scalar1, size> & mat)
+ {
+    return mat;
+  }
+
 
   /* Method to print to cout the matrix in a format that can directly be copied to maple*/
   template <typename Derived>

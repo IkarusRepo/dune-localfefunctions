@@ -192,7 +192,7 @@ namespace Dune {
         auto& unitVec                = coeffs[coeffsIndex[0]];
         auto& unitVecVal             = unitVec.getValue();
         auto scal                    = inner(unitVecVal, dt * std::get<0>(alongArgs.args));
-        auto idmat                   = createScaledIdentityMatrix<CoeffDerivEukMatrix>(scal);
+        auto idmat                   = createScaledIdentityMatrix<ctype, valueSize, valueSize>(scal);
         ddt -= idmat;
       }
 
@@ -287,7 +287,7 @@ namespace Dune {
         const std::array<CoeffDerivEukMatrix, gridDim> Warray
             = evaluateDerivativeWRTCoeffsANDSpatialEukImpl(ipIndexOrPosition, coeffsIndex[0], transArgs);
         for (int i = 0; i < gridDim; ++i) {
-          ChiArrayEuk -= createScaledIdentityMatrix<CoeffDerivEukMatrix>(
+          ChiArrayEuk -= createScaledIdentityMatrix<ctype, valueSize, valueSize>(
               inner(coeffs[coeffsIndex[0]].getValue(), Warray[i] * col(along, i)));
         }
       }
@@ -320,7 +320,7 @@ namespace Dune {
       if (coeffsIndex[0] == coeffsIndex[1]) {  // Riemannian Hessian Weingarten map correction
         const CoeffDerivEukMatrix W = evaluateDerivativeWRTCoeffsANDSpatialSingleEukImpl(
             ipIndexOrPosition, coeffsIndex[0], spatialIndex, transArgs);
-        Chi -= createScaledIdentityMatrix<CoeffDerivEukMatrix>(inner(coeffs[coeffsIndex[0]].getValue(), W * along));
+        Chi -= createScaledIdentityMatrix<ctype, valueSize, valueSize>(inner(coeffs[coeffsIndex[0]].getValue(), W * along));
       }
       return (transposeEvaluated(coeffs[coeffsIndex[0]].orthonormalFrame()) * Chi
               * coeffs[coeffsIndex[1]].orthonormalFrame());
