@@ -29,7 +29,7 @@ namespace Dune {
   public:
     using Base = BinaryExpr<SumExpr, E1, E2>;
     using Base::Base;
-    using Traits = LocalFunctionTraits<SumExpr>;
+    using Traits        = LocalFunctionTraits<SumExpr>;
     using LinearAlgebra = typename Base::E1Raw::LinearAlgebra;
 
     template <size_t ID_ = 0>

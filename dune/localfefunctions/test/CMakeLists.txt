@@ -19,11 +19,13 @@ if(DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING)
     target_link_options(expressiontest PUBLIC -fprofile-arcs -ftest-coverage)
 
   endif()
-   if(DUNE_LOCALFEFUNCTIONS_USE_EIGEN)
-    MESSAGE(STATUS "Eigen Linear Algebra")
-    target_compile_definitions(dune-localfefunctions PUBLIC DUNE_LOCALFEFUNCTIONS_USE_EIGEN)
+  if(DUNE_LOCALFEFUNCTIONS_USE_EIGEN)
+    message(STATUS "Eigen Linear Algebra")
+    target_compile_definitions(dune-localfefunctions
+                               PUBLIC DUNE_LOCALFEFUNCTIONS_USE_EIGEN)
   endif()
-  target_compile_definitions(dune-localfefunctions PUBLIC DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING)
+  target_compile_definitions(dune-localfefunctions
+                             PUBLIC DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING)
   target_compile_options(
     expressiontest
     PRIVATE -ftemplate-backtrace-limit=0 -fdiagnostics-show-template-tree

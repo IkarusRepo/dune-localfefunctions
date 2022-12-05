@@ -71,14 +71,14 @@ namespace Dune {
   }
 
   /** \brief Depending on the Selected LinearAlgebra the Dune::Fieldmatrix is converted to an Eigen::Matrix */
-  template <typename ScalarType, int rows,int cols,typename LinAlg=DefaultLinearAlgebra>
+  template <typename ScalarType, int rows, int cols, typename LinAlg = DefaultLinearAlgebra>
   auto maybeToEigen(const Dune::FieldMatrix<ScalarType, rows, cols>& vec) {
 #if DUNE_LOCALFEFUNCTIONS_USE_EIGEN == 1
-    if constexpr(std::is_same_v<LinAlg,EigenLinearAlgebra>)
+    if constexpr (std::is_same_v<LinAlg, EigenLinearAlgebra>)
       return toEigen(vec);
     else
 #endif
-    return vec;
+      return vec;
   }
 
   /** \brief Creates a Eigen::Matrix from a given Dune::FieldMatrix  */
@@ -92,14 +92,14 @@ namespace Dune {
   }
 
   /** \brief Depending on the Selected LinearAlgebra the Eigen::Matrix is converted to an Dune::FieldMatrix */
-  template <typename ScalarType, int rows,int cols,typename LinAlg=DefaultLinearAlgebra>
+  template <typename ScalarType, int rows, int cols, typename LinAlg = DefaultLinearAlgebra>
   auto maybeToDune(const Eigen::Matrix<ScalarType, rows, cols>& mat) {
 #if DUNE_LOCALFEFUNCTIONS_USE_EIGEN == 1
-    if constexpr(std::is_same_v<LinAlg,EigenLinearAlgebra>)
+    if constexpr (std::is_same_v<LinAlg, EigenLinearAlgebra>)
       return mat;
     else
 #endif
-    return toDune(mat);
+      return toDune(mat);
   }
 
   /** \brief Views a  dune fieldvector as a Eigen::Vector, no copies take place! */
@@ -117,8 +117,6 @@ namespace Dune {
         eigenmatrix(i, j) = mat[i][j];
     return eigenmatrix;
   }
-
-
 
   /** \brief Creates a Eigen::Matrix from a given Dune::DiagonalMatrix. This should return Eigen::DiagonalMatrix but
    * Eigen::DiagonalMatrix does not contain e.g. a transpose method. And therefore we would need to specialize user

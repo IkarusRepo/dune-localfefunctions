@@ -23,9 +23,9 @@
 
 #include <concepts>
 
-#include <dune/localfefunctions/linalgconcepts.hh>
 #include <dune/common/indices.hh>
 #include <dune/localfefunctions/cachedlocalBasis/cachedlocalBasis.hh>
+#include <dune/localfefunctions/linalgconcepts.hh>
 #include <dune/localfefunctions/localFunctionHelper.hh>
 #include <dune/localfefunctions/localFunctionInterface.hh>
 
@@ -35,10 +35,11 @@
 
 namespace Dune {
 
-  template <typename DuneBasis, typename CoeffContainer, typename Geometry, std::size_t ID = 0,typename LinAlg= Dune::DefaultLinearAlgebra>
+  template <typename DuneBasis, typename CoeffContainer, typename Geometry, std::size_t ID = 0,
+            typename LinAlg = Dune::DefaultLinearAlgebra>
   class StandardLocalFunction
-      : public LocalFunctionInterface<StandardLocalFunction<DuneBasis, CoeffContainer, Geometry, ID,LinAlg>>,
-        public ClonableLocalFunction<StandardLocalFunction<DuneBasis, CoeffContainer, Geometry, ID,LinAlg>> {
+      : public LocalFunctionInterface<StandardLocalFunction<DuneBasis, CoeffContainer, Geometry, ID, LinAlg>>,
+        public ClonableLocalFunction<StandardLocalFunction<DuneBasis, CoeffContainer, Geometry, ID, LinAlg>> {
     using Interface = LocalFunctionInterface<StandardLocalFunction>;
 
   public:
@@ -105,7 +106,7 @@ namespace Dune {
     struct rebind {
       using other = StandardLocalFunction<
           DuneBasis, typename Std::Rebind<CoeffContainer, typename Manifold::template rebind<OtherType>::other>::other,
-          Geometry, ID,LinAlg>;
+          Geometry, ID, LinAlg>;
     };
 
     const Dune::CachedLocalBasis<DuneBasis>& basis() const { return basis_; }
@@ -158,8 +159,8 @@ namespace Dune {
     template <typename DomainTypeOrIntegrationPointIndex, typename TransformArgs>
     CoeffDerivMatrix evaluateDerivativeWRTCoeffsImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
                                                      int coeffsIndex, const On<TransformArgs>& transArgs) const {
-      const auto& N = evaluateFunctionWithIPorCoord(ipIndexOrPosition, basis_);
-      CoeffDerivMatrix mat= createScaledIdentityMatrix<ctype,valueSize,valueSize>(N[coeffsIndex]);
+      const auto& N        = evaluateFunctionWithIPorCoord(ipIndexOrPosition, basis_);
+      CoeffDerivMatrix mat = createScaledIdentityMatrix<ctype, valueSize, valueSize>(N[coeffsIndex]);
 
       return mat;
     }
@@ -185,7 +186,8 @@ namespace Dune {
         const On<TransformArgs>& transArgs) const {
       const auto& dNraw = evaluateDerivativeWithIPorCoord(ipIndexOrPosition, basis_);
       maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry_, ipIndexOrPosition, basis_);
-      CoeffDerivMatrix W = createScaledIdentityMatrix<ctype,valueSize,valueSize>(dNTransformed[coeffsIndex][spatialIndex]);
+      CoeffDerivMatrix W
+          = createScaledIdentityMatrix<ctype, valueSize, valueSize>(dNTransformed[coeffsIndex][spatialIndex]);
       return W;
     }
 
@@ -196,8 +198,8 @@ namespace Dune {
     //    const decltype(Dune::viewAsEigenMatrixFixedDyn(coeffs)) coeffsAsMat;
   };
 
-  template <typename DuneBasis, typename CoeffContainer, typename Geometry, std::size_t ID,typename LinAlg>
-  struct LocalFunctionTraits<StandardLocalFunction<DuneBasis, CoeffContainer, Geometry, ID,LinAlg>> {
+  template <typename DuneBasis, typename CoeffContainer, typename Geometry, std::size_t ID, typename LinAlg>
+  struct LocalFunctionTraits<StandardLocalFunction<DuneBasis, CoeffContainer, Geometry, ID, LinAlg>> {
     /** \brief Type used for coordinates */
     using ctype = typename CoeffContainer::value_type::ctype;
     /** \brief Dimension of the coeffs */
@@ -223,7 +225,7 @@ namespace Dune {
     /** \brief Type for a column of the Jacobian matrix */
     using JacobianColType = typename LinAlg::template FixedSizedVector<ctype, valueSize>;
     /** \brief Type for the directional derivatives */
-    using AlongType =  typename LinAlg::template FixedSizedVector<ctype, valueSize>;
+    using AlongType = typename LinAlg::template FixedSizedVector<ctype, valueSize>;
     /** \brief Dimension of the world where this function is mapped to from the reference element */
     static constexpr int worldDimension = Geometry::coorddimension;
   };

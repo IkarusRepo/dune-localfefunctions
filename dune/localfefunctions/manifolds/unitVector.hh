@@ -100,9 +100,8 @@ namespace Dune {
       var = var / two_norm(var);  // projection-based retraction
     }
 
-    static auto derivativeOfProjectionWRTposition(
-        const DefaultLinearAlgebra::FixedSizedVector<ctype, valueSize> &p) {
-      const ctype norm                             = two_norm(p);
+    static auto derivativeOfProjectionWRTposition(const DefaultLinearAlgebra::FixedSizedVector<ctype, valueSize> &p) {
+      const ctype norm                                                  = two_norm(p);
       const DefaultLinearAlgebra::FixedSizedVector<ctype, valueSize> pN = p / norm;
 
       DefaultLinearAlgebra::FixedSizedMatrix<ctype, valueSize, valueSize> result
@@ -111,47 +110,50 @@ namespace Dune {
       return result;
     }
 
-    DefaultLinearAlgebra::FixedSizedMatrix<ctype, valueSize, valueSize> weingartenEmbedded(const CoordinateType &p) const {
+    DefaultLinearAlgebra::FixedSizedMatrix<ctype, valueSize, valueSize> weingartenEmbedded(
+        const CoordinateType &p) const {
       return -createScaledIdentityMatrix<ctype, valueSize, valueSize>(inner(var, p));
     }
 
-    DefaultLinearAlgebra::FixedSizedMatrix<ctype, correctionSize, correctionSize> weingarten(const CoordinateType &p) const {
+    DefaultLinearAlgebra::FixedSizedMatrix<ctype, correctionSize, correctionSize> weingarten(
+        const CoordinateType &p) const {
       return -createScaledIdentityMatrix<ctype, correctionSize, correctionSize>(inner(var, p));
     }
 
     static DefaultLinearAlgebra::FixedSizedMatrix<ctype, valueSize, valueSize> secondDerivativeOfProjectionWRTposition(
-        const DefaultLinearAlgebra::FixedSizedVector<ctype, valueSize> &p, const DefaultLinearAlgebra::FixedSizedVector<ctype, valueSize> &along) {
+        const DefaultLinearAlgebra::FixedSizedVector<ctype, valueSize> &p,
+        const DefaultLinearAlgebra::FixedSizedVector<ctype, valueSize> &along) {
       const ctype normSquared = two_norm2(p);
       using std::sqrt;
-      const ctype norm                             = sqrt(normSquared);
+      const ctype norm                                                  = sqrt(normSquared);
       const DefaultLinearAlgebra::FixedSizedVector<ctype, valueSize> pN = p / norm;
 
       DefaultLinearAlgebra::FixedSizedMatrix<ctype, valueSize, valueSize> Q_along
           = 1 / normSquared
-            * (inner(pN, along)
-                   * (3 * outer(pN, pN) - createScaledIdentityMatrix<ctype, valueSize, valueSize>())
+            * (inner(pN, along) * (3 * outer(pN, pN) - createScaledIdentityMatrix<ctype, valueSize, valueSize>())
                - outer(along, pN) - outer(pN, along));
 
       return Q_along;
     }
 
     static DefaultLinearAlgebra::FixedSizedMatrix<ctype, valueSize, valueSize> thirdDerivativeOfProjectionWRTposition(
-        const DefaultLinearAlgebra::FixedSizedVector<ctype, valueSize> &p, const DefaultLinearAlgebra::FixedSizedVector<ctype, valueSize> &along1,
+        const DefaultLinearAlgebra::FixedSizedVector<ctype, valueSize> &p,
+        const DefaultLinearAlgebra::FixedSizedVector<ctype, valueSize> &along1,
         const DefaultLinearAlgebra::FixedSizedVector<ctype, valueSize> &along2) {
       using FieldMat          = DefaultLinearAlgebra::FixedSizedMatrix<ctype, valueSize, valueSize>;
       const ctype normSquared = two_norm2(p);
       using std::sqrt;
-      const ctype norm                             = sqrt(normSquared);
+      const ctype norm                                                  = sqrt(normSquared);
       const DefaultLinearAlgebra::FixedSizedVector<ctype, valueSize> pN = p / norm;
-      const ctype tscala1                          = inner(pN, along1);
-      const ctype tscalwd1                         = inner(pN, along2);
-      const ctype a1scalwd1                        = inner(along1, along2);
-      const ctype normwcubinv                      = 1 / (normSquared * norm);
-      const FieldMat a1dyadt                       = outer(along1, pN);
-      const FieldMat wd1dyadt                      = outer(along2, pN);
-      const FieldMat tDyadict                      = outer(pN, pN);
-      const FieldMat Id3minus5tdyadt               = createScaledIdentityMatrix<ctype, valueSize, valueSize>() - 5.0 * tDyadict;
-      FieldMat Chi_along                           = normwcubinv
+      const ctype tscala1                                               = inner(pN, along1);
+      const ctype tscalwd1                                              = inner(pN, along2);
+      const ctype a1scalwd1                                             = inner(along1, along2);
+      const ctype normwcubinv                                           = 1 / (normSquared * norm);
+      const FieldMat a1dyadt                                            = outer(along1, pN);
+      const FieldMat wd1dyadt                                           = outer(along2, pN);
+      const FieldMat tDyadict                                           = outer(pN, pN);
+      const FieldMat Id3minus5tdyadt = createScaledIdentityMatrix<ctype, valueSize, valueSize>() - 5.0 * tDyadict;
+      FieldMat Chi_along             = normwcubinv
                            * (3.0 * tscalwd1 * (a1dyadt + 0.5 * tscala1 * Id3minus5tdyadt)
                               + 3.0 * (0.5 * a1scalwd1 * tDyadict + tscala1 * wd1dyadt) - outer(along1, along2)
                               - createScaledIdentityMatrix<ctype, valueSize, valueSize>(a1scalwd1 * 0.5));

@@ -78,9 +78,7 @@ namespace Dune {
 
     /** \brief Compute an orthonormal basis of the tangent space of R^n.
      * This is simply the identity matrix  */
-    auto orthonormalFrame() const {
-      return createScaledIdentityMatrix<ctype, valueSize, correctionSize>();
-    }
+    auto orthonormalFrame() const { return createScaledIdentityMatrix<ctype, valueSize, correctionSize>(); }
 
     /** \brief Copy-Constructor from the values in terms of coordinateType */
     explicit RealTuple(const CoordinateType &vec) noexcept : var{vec} {}
@@ -114,13 +112,9 @@ namespace Dune {
       return *this;
     }
 
-    auto weingartenEmbedded(const CoordinateType &p) const {
-      return createZeroMatrix<ctype, valueSize, valueSize>();
-    }
+    auto weingartenEmbedded(const CoordinateType &p) const { return createZeroMatrix<ctype, valueSize, valueSize>(); }
 
-    auto weingarten(const CoordinateType &p) const {
-      return createZeroMatrix<ctype, valueSize, valueSize>();
-    }
+    auto weingarten(const CoordinateType &p) const { return createZeroMatrix<ctype, valueSize, valueSize>(); }
 
     void addInEmbedding(const CoordinateType &correction) { var += correction; }
 

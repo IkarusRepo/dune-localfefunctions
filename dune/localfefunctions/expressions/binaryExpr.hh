@@ -27,8 +27,8 @@ namespace Dune {
 
   template <template <typename, typename> class Op, typename E1, typename E2>
   struct BinaryExpr : public Dune::LocalFunctionInterface<Op<E1, E2>> {
-    using E1Raw = std::remove_cvref_t<E1>;
-    using E2Raw = std::remove_cvref_t<E2>;
+    using E1Raw         = std::remove_cvref_t<E1>;
+    using E2Raw         = std::remove_cvref_t<E2>;
     using LinearAlgebra = typename E1Raw::LinearAlgebra;
     constexpr const E1& l() const { return std::get<0>(expr); }
     constexpr const E2& r() const { return std::get<1>(expr); }

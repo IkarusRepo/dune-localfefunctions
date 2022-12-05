@@ -16,7 +16,6 @@
 
 namespace Dune {
 
-
   namespace Std {
 
     // Forward declare functions

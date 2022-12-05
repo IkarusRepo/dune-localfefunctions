@@ -33,43 +33,43 @@ namespace Dune {
     name = regex_replace(name, regexp, "SLF");
 
     regexp = "Dune::ProjectionBasedLocalFunction<(([a-zA-Z0-9_:<, ]*>){12})";
-    name = regex_replace(name, regexp, "PBLF");
+    name   = regex_replace(name, regexp, "PBLF");
 
     regexp = "Dune::";
-    name = regex_replace(name, regexp, "");
+    name   = regex_replace(name, regexp, "");
 
     regexp = "InnerProductExpr";
-    name = regex_replace(name, regexp, "Dot");
+    name   = regex_replace(name, regexp, "Dot");
 
     regexp = "NegateExpr";
-    name = regex_replace(name, regexp, "Negate");
+    name   = regex_replace(name, regexp, "Negate");
 
     regexp = "ScaleExpr";
-    name = regex_replace(name, regexp, "Scale");
+    name   = regex_replace(name, regexp, "Scale");
 
     regexp = "SumExpr";
-    name = regex_replace(name, regexp, "Sum");
+    name   = regex_replace(name, regexp, "Sum");
 
     regexp = "const";
-    name = regex_replace(name, regexp, "");
+    name   = regex_replace(name, regexp, "");
 
     regexp = "ConstantExpr";
-    name = regex_replace(name, regexp, "Constant");
+    name   = regex_replace(name, regexp, "Constant");
 
     regexp = "SqrtExpr";
-    name = regex_replace(name, regexp, "Sqrt");
+    name   = regex_replace(name, regexp, "Sqrt");
 
     regexp = "NormSquaredExpr";
-    name = regex_replace(name, regexp, "NormSquared");
+    name   = regex_replace(name, regexp, "NormSquared");
 
-    regexp ="LinearStrainExpr";
-    name = regex_replace(name, regexp, "LinearStrains");
+    regexp = "LinearStrainExpr";
+    name   = regex_replace(name, regexp, "LinearStrains");
 
     regexp = "GreenLagrangeStrainsExpr";
-    name = regex_replace(name, regexp, "GreenLagrangeStrains");
+    name   = regex_replace(name, regexp, "GreenLagrangeStrains");
 
     regexp = "[ \\t]+$";  // remove trailing white space
-    name = regex_replace(name, regexp, "");
+    name   = regex_replace(name, regexp, "");
 
     return name;
   }

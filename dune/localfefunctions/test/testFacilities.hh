@@ -74,8 +74,8 @@ namespace Testing {
 
   /*
    * Simplified version of
-   * https://github.com/ikarus-project/ikarus/blob/main/src/include/ikarus/utils/functionSanityChecks.hh The checkjacobian
-   * function is inspired by http://sma.epfl.ch/~nboumal/book/  Chapter 4.8 and
+   * https://github.com/ikarus-project/ikarus/blob/main/src/include/ikarus/utils/functionSanityChecks.hh The
+   * checkjacobian function is inspired by http://sma.epfl.ch/~nboumal/book/  Chapter 4.8 and
    * https://github.com/NicolasBoumal/manopt/blob/master/manopt/tools/checkdiff.m
    */
   template <typename NonlinearOperator>

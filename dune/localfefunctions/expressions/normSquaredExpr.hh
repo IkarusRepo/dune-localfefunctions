@@ -30,7 +30,7 @@ namespace Dune {
   public:
     using Base = UnaryExpr<NormSquaredExpr, E1>;
     using Base::Base;
-    using Traits = LocalFunctionTraits<NormSquaredExpr>;
+    using Traits        = LocalFunctionTraits<NormSquaredExpr>;
     using LinearAlgebra = typename Base::E1Raw::LinearAlgebra;
     /** \brief Type used for coordinates */
     using ctype                    = typename Traits::ctype;
@@ -96,10 +96,11 @@ namespace Dune {
           // check that the along argument has the correct size
           const auto &alongMatrix = std::get<0>(lfArgs.alongArgs.args);
 
-//          static_assert(cols(alongMatrix) == gridDim);
-//          static_assert(rows(alongMatrix) == 1);
+          //          static_assert(cols(alongMatrix) == gridDim);
+          //          static_assert(rows(alongMatrix) == 1);
 
-          const typename DefaultLinearAlgebra::template FixedSizedMatrix<ctype, Base::E1Raw::valueSize, gridDim> uTimesA = u * alongMatrix;
+          const typename DefaultLinearAlgebra::template FixedSizedMatrix<ctype, Base::E1Raw::valueSize, gridDim> uTimesA
+              = u * alongMatrix;
           static_assert(Rows<decltype(uTimesA)>::value == Base::E1Raw::valueSize);
           static_assert(Cols<decltype(uTimesA)>::value == gridDim);
 
@@ -107,7 +108,7 @@ namespace Dune {
           const auto &[gradu_c0, gradu_c1] = evaluateSecondOrderDerivativesImpl(this->m(), lfArgs);
 
           const auto graduTimesA = Dune::eval(gradu * transpose(alongMatrix));
-//          using graduTimesAType  = std::remove_cvref_t<decltype(graduTimesA)>;
+          //          using graduTimesAType  = std::remove_cvref_t<decltype(graduTimesA)>;
 
           static_assert(Rows<decltype(graduTimesA)>::value == Base::E1Raw::valueSize);
           static_assert(Cols<decltype(graduTimesA)>::value == 1);

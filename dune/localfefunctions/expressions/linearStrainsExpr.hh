@@ -15,7 +15,7 @@ namespace Dune {
   public:
     using Base = UnaryExpr<LinearStrainExpr, E1>;
     using Base::Base;
-    using Traits = LocalFunctionTraits<LinearStrainExpr>;
+    using Traits        = LocalFunctionTraits<LinearStrainExpr>;
     using LinearAlgebra = typename Base::E1Raw::LinearAlgebra;
 
     /** \brief Type used for coordinates */
@@ -49,30 +49,30 @@ namespace Dune {
         const auto gradArgs = addWrt(lfArgs, wrt(DerivativeDirections::spatialAll));
         const auto gradUdI  = evaluateDerivativeImpl(this->m(), gradArgs);
         if constexpr (displacementSize == 1) {
-          coeff(bopI, 0, 0) = getDiagonalEntry(gradUdI[0],0);
+          coeff(bopI, 0, 0) = getDiagonalEntry(gradUdI[0], 0);
         } else if constexpr (displacementSize == 2) {
           setZero(bopI);
-          coeff(bopI, 0, 0) = getDiagonalEntry(gradUdI[0],0);
+          coeff(bopI, 0, 0) = getDiagonalEntry(gradUdI[0], 0);
 
-          coeff(bopI, 1, 1) = getDiagonalEntry(gradUdI[1],0);
-          coeff(bopI, 2, 0) = getDiagonalEntry(gradUdI[1],0);
-          coeff(bopI, 2, 1) = getDiagonalEntry(gradUdI[0],0);
+          coeff(bopI, 1, 1) = getDiagonalEntry(gradUdI[1], 0);
+          coeff(bopI, 2, 0) = getDiagonalEntry(gradUdI[1], 0);
+          coeff(bopI, 2, 1) = getDiagonalEntry(gradUdI[0], 0);
         } else if constexpr (displacementSize == 3) {
           setZero(bopI);
-          coeff(bopI, 0, 0) = getDiagonalEntry(gradUdI[0],0);
+          coeff(bopI, 0, 0) = getDiagonalEntry(gradUdI[0], 0);
 
-          coeff(bopI, 1, 1) = getDiagonalEntry(gradUdI[1],0);
+          coeff(bopI, 1, 1) = getDiagonalEntry(gradUdI[1], 0);
 
-          coeff(bopI, 2, 2) = getDiagonalEntry(gradUdI[2],0);
+          coeff(bopI, 2, 2) = getDiagonalEntry(gradUdI[2], 0);
 
-          coeff(bopI, 3, 1) = getDiagonalEntry(gradUdI[2],0);
-          coeff(bopI, 3, 2) = getDiagonalEntry(gradUdI[1],0);
+          coeff(bopI, 3, 1) = getDiagonalEntry(gradUdI[2], 0);
+          coeff(bopI, 3, 2) = getDiagonalEntry(gradUdI[1], 0);
 
-          coeff(bopI, 4, 0) = getDiagonalEntry(gradUdI[2],0);
-          coeff(bopI, 4, 2) = getDiagonalEntry(gradUdI[0],0);
+          coeff(bopI, 4, 0) = getDiagonalEntry(gradUdI[2], 0);
+          coeff(bopI, 4, 2) = getDiagonalEntry(gradUdI[0], 0);
 
-          coeff(bopI, 5, 0) = getDiagonalEntry(gradUdI[1],0);
-          coeff(bopI, 5, 1) = getDiagonalEntry(gradUdI[0],0);
+          coeff(bopI, 5, 0) = getDiagonalEntry(gradUdI[1], 0);
+          coeff(bopI, 5, 1) = getDiagonalEntry(gradUdI[0], 0);
         }
 
         return bopI;
@@ -90,7 +90,9 @@ namespace Dune {
           if constexpr (LFArgs::hasOneSpatialSingle and LFArgs::hasSingleCoeff) {
             return createZeroMatrix<ctype, strainSize, displacementSize>();
           } else if constexpr (LFArgs::hasOneSpatialAll and LFArgs::hasSingleCoeff) {
-            std::array<typename DefaultLinearAlgebra::template FixedSizedMatrix<ctype, strainSize, displacementSize>, gridDim> res;
+            std::array<typename DefaultLinearAlgebra::template FixedSizedMatrix<ctype, strainSize, displacementSize>,
+                       gridDim>
+                res;
             for (int i = 0; i < gridDim; ++i)
               setZero(res[i]);
             return res;

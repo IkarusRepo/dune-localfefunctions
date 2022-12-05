@@ -16,7 +16,7 @@ namespace Dune {
   public:
     using Base = UnaryExpr<GreenLagrangeStrainsExpr, E1>;
     using Base::Base;
-    using Traits = LocalFunctionTraits<GreenLagrangeStrainsExpr>;
+    using Traits        = LocalFunctionTraits<GreenLagrangeStrainsExpr>;
     using LinearAlgebra = typename Base::E1Raw::LinearAlgebra;
 
     /** \brief Type used for coordinates */
@@ -41,23 +41,24 @@ namespace Dune {
       const auto gradu    = transposeEvaluated(evaluateDerivativeImpl(this->m(), gradArgs));
 
       typename LinearAlgebra::template FixedSizedVector<ctype, strainSize> E;
-      //E= 1/2*(H^T * G + G^T * H + H^T * H) with H = gradu
-//         E= toVoigt(0.5*(2*sym(transpose(gradu)*referenceJacobian)+transpose(referenceJacobian)*referenceJacobian));
+      // E= 1/2*(H^T * G + G^T * H + H^T * H) with H = gradu
+      //         E=
+      //         toVoigt(0.5*(2*sym(transpose(gradu)*referenceJacobian)+transpose(referenceJacobian)*referenceJacobian));
       for (int i = 0; i < gridDim; ++i)
-        E[i] = inner(row(referenceJacobian,i),row(gradu,i)) + 0.5 * two_norm2(row(gradu,i));
+        E[i] = inner(row(referenceJacobian, i), row(gradu, i)) + 0.5 * two_norm2(row(gradu, i));
 
       if constexpr (gridDim == 2) {
-        const ctype v1 = inner(row(referenceJacobian,0), row(gradu,1));
-        const ctype v2 = inner(row(gradu,0),row(referenceJacobian,1));
-        const ctype v3 = inner(row(gradu,0),row(gradu,1));
+        const ctype v1 = inner(row(referenceJacobian, 0), row(gradu, 1));
+        const ctype v2 = inner(row(gradu, 0), row(referenceJacobian, 1));
+        const ctype v3 = inner(row(gradu, 0), row(gradu, 1));
         E[2]           = v1 + v2 + v3;
       } else if constexpr (gridDim == 3) {
-        typename LinearAlgebra::template FixedSizedVector<ctype, gridDim> a1 = row(referenceJacobian,0);
-        a1 += row(gradu,0);
-        typename LinearAlgebra::template FixedSizedVector<ctype, gridDim> a2 = row(referenceJacobian,1);
-        a2 += row(gradu,1);
-        typename LinearAlgebra::template FixedSizedVector<ctype, gridDim> a3 = row(referenceJacobian,2);
-        a3 += row(gradu,2);
+        typename LinearAlgebra::template FixedSizedVector<ctype, gridDim> a1 = row(referenceJacobian, 0);
+        a1 += row(gradu, 0);
+        typename LinearAlgebra::template FixedSizedVector<ctype, gridDim> a2 = row(referenceJacobian, 1);
+        a2 += row(gradu, 1);
+        typename LinearAlgebra::template FixedSizedVector<ctype, gridDim> a3 = row(referenceJacobian, 2);
+        a3 += row(gradu, 2);
         E[3] = inner(a2, a3);
         E[4] = inner(a1, a3);
         E[5] = inner(a1, a2);
@@ -71,8 +72,8 @@ namespace Dune {
       if constexpr (DerivativeOrder == 1 and LFArgs::hasSingleCoeff) {
         const auto integrationPointPosition
             = returnIntegrationPointPosition(lfArgs.integrationPointOrIndex, this->m().basis());
-        const auto referenceJacobian
-            = maybeToEigen(this->m().geometry()->jacobianTransposed(integrationPointPosition));  // the rows are X_{,1} and X_{,2}
+        const auto referenceJacobian = maybeToEigen(
+            this->m().geometry()->jacobianTransposed(integrationPointPosition));  // the rows are X_{,1} and X_{,2}
         const auto gradArgs = replaceWrt(lfArgs, wrt(DerivativeDirections::spatialAll));
         const auto gradu
             = transposeEvaluated(evaluateDerivativeImpl(this->m(), gradArgs));  // the rows are u_{,1} and u_{,2}
@@ -80,26 +81,26 @@ namespace Dune {
         const auto gradUdI    = evaluateDerivativeImpl(this->m(), gradArgsdI);  // derivative of grad u wrt I-th coeff
 
         typename LinearAlgebra::template FixedSizedMatrix<double, strainSize, gridDim> bopI{};
-        typename LinearAlgebra::template FixedSizedVector<ctype, gridDim> g1 = row(referenceJacobian,0);
-        g1 += row(gradu,0);
+        typename LinearAlgebra::template FixedSizedVector<ctype, gridDim> g1 = row(referenceJacobian, 0);
+        g1 += row(gradu, 0);
         if constexpr (displacementSize == 1) {
-          coeff(bopI, 0, 0) = getDiagonalEntry(gradUdI[0],0) * g1[0];
+          coeff(bopI, 0, 0) = getDiagonalEntry(gradUdI[0], 0) * g1[0];
         } else if constexpr (displacementSize == 2) {
-          typename DefaultLinearAlgebra::template FixedSizedVector<ctype, gridDim> g2 = row(referenceJacobian,1);
-          g2 += row(gradu,1);
-          const auto& dNIdT1 = getDiagonalEntry(gradUdI[0],0);
-          const auto& dNIdT2 = getDiagonalEntry(gradUdI[1],0);
+          typename DefaultLinearAlgebra::template FixedSizedVector<ctype, gridDim> g2 = row(referenceJacobian, 1);
+          g2 += row(gradu, 1);
+          const auto& dNIdT1 = getDiagonalEntry(gradUdI[0], 0);
+          const auto& dNIdT2 = getDiagonalEntry(gradUdI[1], 0);
           row(bopI, 0)       = dNIdT1 * g1;                // dE11_dCIx,dE11_dCIy
           row(bopI, 1)       = dNIdT2 * g2;                // dE22_dCIx,dE22_dCIy
           row(bopI, 2)       = dNIdT2 * g1 + dNIdT1 * g2;  // 2*dE12_dCIx,2*dE12_dCIy
         } else if constexpr (displacementSize == 3) {
-          typename DefaultLinearAlgebra::template FixedSizedVector<ctype, gridDim> g2 = row(referenceJacobian,1);
-          g2 += row(gradu,1);
-          typename DefaultLinearAlgebra::template FixedSizedVector<ctype, gridDim> g3 = row(referenceJacobian,2);
-          g3 += row(gradu,2);
-          const auto& dNIdT1 = getDiagonalEntry(gradUdI[0],0);
-          const auto& dNIdT2 = getDiagonalEntry(gradUdI[1],0);
-          const auto& dNIdT3 = getDiagonalEntry(gradUdI[2],0);
+          typename DefaultLinearAlgebra::template FixedSizedVector<ctype, gridDim> g2 = row(referenceJacobian, 1);
+          g2 += row(gradu, 1);
+          typename DefaultLinearAlgebra::template FixedSizedVector<ctype, gridDim> g3 = row(referenceJacobian, 2);
+          g3 += row(gradu, 2);
+          const auto& dNIdT1 = getDiagonalEntry(gradUdI[0], 0);
+          const auto& dNIdT2 = getDiagonalEntry(gradUdI[1], 0);
+          const auto& dNIdT3 = getDiagonalEntry(gradUdI[2], 0);
           row(bopI, 0)       = dNIdT1 * g1;                // dE11_dCIx,dE11_dCIy,dE11_dCIz
           row(bopI, 1)       = dNIdT2 * g2;                // dE22_dCIx,dE22_dCIy,dE22_dCIz
           row(bopI, 2)       = dNIdT3 * g3;                // dE33_dCIx,dE33_dCIy,dE33_dCIz
@@ -126,29 +127,29 @@ namespace Dune {
           const auto gradArgsdIJ         = addWrt(lfArgs, wrt(DerivativeDirections::spatialAll));
           const auto& [gradUdI, gradUdJ] = evaluateSecondOrderDerivativesImpl(this->m(), gradArgsdIJ);
           if constexpr (displacementSize == 1) {
-            const auto& dNIdT1 = getDiagonalEntry(gradUdI[0],0);
-            const auto& dNJdT1 = getDiagonalEntry(gradUdJ[0],0);
+            const auto& dNIdT1 = getDiagonalEntry(gradUdI[0], 0);
+            const auto& dNJdT1 = getDiagonalEntry(gradUdJ[0], 0);
             const ctype val    = S[0] * dNIdT1 * dNJdT1;
-            return createScaledIdentityMatrix<ctype,displacementSize, displacementSize>(val);
+            return createScaledIdentityMatrix<ctype, displacementSize, displacementSize>(val);
           } else if constexpr (displacementSize == 2) {
-            const auto& dNIdT1 = getDiagonalEntry(gradUdI[0],0);
-            const auto& dNIdT2 = getDiagonalEntry(gradUdI[1],0);
-            const auto& dNJdT1 = getDiagonalEntry(gradUdJ[0],0);
-            const auto& dNJdT2 = getDiagonalEntry(gradUdJ[1],0);
+            const auto& dNIdT1 = getDiagonalEntry(gradUdI[0], 0);
+            const auto& dNIdT2 = getDiagonalEntry(gradUdI[1], 0);
+            const auto& dNJdT1 = getDiagonalEntry(gradUdJ[0], 0);
+            const auto& dNJdT2 = getDiagonalEntry(gradUdJ[1], 0);
             const ctype val
                 = S[0] * dNIdT1 * dNJdT1 + S[1] * dNIdT2 * dNJdT2 + S[2] * (dNIdT1 * dNJdT2 + dNJdT1 * dNIdT2);
-            return createScaledIdentityMatrix<ctype,displacementSize, displacementSize>(val);
+            return createScaledIdentityMatrix<ctype, displacementSize, displacementSize>(val);
           } else if constexpr (displacementSize == 3) {
-            const auto& dNIdT1 = getDiagonalEntry(gradUdI[0],0);
-            const auto& dNIdT2 = getDiagonalEntry(gradUdI[1],0);
-            const auto& dNIdT3 = getDiagonalEntry(gradUdI[2],0);
-            const auto& dNJdT1 = getDiagonalEntry(gradUdJ[0],0);
-            const auto& dNJdT2 = getDiagonalEntry(gradUdJ[1],0);
-            const auto& dNJdT3 = getDiagonalEntry(gradUdJ[2],0);
+            const auto& dNIdT1 = getDiagonalEntry(gradUdI[0], 0);
+            const auto& dNIdT2 = getDiagonalEntry(gradUdI[1], 0);
+            const auto& dNIdT3 = getDiagonalEntry(gradUdI[2], 0);
+            const auto& dNJdT1 = getDiagonalEntry(gradUdJ[0], 0);
+            const auto& dNJdT2 = getDiagonalEntry(gradUdJ[1], 0);
+            const auto& dNJdT3 = getDiagonalEntry(gradUdJ[2], 0);
             const ctype val    = S[0] * dNIdT1 * dNJdT1 + S[1] * dNIdT2 * dNJdT2 + S[2] * dNIdT3 * dNJdT3
                               + S[3] * (dNIdT2 * dNJdT3 + dNJdT2 * dNIdT3) + S[4] * (dNIdT1 * dNJdT3 + dNJdT1 * dNIdT3)
                               + S[5] * (dNIdT1 * dNJdT2 + dNJdT1 * dNIdT2);
-            return createScaledIdentityMatrix<ctype,displacementSize, displacementSize>(val);
+            return createScaledIdentityMatrix<ctype, displacementSize, displacementSize>(val);
           }
         } else if constexpr (LFArgs::hasOneSpatial and LFArgs::hasSingleCoeff) {
           if constexpr (LFArgs::hasOneSpatialSingle and LFArgs::hasSingleCoeff) {
@@ -156,7 +157,9 @@ namespace Dune {
             return createZeroMatrix<ctype, strainSize, displacementSize>();
           } else if constexpr (LFArgs::hasOneSpatialAll and LFArgs::hasSingleCoeff) {
             DUNE_THROW(Dune::NotImplemented, "Higher spatial derivatives of linear strain expression not implemented.");
-            return std::array<typename DefaultLinearAlgebra::template FixedSizedMatrix<ctype, strainSize, displacementSize>, gridDim>{};
+            return std::array<
+                typename DefaultLinearAlgebra::template FixedSizedMatrix<ctype, strainSize, displacementSize>,
+                gridDim>{};
           }
         }
       } else if constexpr (DerivativeOrder == 3) {

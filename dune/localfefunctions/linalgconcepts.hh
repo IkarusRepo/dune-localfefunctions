@@ -6,90 +6,78 @@
 #include <dune/common/fvector.hh>
 #include <dune/istl/scaledidmatrix.hh>
 #if DUNE_LOCALFEFUNCTIONS_USE_EIGEN == 1
-#include <Eigen/Core>
+#  include <Eigen/Core>
 #endif
-namespace Dune
-{
-  struct DuneLinearAlgebra
-  {
-    template<typename ScalarType,int rows>
-    using FixedSizedVector= Dune::FieldVector<ScalarType,rows>;
-    template<typename ScalarType,int rows,int cols>
-    using FixedSizedMatrix= Dune::FieldMatrix<ScalarType,rows,cols>;
+namespace Dune {
+  struct DuneLinearAlgebra {
+    template <typename ScalarType, int rows>
+    using FixedSizedVector = Dune::FieldVector<ScalarType, rows>;
+    template <typename ScalarType, int rows, int cols>
+    using FixedSizedMatrix = Dune::FieldMatrix<ScalarType, rows, cols>;
 
-    template<typename ScalarType,int rows>
-    using FixedSizedScaledIdentityMatrix= Dune::ScaledIdentityMatrix<ScalarType,rows>;
+    template <typename ScalarType, int rows>
+    using FixedSizedScaledIdentityMatrix = Dune::ScaledIdentityMatrix<ScalarType, rows>;
 
-    template<typename ScalarType,int rows>
-    static auto createZeroVector()
-    {
+    template <typename ScalarType, int rows>
+    static auto createZeroVector() {
       return Dune::FieldVector<ScalarType, rows>(0);
     }
 
-    template<typename ScalarType,int rows,int cols>
+    template <typename ScalarType, int rows, int cols>
     static auto createZeroMatrix() {
       return Dune::FieldMatrix<ScalarType, rows, cols>(0);
     }
 
-    template<typename ScalarType,int rows>
-    static auto createOnesVector()
-    {
+    template <typename ScalarType, int rows>
+    static auto createOnesVector() {
       return Dune::FieldVector<ScalarType, rows>(1);
     }
 
-    template<typename ScalarType,int rows,int cols>
-    static auto createOnesMatrix()
-    {
-      return Dune::FieldMatrix<ScalarType, rows,cols>(1);
+    template <typename ScalarType, int rows, int cols>
+    static auto createOnesMatrix() {
+      return Dune::FieldMatrix<ScalarType, rows, cols>(1);
     }
 
-    template<typename ScalarType,int rows>
-    static auto createScaledIdentityMatrix(ScalarType val)
-    {
+    template <typename ScalarType, int rows>
+    static auto createScaledIdentityMatrix(ScalarType val) {
       return Dune::ScaledIdentityMatrix<ScalarType, rows>(val);
     }
   };
 
 #if DUNE_LOCALFEFUNCTIONS_USE_EIGEN == 1
-  struct EigenLinearAlgebra
-  {
-    template<typename ScalarType,int rows>
-    using FixedSizedVector= Eigen::Vector<ScalarType,rows>;
-    template<typename ScalarType,int rows,int cols>
-    using FixedSizedMatrix= Eigen::Matrix<ScalarType,rows,cols>;
+  struct EigenLinearAlgebra {
+    template <typename ScalarType, int rows>
+    using FixedSizedVector = Eigen::Vector<ScalarType, rows>;
+    template <typename ScalarType, int rows, int cols>
+    using FixedSizedMatrix = Eigen::Matrix<ScalarType, rows, cols>;
 
-    template<typename ScalarType,int rows>
-    using FixedSizedScaledIdentityMatrix= Eigen::Matrix<ScalarType,rows,rows>;
+    template <typename ScalarType, int rows>
+    using FixedSizedScaledIdentityMatrix = Eigen::Matrix<ScalarType, rows, rows>;
 
-    template<typename ScalarType,int rows>
-    static auto createZeroVector()
-    {
+    template <typename ScalarType, int rows>
+    static auto createZeroVector() {
       return Eigen::Vector<ScalarType, rows>::Zero();
     }
 
-    template<typename ScalarType,int rows>
-    static auto createOnesVector()
-    {
+    template <typename ScalarType, int rows>
+    static auto createOnesVector() {
       return Eigen::Vector<ScalarType, rows>::Ones();
     }
 
-    template<typename ScalarType,int rows,int cols>
+    template <typename ScalarType, int rows, int cols>
     static auto createZeroMatrix() {
       return Eigen::Matrix<ScalarType, rows, cols>::Zero();
     }
 
-    template<typename ScalarType,int rows,int cols>
-    static auto createOnesMatrix()
-    {
-      return Eigen::Matrix<ScalarType, rows,cols>::Ones();
+    template <typename ScalarType, int rows, int cols>
+    static auto createOnesMatrix() {
+      return Eigen::Matrix<ScalarType, rows, cols>::Ones();
     }
 
-    template<typename ScalarType,int rows>
-    static Eigen::Matrix<ScalarType, rows,rows> createScaledIdentityMatrix(const ScalarType& val)
-    {
-      return (Eigen::Matrix<ScalarType, rows,rows>::Identity()*val).eval();
+    template <typename ScalarType, int rows>
+    static Eigen::Matrix<ScalarType, rows, rows> createScaledIdentityMatrix(const ScalarType& val) {
+      return (Eigen::Matrix<ScalarType, rows, rows>::Identity() * val).eval();
     }
-
   };
 #endif
 #if DUNE_LOCALFEFUNCTIONS_USE_EIGEN == 1
@@ -98,6 +86,5 @@ namespace Dune
   using DefaultLinearAlgebra = DuneLinearAlgebra;
 #endif
 
-
-//  concept DuneOrEigenMatrix
-}
+  //  concept DuneOrEigenMatrix
+}  // namespace Dune
