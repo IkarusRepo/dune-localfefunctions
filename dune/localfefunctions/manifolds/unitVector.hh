@@ -1,5 +1,5 @@
 /*
- * This file is part of the Ikarus distribution (https://github.com/IkarusRepo/Ikarus).
+ * This file is part of the Ikarus distribution (https://github.com/ikarus-project/ikarus).
  * Copyright (c) 2022. The Ikarus developers.
  *
  * This library is free software; you can redistribute it and/or
@@ -111,11 +111,11 @@ namespace Dune {
       return result;
     }
 
-    auto weingartenEmbedded(const CoordinateType &p) const {
+    DefaultLinearAlgebra::FixedSizedMatrix<ctype, valueSize, valueSize> weingartenEmbedded(const CoordinateType &p) const {
       return -createScaledIdentityMatrix<ctype, valueSize, valueSize>(inner(var, p));
     }
 
-    auto weingarten(const CoordinateType &p) const {
+    DefaultLinearAlgebra::FixedSizedMatrix<ctype, correctionSize, correctionSize> weingarten(const CoordinateType &p) const {
       return -createScaledIdentityMatrix<ctype, correctionSize, correctionSize>(inner(var, p));
     }
 

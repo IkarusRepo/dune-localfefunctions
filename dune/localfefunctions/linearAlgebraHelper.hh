@@ -1,7 +1,7 @@
 
 
 /*
- * This file is part of the Ikarus distribution (https://github.com/IkarusRepo/Ikarus).
+ * This file is part of the Ikarus distribution (https://github.com/ikarus-project/ikarus).
  * Copyright (c) 2022. The Ikarus developers.
  *
  * This library is free software; you can redistribute it and/or
@@ -67,10 +67,25 @@ namespace Dune {
     return autodiff::detail::eval(t) * A;
   }
 
+  /** \brief Computes norm squared (Frobenius) of the matrix  */
+  template <typename T> requires  autodiff::detail::isDual<T> || autodiff::detail::isExpr<T> || autodiff::detail::isArithmetic<T>
+  auto two_norm2(const T& a) {
+    using std::abs;
+    return abs(a);
+  }
+
+  /** \brief Specialization for scalar types  */
+  template <typename field_type, typename field_type2> requires ((autodiff::detail::isDual<field_type> || autodiff::detail::isExpr<field_type> || autodiff::detail::isArithmetic<field_type>)
+             and (autodiff::detail::isDual<field_type2> || autodiff::detail::isExpr<field_type2> || autodiff::detail::isArithmetic<field_type2>))
+  auto inner( field_type a,  field_type2 b) {
+    return a*b;
+  }
+
   /** \brief  Transpose for scalars and autodiff types */
   template <typename T>
   requires autodiff::detail::isDual<T> || autodiff::detail::isExpr<T> || autodiff::detail::isArithmetic<T>
   auto transpose(T&& t) { return t; }
+
   template <typename T1, typename T2>
   requires(
       autodiff::detail::isDual<
@@ -133,15 +148,27 @@ namespace Dune {
     return mat[requestedRow];
   }
 
-  /** \brief Get the requested column of fieldmatrix */
+  /** \brief Get the requested column of Eigen::Matrix */
   template <typename field_type, int rows, int cols>
-  auto row(const Eigen::Matrix<field_type, rows, cols>& mat, const int requestedRow) {
+  decltype(auto) row(const Eigen::Matrix<field_type, rows, cols>& mat, const int requestedRow) {
     return mat.row(requestedRow);
   }
 
-  /** \brief Get the requested column of fieldmatrix */
+  /** \brief Get the requested column of Eigen::Matrix */
   template <typename field_type, int rows, int cols>
-  auto col(const Eigen::Matrix<field_type, rows, cols>& mat, const int requestedRow) {
+  decltype(auto) row(Eigen::Matrix<field_type, rows, cols>& mat, const int requestedRow) {
+    return mat.row(requestedRow);
+  }
+
+  /** \brief Get the requested column of Eigen::Matrix */
+  template <typename field_type, int rows, int cols>
+  decltype(auto) col(const Eigen::Matrix<field_type, rows, cols>& mat, const int requestedRow) {
+    return mat.col(requestedRow);
+  }
+
+  /** \brief Get the requested column of Eigen::Matrix */
+  template <typename field_type, int rows, int cols>
+  decltype(auto) col(Eigen::Matrix<field_type, rows, cols>& mat, const int requestedRow) {
     return mat.col(requestedRow);
   }
 
@@ -157,6 +184,14 @@ namespace Dune {
 
     return res;
   }
+
+#ifndef DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING
+  /** \brief Specialization for scalar types  */
+  template <typename field_type, typename field_type2> requires (std::is_arithmetic_v<field_type> and std::is_arithmetic_v<field_type2>)
+  auto inner( field_type a,  field_type2 b) {
+    return a*b;
+  }
+#endif
 
   /** \brief Computes the inner product (Frobenius) of two vector, no complex conjugate here, use .dot instead!  */
   template <typename field_type, typename field_type2, int rows>
@@ -194,7 +229,8 @@ namespace Dune {
   /** \brief Computes the inner product (Frobenius) of two vector, no complex conjugate here, used .dot instead!  */
   template <typename field_type, typename field_type2, int rows>
   auto inner(const Dune::FieldVector<field_type, rows>& a, const Dune::FieldVector<field_type2, rows>& b) {
-    field_type res{0};
+    using ScalarResultType = typename Dune::PromotionTraits<field_type, field_type2>::PromotedType;
+    ScalarResultType res{0};
     for (int i = 0; i < rows; ++i)
       res += a[i] * b[i];
     return res;
@@ -211,6 +247,15 @@ namespace Dune {
   auto two_norm2(const Eigen::MatrixBase<Derived>& a) {
     return a.squaredNorm();
   }
+
+#ifndef DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING
+  /** \brief Computes norm squared (Frobenius) of the matrix  */
+  template <typename Scalar> requires std::is_arithmetic_v<Scalar>
+  auto two_norm2(const Scalar& a) {
+    using std::abs;
+    return abs(a);
+  }
+#endif
 
   /** \brief Outer product between two vector */
   template <typename field_type, int rows1, int rows2>
@@ -256,6 +301,16 @@ namespace Dune {
     for (int i = 0; i < rows1; ++i)
       for (int j = 0; j < rows2; ++j)
         res[i][j] = a[i][0] * b[j];
+
+    return res;
+  }
+
+  /** \brief Outer product between two vector */
+  template <typename field_type,typename field_type2, int rows1, int rows2>
+  auto outer(const Eigen::Vector<field_type, rows1>& a, const Eigen::Vector<field_type2, rows2>& b) {
+    using ScalarResultType = typename Dune::PromotionTraits<field_type, field_type2>::PromotedType;
+
+    Eigen::Matrix<ScalarResultType, rows1, rows2> res=a*b.transpose();
 
     return res;
   }
@@ -654,6 +709,22 @@ std::generate(mat.begin(), mat.end(), rand);
     return a[row][col];
   }
 
+  template <typename ST, int size>
+    requires(size > 0 and size <= 3) auto toVoigt(const DefaultLinearAlgebra::template FixedSizedMatrix<ST, size, size> &E) {
+    typename DefaultLinearAlgebra::template FixedSizedVector<ST, (size * (size + 1)) / 2> EVoigt;
+    for (int i = 0; i < size; ++i)
+      EVoigt[i] = coeff(E,i,i);
+
+    if constexpr (size == 2)
+      EVoigt[2] = coeff(E,0,1) * 2;
+    else if constexpr (size == 3) {
+      EVoigt[3] = coeff(E,1,2) * 2;
+      EVoigt[4] = coeff(E,0,2) * 2;
+      EVoigt[5] = coeff(E,0,1) * 2;
+    }
+    return EVoigt;
+  }
+
   template <typename field_type, int rows>
   void setIdentity(Dune::DiagonalMatrix<field_type, rows>& a) {
     a = Dune::DiagonalMatrix<field_type, rows>(1);
@@ -1043,7 +1114,7 @@ std::generate(mat.begin(), mat.end(), rand);
   }
 
   template <typename Scalar, int size>
-  auto& getDiagonalEntry(const Eigen::Matrix<Scalar, size, size>& a,   int i) {
+  auto getDiagonalEntry(const Eigen::Matrix<Scalar, size, size>& a,   int i) {
     return a.diagonal()[i];
   }
 
@@ -1152,53 +1223,29 @@ std::generate(mat.begin(), mat.end(), rand);
     return 0.5 * (A - A.transpose());
   }
 
-  template <typename Derived>
-  consteval auto cols(const Eigen::MatrixBase<Derived>&)
+  template<typename T>
+  struct Rows
   {
-    return Eigen::MatrixBase<Derived>::ColsAtCompileTime;
-  }
+    static constexpr int value = []{ if constexpr (requires {std::remove_cvref_t<T>::RowsAtCompileTime;})
+    return std::remove_cvref_t<T>::RowsAtCompileTime;
+    else if constexpr (requires {std::remove_cvref_t<T>::rows;})
+    return std::remove_cvref_t<T>::rows;
+    else if constexpr (requires {std::remove_cvref_t<T>::dimension;})
+        return std::remove_cvref_t<T>::dimension;
+    }();
+  };
 
-  template <typename Scalar, int rows, int cols_>
-  consteval auto cols(const Dune::FieldMatrix<Scalar,rows,cols_>&)
+  template<typename T>
+  struct Cols
   {
-    return cols_;
-  }
-
-  template <typename Scalar, int cols_>
-  consteval auto cols(const Dune::ScaledIdentityMatrix<Scalar,cols_>&)
-  {
-    return cols_;
-  }
-
-  template <typename Scalar, int rows_>
-  consteval auto cols(const Dune::FieldVector<Scalar,rows_>&)
-  {
-    return 1;
-  }
-
-  template <typename Derived>
-  consteval auto rows(const Eigen::MatrixBase<Derived>& A)
-  {
-    return Eigen::MatrixBase<Derived>::RowsAtCompileTime;
-  }
-
-  template <typename Scalar, int rows_, int cols>
-  consteval auto rows(const Dune::FieldMatrix<Scalar,rows_,cols>&)
-  {
-    return rows_;
-  }
-
-  template <typename Scalar, int cols_>
-  consteval auto rows(const Dune::ScaledIdentityMatrix<Scalar,cols_>&)
-  {
-    return cols_;
-  }
-
-  template <typename Scalar, int rows_>
-  consteval auto rows(const Dune::FieldVector<Scalar,rows_>&)
-  {
-    return rows_;
-  }
+    static constexpr int value = []{ if constexpr (requires {std::remove_cvref_t<T>::ColsAtCompileTime;})
+    return std::remove_cvref_t<T>::ColsAtCompileTime;
+    else if constexpr (requires {std::remove_cvref_t<T>::cols;})
+      return std::remove_cvref_t<T>::cols;
+    else if constexpr (requires {std::remove_cvref_t<T>::dimension;})
+        return 1;
+    }();
+  };
 
   /** \brief Evaluates Eigen expressions */
   template <typename Derived>

@@ -1,5 +1,5 @@
 /*
- * This file is part of the Ikarus distribution (https://github.com/IkarusRepo/Ikarus).
+ * This file is part of the Ikarus distribution (https://github.com/ikarus-project/ikarus).
  * Copyright (c) 2022. The Ikarus developers.
  *
  * This library is free software; you can redistribute it and/or
@@ -29,44 +29,47 @@ namespace Dune {
   template <typename LF>
   auto localFunctionName(const LF& lf) {
     std::string name = Dune::className(lf);
-    std::regex regexp0("Dune::StandardLocalFunction<(([a-zA-Z0-9_:<, ]*>){12})");
-    name = regex_replace(name, regexp0, "SLF");
+    std::regex regexp("Dune::StandardLocalFunction<(([a-zA-Z0-9_:<, ]*>){12})");
+    name = regex_replace(name, regexp, "SLF");
 
-    std::regex regexp1("Dune::ProjectionBasedLocalFunction<(([a-zA-Z0-9_:<, ]*>){12})");
-    name = regex_replace(name, regexp1, "PBLF");
+    regexp = "Dune::ProjectionBasedLocalFunction<(([a-zA-Z0-9_:<, ]*>){12})";
+    name = regex_replace(name, regexp, "PBLF");
 
-    std::regex regexp2("Dune::");
-    name = regex_replace(name, regexp2, "");
+    regexp = "Dune::";
+    name = regex_replace(name, regexp, "");
 
-    std::regex regexp3("InnerProductExpr");
-    name = regex_replace(name, regexp3, "Dot");
+    regexp = "InnerProductExpr";
+    name = regex_replace(name, regexp, "Dot");
 
-    std::regex regexp4("NegateExpr");
-    name = regex_replace(name, regexp4, "Negate");
+    regexp = "NegateExpr";
+    name = regex_replace(name, regexp, "Negate");
 
-    std::regex regexp5("ScaleExpr");
-    name = regex_replace(name, regexp5, "Scale");
+    regexp = "ScaleExpr";
+    name = regex_replace(name, regexp, "Scale");
 
-    std::regex regexp6("SumExpr");
-    name = regex_replace(name, regexp6, "Sum");
+    regexp = "SumExpr";
+    name = regex_replace(name, regexp, "Sum");
 
-    std::regex regexp7("const");
-    name = regex_replace(name, regexp7, "");
+    regexp = "const";
+    name = regex_replace(name, regexp, "");
 
-    std::regex regexp8("ConstantExpr");
-    name = regex_replace(name, regexp8, "Constant");
+    regexp = "ConstantExpr";
+    name = regex_replace(name, regexp, "Constant");
 
-    std::regex regexp9("SqrtExpr");
-    name = regex_replace(name, regexp9, "Sqrt");
+    regexp = "SqrtExpr";
+    name = regex_replace(name, regexp, "Sqrt");
 
-    std::regex regexp10("NormSquaredExpr");
-    name = regex_replace(name, regexp10, "NormSquared");
+    regexp = "NormSquaredExpr";
+    name = regex_replace(name, regexp, "NormSquared");
 
-    std::regex regexp11("LinearStrainExpr");
-    name = regex_replace(name, regexp11, "LinearStrains");
+    regexp ="LinearStrainExpr";
+    name = regex_replace(name, regexp, "LinearStrains");
 
-    std::regex regexp12("[ \\t]+$");  // remove trailing white space
-    name = regex_replace(name, regexp12, "");
+    regexp = "GreenLagrangeStrainsExpr";
+    name = regex_replace(name, regexp, "GreenLagrangeStrains");
+
+    regexp = "[ \\t]+$";  // remove trailing white space
+    name = regex_replace(name, regexp, "");
 
     return name;
   }

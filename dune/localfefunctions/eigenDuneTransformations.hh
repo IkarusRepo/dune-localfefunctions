@@ -40,6 +40,12 @@ namespace Dune {
     return {vec.data(), size};
   }
 
+  /** \brief No-op of  toEigenVectorMap(const Dune::FieldVector<ScalarType, size>&*/
+  template <typename ScalarType, int size>
+  auto toEigenVectorMap(const Eigen::Vector<ScalarType, size>& vec) {
+    return vec;
+  }
+
   /** \brief Creates a Eigen::Vector from a given Dune::FieldVector  */
   template <typename ScalarType, int size>
   Eigen::Vector<ScalarType, size> toEigen(const Dune::FieldVector<ScalarType, size>& vec) {
@@ -50,9 +56,9 @@ namespace Dune {
   }
 
   /** \brief Does nothing if Matrix is already eigen */
-  template <typename ScalarType, int rows,int cols>
-  auto toEigen(const Eigen::Matrix<ScalarType, rows,cols>& mat) {
-    return mat;
+  template <typename Derived>
+  auto toEigen(const Eigen::MatrixBase<Derived>& mat) {
+    return mat.derived();
   }
 
   /** \brief Creates a Eigen::Vector from a given Dune::FieldMatrix with one column  */
@@ -70,6 +76,7 @@ namespace Dune {
 #if DUNE_LOCALFEFUNCTIONS_USE_EIGEN == 1
     if constexpr(std::is_same_v<LinAlg,EigenLinearAlgebra>)
       return toEigen(vec);
+    else
 #endif
     return vec;
   }
@@ -83,20 +90,21 @@ namespace Dune {
         duneMatrix[i][j] = mat(i, j);
     return duneMatrix;
   }
-  
+
   /** \brief Depending on the Selected LinearAlgebra the Eigen::Matrix is converted to an Dune::FieldMatrix */
   template <typename ScalarType, int rows,int cols,typename LinAlg=DefaultLinearAlgebra>
   auto maybeToDune(const Eigen::Matrix<ScalarType, rows, cols>& mat) {
 #if DUNE_LOCALFEFUNCTIONS_USE_EIGEN == 1
     if constexpr(std::is_same_v<LinAlg,EigenLinearAlgebra>)
       return mat;
+    else
 #endif
     return toDune(mat);
   }
 
   /** \brief Views a  dune fieldvector as a Eigen::Vector, no copies take place! */
   template <typename ScalarType, int size>
-  Eigen::Map<Eigen::Vector<ScalarType, size>> toEigenVector(Dune::FieldVector<ScalarType, size>& vec) {
+  Eigen::Map<Eigen::Vector<ScalarType, size>> toEigen(Dune::FieldVector<ScalarType, size>& vec) {
     return {vec.data(), size};
   }
 

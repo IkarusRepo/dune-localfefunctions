@@ -85,7 +85,7 @@ namespace Dune
     }
 
     template<typename ScalarType,int rows>
-    static auto createScaledIdentityMatrix(const ScalarType& val)
+    static Eigen::Matrix<ScalarType, rows,rows> createScaledIdentityMatrix(const ScalarType& val)
     {
       return (Eigen::Matrix<ScalarType, rows,rows>::Identity()*val).eval();
     }

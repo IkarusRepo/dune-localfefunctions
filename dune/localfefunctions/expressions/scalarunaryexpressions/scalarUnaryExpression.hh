@@ -1,5 +1,5 @@
 /*
- * This file is part of the Ikarus distribution (https://github.com/IkarusRepo/Ikarus).
+ * This file is part of the Ikarus distribution (https://github.com/ikarus-project/ikarus).
  * Copyright (c) 2022. The Ikarus developers.
  *
  * This library is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
 
 #pragma once
 #include <dune/localfefunctions/expressions/unaryExpr.hh>
-//#include <ikarus/utils/linearAlgebraHelper.hh>
+
 namespace Dune {
 
   template <typename E1, typename Func>
@@ -40,12 +40,12 @@ namespace Dune {
 
     template <typename LFArgs>
     auto evaluateValueOfExpression(const LFArgs& lfArgs) const {
-      return typename LinearAlgebra::FixedSizedMatrix<ctype, 1, 1>(Func::value(evaluateFunctionImpl(this->m(), lfArgs)[0][0]));
+      return typename LinearAlgebra::template FixedSizedMatrix<ctype, 1, 1>(Func::value(coeff(evaluateFunctionImpl(this->m(), lfArgs),0,0)));
     }
 
     template <int DerivativeOrder, typename LFArgs>
     auto evaluateDerivativeOfExpression(const LFArgs& lfArgs) const {
-      const auto u = evaluateFunctionImpl(this->m(), lfArgs)[0][0];
+      const auto u = coeff(evaluateFunctionImpl(this->m(), lfArgs),0,0);
       if constexpr (DerivativeOrder == 1)  // d(f(u(x)))/(dx) =  u_x *D (f(u(x))
       {
         const auto u_x = evaluateDerivativeImpl(this->m(), lfArgs);
@@ -56,7 +56,7 @@ namespace Dune {
         const auto u_xy           = evaluateDerivativeImpl(this->m(), lfArgs);
         const auto u_yTimesfactor = Dune::eval(u_y * Func::secondDerivative(u));
         if constexpr (LFArgs::hasOneSpatialAll and LFArgs::hasSingleCoeff) {
-          std::array<std::remove_cvref_t<decltype(Dune::eval(col(u_x, 0)[0] * u_y))>, gridDim> res;
+          std::array<std::remove_cvref_t<decltype(Dune::eval(coeff(u_x, 0,0) * u_y))>, gridDim> res;
           for (int i = 0; i < gridDim; ++i)
             res[i] = Dune::eval(col(u_x, i)[0] * u_yTimesfactor + u_xy[i] * Func::derivative(u));
           return res;
@@ -75,12 +75,12 @@ namespace Dune {
         const auto u_yz       = evaluateDerivativeImpl(this->m(), argsForDyz);
 
         if constexpr (LFArgs::hasOneSpatialSingle) {
-          static_assert(decltype(u_x)::cols == 1);
-          static_assert(decltype(u_x)::rows == 1);
+          static_assert(Cols<decltype(u_x)>::value == 1);
+          static_assert(Rows<decltype(u_x)>::value == 1);
 
           return eval(u_xyz * Func::derivative(u)
-                      + (u_x[0][0] * leftMultiplyTranspose(u_y, u_z)) * Func::thirdDerivative(u)
-                      + ((leftMultiplyTranspose(u_y, u_xz) + u_x[0][0] * transposeEvaluated(u_yz)
+                      + (coeff(u_x,0,0) * leftMultiplyTranspose(u_y, u_z)) * Func::thirdDerivative(u)
+                      + ((leftMultiplyTranspose(u_y, u_xz) + coeff(u_x,0,0) * transposeEvaluated(u_yz)
                           + leftMultiplyTranspose(u_xy, u_z)))
                             * Func::secondDerivative(u));
         } else if constexpr (LFArgs::hasOneSpatialAll) {
@@ -90,8 +90,8 @@ namespace Dune {
 
           for (int i = 0; i < gridDim; ++i)
             res += coeff(alongMatrix, 0, i)
-                   * (u_x[0][i] * leftMultiplyTranspose(u_y, u_z) * Func::thirdDerivative(u)
-                      + (leftMultiplyTranspose(u_y, u_xz[i]) + u_x[0][i] * transposeEvaluated(u_yz)
+                   * (coeff(u_x,0,i) * leftMultiplyTranspose(u_y, u_z) * Func::thirdDerivative(u)
+                      + (leftMultiplyTranspose(u_y, u_xz[i]) + coeff(u_x,0,i) * transposeEvaluated(u_yz)
                          + leftMultiplyTranspose(u_xy[i], u_z))
                             * Func::secondDerivative(u));
           return res;

@@ -1,5 +1,5 @@
 /*
- * This file is part of the Ikarus distribution (https://github.com/IkarusRepo/Ikarus).
+ * This file is part of the Ikarus distribution (https://github.com/ikarus-project/ikarus).
  * Copyright (c) 2022. The Ikarus developers.
  *
  * This library is free software; you can redistribute it and/or
@@ -118,7 +118,7 @@ namespace Dune {
       FunctionReturnType res;
       setZero(res);
       for (int i = 0; i < coeffs.size(); ++i)
-        for (int j = 0; j < rows(res); ++j) {
+        for (int j = 0; j < Rows<FunctionReturnType>::value; ++j) {
           res[j] += coeffs[i].getValue()[j] * N[i];
         }
 
@@ -147,7 +147,7 @@ namespace Dune {
 
       JacobianColType Jcol;
       setZero(Jcol);
-      for (int j = 0; j < rows(Jcol); ++j) {
+      for (int j = 0; j < Rows<JacobianColType>::value; ++j) {
         for (int i = 0; i < coeffs.size(); ++i)
           Jcol[j] += coeffs[i].getValue()[j] * coeff(dNTransformed, i, spaceIndex);
       }

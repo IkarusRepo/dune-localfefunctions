@@ -51,37 +51,28 @@ namespace Dune {
         if constexpr (displacementSize == 1) {
           coeff(bopI, 0, 0) = getDiagonalEntry(gradUdI[0],0);
         } else if constexpr (displacementSize == 2) {
-          row(bopI, 0)[0] = getDiagonalEntry(gradUdI[0],0);
-          row(bopI, 0)[1] = 0;
-          row(bopI, 1)[0] = 0;
-          row(bopI, 1)[1] = getDiagonalEntry(gradUdI[1],0);
-          row(bopI, 2)[0] = getDiagonalEntry(gradUdI[1],0);
-          row(bopI, 2)[1] = getDiagonalEntry(gradUdI[0],0);
+          setZero(bopI);
+          coeff(bopI, 0, 0) = getDiagonalEntry(gradUdI[0],0);
 
+          coeff(bopI, 1, 1) = getDiagonalEntry(gradUdI[1],0);
+          coeff(bopI, 2, 0) = getDiagonalEntry(gradUdI[1],0);
+          coeff(bopI, 2, 1) = getDiagonalEntry(gradUdI[0],0);
         } else if constexpr (displacementSize == 3) {
-          row(bopI, 0)[0] = getDiagonalEntry(gradUdI[0],0);
-          row(bopI, 0)[1] = 0;
-          row(bopI, 0)[2] = 0;
+          setZero(bopI);
+          coeff(bopI, 0, 0) = getDiagonalEntry(gradUdI[0],0);
 
-          row(bopI, 1)[0] = 0;
-          row(bopI, 1)[1] = getDiagonalEntry(gradUdI[1],0);
-          row(bopI, 1)[2] = 0;
+          coeff(bopI, 1, 1) = getDiagonalEntry(gradUdI[1],0);
 
-          row(bopI, 2)[0] = 0;
-          row(bopI, 2)[1] = 0;
-          row(bopI, 2)[2] = getDiagonalEntry(gradUdI[2],0);
+          coeff(bopI, 2, 2) = getDiagonalEntry(gradUdI[2],0);
 
-          row(bopI, 3)[0] = 0;
-          row(bopI, 3)[1] = getDiagonalEntry(gradUdI[2],0);
-          row(bopI, 3)[2] = getDiagonalEntry(gradUdI[1],0);
+          coeff(bopI, 3, 1) = getDiagonalEntry(gradUdI[2],0);
+          coeff(bopI, 3, 2) = getDiagonalEntry(gradUdI[1],0);
 
-          row(bopI, 4)[0] = getDiagonalEntry(gradUdI[2],0);
-          row(bopI, 4)[1] = 0;
-          row(bopI, 4)[2] = getDiagonalEntry(gradUdI[0],0);
+          coeff(bopI, 4, 0) = getDiagonalEntry(gradUdI[2],0);
+          coeff(bopI, 4, 2) = getDiagonalEntry(gradUdI[0],0);
 
-          row(bopI, 5)[0] = getDiagonalEntry(gradUdI[1],0);
-          row(bopI, 5)[1] = getDiagonalEntry(gradUdI[0],0);
-          row(bopI, 5)[2] = 0;
+          coeff(bopI, 5, 0) = getDiagonalEntry(gradUdI[1],0);
+          coeff(bopI, 5, 1) = getDiagonalEntry(gradUdI[0],0);
         }
 
         return bopI;

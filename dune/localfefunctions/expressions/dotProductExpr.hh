@@ -1,5 +1,5 @@
 /*
- * This file is part of the Ikarus distribution (https://github.com/IkarusRepo/Ikarus).
+ * This file is part of the Ikarus distribution (https://github.com/ikarus-project/ikarus).
  * Copyright (c) 2022. The Ikarus developers.
  *
  * This library is free software; you can redistribute it and/or
@@ -113,20 +113,20 @@ namespace Dune {
           // check that the along argument has the correct size
           const auto &alongMatrix = std::get<0>(lfArgs.alongArgs.args);
           using AlongMatrix       = std::remove_cvref_t<decltype(alongMatrix)>;
-          static_assert(AlongMatrix::rows == 1);
-          static_assert(AlongMatrix::cols == gridDim);
+          static_assert(Rows<AlongMatrix>::value == 1);
+          static_assert(Cols<AlongMatrix>::value == gridDim);
 
-          static_assert(u.dimension == Base::E1Raw::valueSize);
-          static_assert(v.dimension == Base::E1Raw::valueSize);
+          static_assert(Rows<decltype(u)>::value == Base::E1Raw::valueSize);
+          static_assert(Rows<decltype(v)>::value == Base::E1Raw::valueSize);
 
           const typename LinearAlgebra::template FixedSizedMatrix<ctype, Base::E1Raw::valueSize, gridDim> uTimesA = u * alongMatrix;
           const typename LinearAlgebra::template FixedSizedMatrix<ctype, Base::E2Raw::valueSize, gridDim> vTimesA = v * alongMatrix;
           using uTimesAType = std::remove_cvref_t<decltype(uTimesA)>;
           using vTimesAType = std::remove_cvref_t<decltype(vTimesA)>;
-          static_assert(uTimesAType::rows == Base::E1Raw::valueSize);
-          static_assert(vTimesAType::rows == Base::E2Raw::valueSize);
-          static_assert(uTimesAType::cols == gridDim);
-          static_assert(vTimesAType::cols == gridDim);
+          static_assert(Rows<uTimesAType>::value == Base::E1Raw::valueSize);
+          static_assert(Rows<vTimesAType>::value == Base::E2Raw::valueSize);
+          static_assert(Cols<uTimesAType>::value == gridDim);
+          static_assert(Cols<vTimesAType>::value == gridDim);
 
           const auto &[gradu, u_c0, u_c1]  = evaluateFirstOrderDerivativesImpl(this->l(), lfArgs);
           const auto &[gradv, v_c0, v_c1]  = evaluateFirstOrderDerivativesImpl(this->r(), lfArgs);
@@ -135,10 +135,11 @@ namespace Dune {
 
           const auto graduTimesA = eval(gradu * transpose(alongMatrix));
           const auto gradvTimesA = eval(gradv * transpose(alongMatrix));
-          static_assert(graduTimesA.rows == Base::E1Raw::valueSize);
-          static_assert(graduTimesA.cols == 1);
-          static_assert(gradvTimesA.rows == Base::E2Raw::valueSize);
-          static_assert(gradvTimesA.cols == 1);
+
+          static_assert(Rows<decltype(graduTimesA)>::value == Base::E1Raw::valueSize);
+          static_assert(Cols<decltype(graduTimesA)>::value == 1);
+          static_assert(Rows<decltype(gradvTimesA)>::value == Base::E2Raw::valueSize);
+          static_assert(Cols<decltype(gradvTimesA)>::value == 1);
 
           const auto argsForDyz = lfArgs.extractSecondWrtArgOrFirstNonSpatial();
 

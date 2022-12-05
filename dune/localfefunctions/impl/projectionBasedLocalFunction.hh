@@ -1,5 +1,5 @@
 /*
- * This file is part of the Ikarus distribution (https://github.com/IkarusRepo/Ikarus).
+ * This file is part of the Ikarus distribution (https://github.com/ikarus-project/ikarus).
  * Copyright (c) 2022. The Ikarus developers.
  *
  * This library is free software; you can redistribute it and/or
@@ -268,10 +268,10 @@ namespace Dune {
       const auto& along             = std::get<0>(alongArgs.args);
       CoeffDerivEukMatrix ChiArrayEuk;
       setZero(ChiArrayEuk);
-      static_assert(along.cols == gridDim);
-      static_assert(J.cols == gridDim);
-      static_assert(along.rows == valueSize);
-      static_assert(J.rows == valueSize);
+      static_assert(Cols<decltype(along)>::value == gridDim);
+      static_assert(Cols<decltype(J)>::value == gridDim);
+      static_assert(Rows<decltype(along)>::value == valueSize);
+      static_assert(Rows<decltype(J)>::value == valueSize);
       for (int i = 0; i < gridDim; ++i) {
         auto colAlong               = col(along, i);
         const auto chi              = tryToCallThirdDerivativeOfProjectionWRTposition(valE, colAlong, col(J, i));
@@ -336,7 +336,7 @@ namespace Dune {
     JacobianColType evaluateEmbeddingJacobianColImpl(const AnsatzFunctionJacobian& dN, int spaceIndex) const {
       JacobianColType Jcol;
       setZero(Jcol);
-      for (int j = 0; j < Jcol.dimension; ++j) {
+      for (int j = 0; j < Rows<JacobianColType>::value; ++j) {
         for (int i = 0; i < coeffs.size(); ++i)
           Jcol[j] += coeffs[i].getValue()[j] * coeff(dN, i, spaceIndex);
       }
@@ -398,9 +398,9 @@ namespace Dune {
     /** \brief Type for the points for evaluation, usually the integration points */
     using DomainType = typename DuneBasis::Traits::DomainType;
     /** \brief Type for a column of the Jacobian matrix */
-    using JacobianColType = Dune::FieldVector<ctype, valueSize>;
+    using JacobianColType = typename DefaultLinearAlgebra::template FixedSizedVector<ctype, valueSize>;
     /** \brief Type for the directional derivatives */
-    using AlongType = Dune::FieldVector<ctype, valueSize>;
+    using AlongType = typename DefaultLinearAlgebra::template FixedSizedVector<ctype, valueSize>;
     /** \brief Dimension of the world where this function is mapped to from the reference element */
     static constexpr int worldDimension = Geometry::coorddimension;
   };

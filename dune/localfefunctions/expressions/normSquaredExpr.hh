@@ -1,5 +1,5 @@
 /*
- * This file is part of the Ikarus distribution (https://github.com/IkarusRepo/Ikarus).
+ * This file is part of the Ikarus distribution (https://github.com/ikarus-project/ikarus).
  * Copyright (c) 2022. The Ikarus developers.
  *
  * This library is free software; you can redistribute it and/or
@@ -100,8 +100,8 @@ namespace Dune {
 //          static_assert(rows(alongMatrix) == 1);
 
           const typename DefaultLinearAlgebra::template FixedSizedMatrix<ctype, Base::E1Raw::valueSize, gridDim> uTimesA = u * alongMatrix;
-          static_assert(rows(uTimesA) == Base::E1Raw::valueSize);
-          static_assert(cols(uTimesA) == gridDim);
+          static_assert(Rows<decltype(uTimesA)>::value == Base::E1Raw::valueSize);
+          static_assert(Cols<decltype(uTimesA)>::value == gridDim);
 
           const auto &[gradu, u_c0, u_c1]  = evaluateFirstOrderDerivativesImpl(this->m(), lfArgs);
           const auto &[gradu_c0, gradu_c1] = evaluateSecondOrderDerivativesImpl(this->m(), lfArgs);
@@ -109,8 +109,8 @@ namespace Dune {
           const auto graduTimesA = Dune::eval(gradu * transpose(alongMatrix));
 //          using graduTimesAType  = std::remove_cvref_t<decltype(graduTimesA)>;
 
-          static_assert(rows(graduTimesA) == Base::E1Raw::valueSize);
-          static_assert(cols(graduTimesA) == 1);
+          static_assert(Rows<decltype(graduTimesA)>::value == Base::E1Raw::valueSize);
+          static_assert(Cols<decltype(graduTimesA)>::value == 1);
 
           const auto argsForDyz = lfArgs.extractSecondWrtArgOrFirstNonSpatial();
 
