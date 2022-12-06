@@ -1,6 +1,6 @@
-[![codecov](https://codecov.io/gh/ikarus-project/dune-localfefunctions/branch/main/graph/badge.svg?token=V50htxzDss)](https://codecov.io/gh/ikarus-project/dune-localfefunctions)
-
 # dune-localfefunctions
+
+[![codecov](https://codecov.io/gh/ikarus-project/dune-localfefunctions/branch/main/graph/badge.svg?token=V50htxzDss)](https://codecov.io/gh/ikarus-project/dune-localfefunctions)
 
 
 
