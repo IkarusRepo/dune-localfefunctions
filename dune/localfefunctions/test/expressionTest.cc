@@ -244,7 +244,7 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
 
           auto jacoWrtCoeffAndSpatialExpected
               = Dune::eval(transposeEvaluated(BLAi)
-                * segment<coeffValueSize>(gradientWRTCoeffsTwoTimesSingleSpatial[d], i * coeffValueSize));
+                           * segment<coeffValueSize>(gradientWRTCoeffsTwoTimesSingleSpatial[d], i * coeffValueSize));
           t.check(isApproxSame(jacoWrtCoeffAndSpatial, jacoWrtCoeffAndSpatialExpected, tol),
                   "Test mixed first derivative wrt coeff and first derivative wrt single spatial");
         }
@@ -684,9 +684,9 @@ int main(int argc, char **argv) {
   using namespace std;
   auto start = high_resolution_clock::now();
   t.subTest(testExpressionsOnLine());
-//  t.subTest(testExpressionsOnTriangle());
-//  t.subTest(testExpressionsOnQuadrilateral());
-//  t.subTest(testExpressionsOnHexahedron());
+  t.subTest(testExpressionsOnTriangle());
+  t.subTest(testExpressionsOnQuadrilateral());
+  t.subTest(testExpressionsOnHexahedron());
   auto stop     = high_resolution_clock::now();
   auto duration = duration_cast<milliseconds>(stop - start);
   cout << "The test execution took: " << duration.count() << endl;
