@@ -58,7 +58,7 @@ namespace Dune {
     using Traits = LocalFunctionTraits<ProjectionBasedLocalFunction>;
 
     static constexpr bool isLeaf = true;
-    using Ids                    = Dune::index_constant<ID>;
+    static constexpr std::array<int, 1> id{ID};
 
     using LinearAlgebra = LinAlg;
 

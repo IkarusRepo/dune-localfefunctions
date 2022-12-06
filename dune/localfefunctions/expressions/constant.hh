@@ -48,7 +48,7 @@ namespace Dune {
     };
 
     static constexpr bool isLeaf = true;
-    using Ids                    = Arithmetic;
+    static constexpr std::array<int,1> id{arithmetic};
     template <size_t ID_ = 0>
     static constexpr int orderID = ID_ == Arithmetic::value ? linear : constant;
 

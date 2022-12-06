@@ -465,8 +465,7 @@ auto localFunctionTestConstructor(const Dune::GeometryType &geometryType, size_t
   }
   static_assert(std::tuple_size_v<decltype(collectNonArithmeticLeafNodes(h))> == 2);
   static_assert(countNonArithmeticLeafNodes(h) == 2);
-  static_assert(
-      std::is_same_v<typename decltype(h)::Ids, std::tuple<Dune::index_constant<0>, Dune::index_constant<0>>>);
+  static_assert(decltype(h)::id[0]==0 and decltype(h)::id[1]==0);
 
   auto ft2 = 2 * f;
   t.subTest(testLocalFunction(ft2));
@@ -501,8 +500,7 @@ auto localFunctionTestConstructor(const Dune::GeometryType &geometryType, size_t
   t.subTest(testLocalFunction(dotfg));
   static_assert(countNonArithmeticLeafNodes(dotfg) == 2);
   static_assert(dotfg.order() == quadratic);
-  static_assert(
-      std::is_same_v<typename decltype(dotfg)::Ids, std::tuple<Dune::index_constant<0>, Dune::index_constant<0>>>);
+  static_assert(decltype(dotfg)::id[0]==0 and decltype(dotfg)::id[1]==0);
 
   auto normSq = normSquared(f);
   t.subTest(testLocalFunction(normSq));
@@ -535,8 +533,7 @@ auto localFunctionTestConstructor(const Dune::GeometryType &geometryType, size_t
 
   auto k2 = dot(f2 + g2, g2);
   static_assert(countNonArithmeticLeafNodes(k2) == 3);
-  static_assert(std::is_same_v<typename decltype(k2)::Ids,
-                               std::tuple<Dune::index_constant<0>, Dune::index_constant<1>, Dune::index_constant<1>>>);
+  static_assert(decltype(k2)::id[0]==0 and decltype(k2)::id[1]==1 and decltype(k2)::id[2]==1);
 
   auto b2 = collectNonArithmeticLeafNodes(k2);
   static_assert(std::tuple_size_v<decltype(b2)> == 3);

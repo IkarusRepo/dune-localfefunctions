@@ -233,7 +233,7 @@ namespace Dune {
                                                             localFunctionArgs.transformWithArgs);
         }
       } else if constexpr (LocalFunctionArguments::hasSingleCoeff) {
-        if constexpr (decltype(localFunctionArgs.coeffsIndices[_0][_0])::value != LocalFunctionImpl::Ids::value)
+        if constexpr (decltype(localFunctionArgs.coeffsIndices[_0][_0])::value != LocalFunctionImpl::id[0])
           return DerivativeDirections::ZeroMatrix();
         else if constexpr (LocalFunctionArguments::hasNoSpatial) {
           return f.impl().evaluateDerivativeWRTCoeffsImpl(localFunctionArgs.integrationPointOrIndex,

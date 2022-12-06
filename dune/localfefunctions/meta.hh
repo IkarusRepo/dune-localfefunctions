@@ -199,10 +199,10 @@ namespace Dune {
   concept IsBinaryExpr = LF::children == 2;
 
   using Arithmetic                 = Dune::index_constant<100>;
-  static constexpr auto arithmetic = Arithmetic{};
+  static constexpr int arithmetic = Arithmetic::value;
 
   template <typename LF>
-  concept IsArithmeticExpr = std::remove_cvref_t<LF>::Ids::value == arithmetic;
+  concept IsArithmeticExpr = std::remove_cvref_t<LF>::id[0] == arithmetic;
 
   template <typename E1, typename E2>
   class ScaleExpr;
@@ -215,7 +215,7 @@ namespace Dune {
     typename std::remove_cvref_t<LocalFunctionImpl>::Traits;
     std::remove_cvref_t<LocalFunctionImpl>::Traits::valueSize;
     typename std::remove_cvref_t<LocalFunctionImpl>::Traits::DomainType;
-    typename std::remove_cvref_t<LocalFunctionImpl>::Ids;
+    std::remove_cvref_t<LocalFunctionImpl>::id;
   };
 
   template <typename LF>

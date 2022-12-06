@@ -40,13 +40,13 @@ namespace Dune {
 
     E1& m() { return std::get<0>(expr); }
 
-    using Ids = decltype(Std::makeNestedTupleFlat(std::make_tuple(std::declval<typename E1Raw::Ids>())));
+    static constexpr auto id = E1Raw::id;
 
     auto clone() const { return Op<decltype(m().clone()), Args...>(m().clone()); }
 
     /** Rebind the value type of the underlying local function with the id ID */
     template <typename OtherType, size_t ID = 0>
-    auto rebindClone(OtherType&&, Dune::index_constant<ID>&& id = Dune::index_constant<0>()) const {
+    auto rebindClone(OtherType&&, Dune::index_constant<ID>&& id_ = Dune::index_constant<0>()) const {
       return rebind<Op, E1, OtherType, ID, Args...>(m(), Dune::index_constant<ID>());
     }
 

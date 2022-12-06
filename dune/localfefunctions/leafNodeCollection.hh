@@ -23,6 +23,8 @@
 #include <dune/common/indices.hh>
 
 //#include <ikarus/utils/linearAlgebraHelper.hh>
+#include <ranges>
+
 #include <dune/localfefunctions/helper.hh>
 namespace Dune {
   namespace Impl {
@@ -32,11 +34,8 @@ namespace Dune {
 
     template <typename LF>
     requires(!std::is_arithmetic_v<LF>) consteval int countNonArithmeticLeafNodesImpl() {
-      if constexpr (Std::isSpecialization<std::tuple, typename LF::Ids>::value) {
-        constexpr auto predicate = []<typename Type>(Type) { return Type::value != Dune::arithmetic; };
-        return std::tuple_size_v<decltype(Std::filter(typename LF::Ids(), predicate))>;
-      } else
-        return 1;
+     constexpr auto predicate = [](auto v) { return v != Dune::arithmetic; };
+      return std::ranges::count_if(LF::id,predicate);
     }
 
     template <typename LF>
@@ -86,10 +85,10 @@ namespace Dune {
     /** Return the a const reference of the coefficients if the leaf node with id tag I is unique. Otherwise this
      * function is deactivated */
     template <std::size_t I = 0>
-    requires(Std::countType<typename LFRaw::Ids, Dune::index_constant<I>>()
+    requires(std::ranges::count(LFRaw::id, I)
              == 1) auto& coefficientsRef(Dune::index_constant<I> = Dune::index_constant<I>()) {
       static_assert(
-          Std::countType<typename LFRaw::Ids, Dune::index_constant<I>>() == 1,
+          std::ranges::count(LFRaw::id, I) == 1,
           "Non-const coefficientsRef() can only be called, if there is only one node with the given leaf node ID.");
       return std::get<I>(leafNodes).coefficientsRef();
     }
@@ -104,7 +103,7 @@ namespace Dune {
     void addToCoeffs(const Eigen::MatrixBase<Derived>& correction,
                      Dune::index_constant<I> = Dune::index_constant<0UL>()) {
       Dune::Hybrid::forEach(leafNodes, [&]<typename LFI>(LFI& lfi) {
-        if constexpr (LFI::Ids::value == I) lfi.coefficientsRef() += correction;
+        if constexpr (LFI::id[0] == I) lfi.coefficientsRef() += correction;
       });
     }
 
@@ -113,7 +112,7 @@ namespace Dune {
     void addToCoeffsInEmbedding(const Eigen::MatrixBase<Derived>& correction,
                                 Dune::index_constant<I> = Dune::index_constant<0UL>()) {
       Dune::Hybrid::forEach(leafNodes, [&]<typename LFI>(LFI& lfi) {
-        if constexpr (LFI::Ids::value == I) addInEmbedding(lfi.coefficientsRef(), correction);
+        if constexpr (LFI::id[0] == I) addInEmbedding(lfi.coefficientsRef(), correction);
       });
     }
 

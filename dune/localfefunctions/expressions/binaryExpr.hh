@@ -47,8 +47,7 @@ namespace Dune {
 
     /* Creates a tuple of all subtype ids, size l or r is not a tuple, tuple_cat may not work.
      * Thus, we artificially wrap them inside a tuple  */
-    using Ids = decltype(Std::makeNestedTupleFlat(
-        std::make_tuple(std::declval<typename E1Raw::Ids>(), std::declval<typename E2Raw::Ids>())));
+    static constexpr auto id = Dune::Std::concatArray(E1Raw::id, E2Raw::id);
 
     /** The function order wrt. the coefficients */
     template <size_t ID_ = 0>

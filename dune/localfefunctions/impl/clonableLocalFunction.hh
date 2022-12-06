@@ -25,15 +25,15 @@ namespace Dune {
   class ClonableLocalFunction {
   public:
     LFImpl clone() const {
-      return LFImpl(underlying().basis(), underlying().coeffs, underlying().geometry(), typename LFImpl::Ids());
+      return LFImpl(underlying().basis(), underlying().coeffs, underlying().geometry(), Dune::index_constant< LFImpl::id[0]>());
     }
 
     template <typename OtherType, size_t ID = 0>
     auto rebindClone(OtherType&& t, Dune::index_constant<ID>&& id = Dune::index_constant<0>()) const {
-      if constexpr (LFImpl::Ids::value == ID)
+      if constexpr (LFImpl::id[0] == ID)
         return typename LFImpl::template rebind<OtherType>::other(underlying().basis(),
                                                                   convertUnderlying<OtherType>(underlying().coeffs),
-                                                                  underlying().geometry(), typename LFImpl::Ids());
+                                                                  underlying().geometry(), Dune::index_constant< LFImpl::id[0]>());
       else
         return clone();
     }
