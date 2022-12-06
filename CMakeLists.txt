@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2022 Alexander Müller mueller@ibb.uni-stuttgart.de
+# SPDX-License-Identifier: LGPL-2.1-or-later
+
 cmake_minimum_required(VERSION 3.18)
 project(dune-localfefunctions CXX)
 
@@ -45,7 +48,6 @@ dune_enable_all_packages()
 target_link_dune_default_libraries(${PROJECT_NAME}) # link compiled dune libs
 add_dune_all_flags(${PROJECT_NAME})
 add_subdirectory(dune)
-add_subdirectory(doc)
 add_subdirectory(cmake/modules)
 add_subdirectory(cmake/FormatTarget)
 

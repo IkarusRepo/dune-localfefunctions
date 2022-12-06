@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2022 Alexander Müller mueller@ibb.uni-stuttgart.de
+SPDX-License-Identifier: LGPL-2.1-or-later
+-->
+
 # dune-localfefunctions
 
 [![codecov](https://codecov.io/gh/ikarus-project/dune-localfefunctions/branch/main/graph/badge.svg?token=V50htxzDss)](https://codecov.io/gh/ikarus-project/dune-localfefunctions)

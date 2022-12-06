@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2022 Alexander Müller mueller@ibb.uni-stuttgart.de
+# SPDX-License-Identifier: LGPL-2.1-or-later
+
 if(DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING)
   find_package(autodiff REQUIRED)
   find_package(Eigen3 3.3.9 REQUIRED)
