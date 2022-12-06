@@ -213,7 +213,7 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
       static_assert(Rows<decltype(jacobianWRTCoeffs)>::value == coeffCorrectionSize);  // note the  transpose above
       static_assert(Cols<decltype(jacobianWRTCoeffs)>::value == 1);
       auto jacobianWRTCoeffsAD
-          = transposeEvaluated(BLAi) * segment<coeffValueSize>(gradienWRTCoeffs, i * coeffValueSize);
+          = Dune::eval(transposeEvaluated(BLAi) * segment<coeffValueSize>(gradienWRTCoeffs, i * coeffValueSize));
       t.require(isApproxSame(jacobianWRTCoeffs, jacobianWRTCoeffsAD, tol), "Test first derivative wrt coeff")
           << "jacobianWRTCoeffs:\n"
           << jacobianWRTCoeffs << "\n jacobianWRTCoeffsAD: \n"
@@ -243,8 +243,8 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
               "Check that passing in different order does not change anything for the derivatives (spatial single)");
 
           auto jacoWrtCoeffAndSpatialExpected
-              = transposeEvaluated(BLAi)
-                * segment<coeffValueSize>(gradientWRTCoeffsTwoTimesSingleSpatial[d], i * coeffValueSize);
+              = Dune::eval(transposeEvaluated(BLAi)
+                * segment<coeffValueSize>(gradientWRTCoeffsTwoTimesSingleSpatial[d], i * coeffValueSize));
           t.check(isApproxSame(jacoWrtCoeffAndSpatial, jacoWrtCoeffAndSpatialExpected, tol),
                   "Test mixed first derivative wrt coeff and first derivative wrt single spatial");
         }
@@ -574,8 +574,8 @@ auto localFunctionTestConstructor(const Dune::GeometryType &geometryType, size_t
     for (size_t iC = 0; iC < fe.size(); ++iC) {
       const VectorType dfdi = g2.evaluate(gpIndex, Dune::on(DerivativeDirections::referenceElement)) * N[iC];
 
-      const auto dkdi = transposeEvaluated(
-          k2.evaluateDerivative(gpIndex, wrt(coeff(_0, iC)), Dune::on(DerivativeDirections::referenceElement)));
+      const auto dkdi = Dune::eval(transposeEvaluated(
+          k2.evaluateDerivative(gpIndex, wrt(coeff(_0, iC)), Dune::on(DerivativeDirections::referenceElement))));
 
       t.check(isApproxSame(dfdi, dkdi, tol));
 
@@ -684,9 +684,9 @@ int main(int argc, char **argv) {
   using namespace std;
   auto start = high_resolution_clock::now();
   t.subTest(testExpressionsOnLine());
-  t.subTest(testExpressionsOnTriangle());
-  t.subTest(testExpressionsOnQuadrilateral());
-  t.subTest(testExpressionsOnHexahedron());
+//  t.subTest(testExpressionsOnTriangle());
+//  t.subTest(testExpressionsOnQuadrilateral());
+//  t.subTest(testExpressionsOnHexahedron());
   auto stop     = high_resolution_clock::now();
   auto duration = duration_cast<milliseconds>(stop - start);
   cout << "The test execution took: " << duration.count() << endl;

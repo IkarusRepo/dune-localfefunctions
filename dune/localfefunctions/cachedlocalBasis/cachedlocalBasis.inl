@@ -46,6 +46,7 @@ namespace Dune {
       return rule.value()[i];
     else
       assert(false && "You need to call bind first");
+    __builtin_unreachable();
   }
 
   /*
