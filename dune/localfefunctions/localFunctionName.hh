@@ -53,7 +53,7 @@ namespace Dune {
     regexp = "const";
     name   = regex_replace(name, regexp, "");
 
-    regexp = "ConstantExpr";
+    regexp = "ConstantExpr<(([a-zA-Z0-9_:<, ]*>))";
     name   = regex_replace(name, regexp, "Constant");
 
     regexp = "SqrtExpr";
