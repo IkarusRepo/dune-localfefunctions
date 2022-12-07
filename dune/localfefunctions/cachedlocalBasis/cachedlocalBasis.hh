@@ -51,9 +51,8 @@ namespace Dune {
     void evaluateSecondDerivatives(const DomainType& local, SecondDerivativeType& ddN) const;
 
     /* Evaluates the ansatz functions and derivatives into the given Eigen Vector/Matrix N,dN */
-    template <typename Derived1, typename Derived2>
-    void evaluateFunctionAndJacobian(const DomainType& local, Eigen::PlainObjectBase<Derived1>& N,
-                                     Eigen::PlainObjectBase<Derived2>& dN) const;
+    void evaluateFunctionAndJacobian(const DomainType& local, AnsatzFunctionType& N,
+                                     JacobianType& dN) const;
 
     /* Returns the number of ansatz functions */
     unsigned int size() const { return duneLocalBasis->size(); }

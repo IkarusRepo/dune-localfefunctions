@@ -62,9 +62,8 @@ namespace Dune {
   }
 
   template <Concepts::LocalBasis DuneLocalBasis>
-  template <typename Derived1, typename Derived2>
-  void CachedLocalBasis<DuneLocalBasis>::evaluateFunctionAndJacobian(const DomainType& local, Eigen::PlainObjectBase<Derived1>& N,
-                                   Eigen::PlainObjectBase<Derived2>& dN) const {
+  void CachedLocalBasis<DuneLocalBasis>::evaluateFunctionAndJacobian(const DomainType& local, AnsatzFunctionType& N,
+                                                                     JacobianType& dN) const {
     evaluateFunction(local, N);
     evaluateJacobian(local, dN);
   }
