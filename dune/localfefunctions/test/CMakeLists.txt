@@ -22,6 +22,36 @@ if(DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING)
     target_link_options(expressiontest PUBLIC -fprofile-arcs -ftest-coverage)
 
   endif()
+    target_compile_options(
+          expressiontest
+          PRIVATE -ftemplate-backtrace-limit=0 -fdiagnostics-show-template-tree
+          -fno-elide-type -fconcepts-diagnostics-depth=2)
+
+  target_compile_features(expressiontest PRIVATE cxx_std_20)
+
+  dune_add_test(
+          NAME
+          cachedlocalbasis
+          SOURCES
+          cachedlocalbasis.cc
+          testFacilities.cc
+          LINK_LIBRARIES
+          Eigen3::Eigen
+          dune-localfefunctions)
+  if(ENABLE_TEST_COVERAGE)
+    message("Enable Test Coverage")
+    target_compile_options(cachedlocalbasis PUBLIC -O0 -g -fprofile-arcs
+            -ftest-coverage)
+    target_link_options(cachedlocalbasis PUBLIC -fprofile-arcs -ftest-coverage)
+
+  endif()
+  target_compile_options(
+          cachedlocalbasis
+          PRIVATE -ftemplate-backtrace-limit=0 -fdiagnostics-show-template-tree
+          -fno-elide-type -fconcepts-diagnostics-depth=2)
+
+  target_compile_features(cachedlocalbasis PRIVATE cxx_std_20)
+
   if(DUNE_LOCALFEFUNCTIONS_USE_EIGEN)
     message(STATUS "Eigen Linear Algebra")
     target_compile_definitions(dune-localfefunctions
@@ -29,11 +59,6 @@ if(DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING)
   endif()
   target_compile_definitions(dune-localfefunctions
                              PUBLIC DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING)
-  target_compile_options(
-    expressiontest
-    PRIVATE -ftemplate-backtrace-limit=0 -fdiagnostics-show-template-tree
-            -fno-elide-type -fconcepts-diagnostics-depth=2)
 
-  target_compile_features(expressiontest PRIVATE cxx_std_20)
 
 endif()
