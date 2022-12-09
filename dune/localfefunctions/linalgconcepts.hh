@@ -5,6 +5,7 @@
 
 #include <dune/common/fmatrix.hh>
 #include <dune/common/fvector.hh>
+#include <dune/istl/bvector.hh>
 #include <dune/istl/scaledidmatrix.hh>
 #if DUNE_LOCALFEFUNCTIONS_USE_EIGEN == 1
 #  include <Eigen/Core>
@@ -13,8 +14,15 @@ namespace Dune {
   struct DuneLinearAlgebra {
     template <typename ScalarType, int rows>
     using FixedSizedVector = Dune::FieldVector<ScalarType, rows>;
+
+    template <typename ScalarType>
+    using VariableSizedVector = Dune::BlockVector<ScalarType>;
+
     template <typename ScalarType, int rows, int cols>
     using FixedSizedMatrix = Dune::FieldMatrix<ScalarType, rows, cols>;
+
+    template <typename ScalarType, int cols>
+    using VarFixSizedMatrix = Dune::BlockVector<Dune::FieldVector<ScalarType, cols>>;
 
     template <typename ScalarType, int rows>
     using FixedSizedScaledIdentityMatrix = Dune::ScaledIdentityMatrix<ScalarType, rows>;
@@ -49,8 +57,15 @@ namespace Dune {
   struct EigenLinearAlgebra {
     template <typename ScalarType, int rows>
     using FixedSizedVector = Eigen::Vector<ScalarType, rows>;
+
+    template <typename ScalarType>
+    using VariableSizedVector = Eigen::VectorX<ScalarType>;
+
     template <typename ScalarType, int rows, int cols>
     using FixedSizedMatrix = Eigen::Matrix<ScalarType, rows, cols>;
+
+    template <typename ScalarType, int cols>
+    using VarFixSizedMatrix = Eigen::Matrix<ScalarType, Eigen::Dynamic, cols>;
 
     template <typename ScalarType, int rows>
     using FixedSizedScaledIdentityMatrix = Eigen::Matrix<ScalarType, rows, rows>;
@@ -81,6 +96,7 @@ namespace Dune {
     }
   };
 #endif
+
 #if DUNE_LOCALFEFUNCTIONS_USE_EIGEN == 1
   using DefaultLinearAlgebra = EigenLinearAlgebra;
 #else

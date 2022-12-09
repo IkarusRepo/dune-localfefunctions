@@ -158,7 +158,7 @@ namespace Dune {
       std::array<CoeffDerivMatrix, gridDim> Warray;
       for (int dir = 0; dir < gridDim; ++dir) {
         setZero(Warray[dir]);
-        setDiagonal(Warray[dir], dNTransformed[coeffsIndex][dir]);
+        setDiagonal(Warray[dir], coeff(dNTransformed, coeffsIndex, dir));
       }
 
       return Warray;
@@ -171,7 +171,7 @@ namespace Dune {
       const auto& dNraw = evaluateDerivativeWithIPorCoord(ipIndexOrPosition, basis_);
       maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry_, ipIndexOrPosition, basis_);
       CoeffDerivMatrix W
-          = createScaledIdentityMatrix<ctype, valueSize, valueSize>(dNTransformed[coeffsIndex][spatialIndex]);
+          = createScaledIdentityMatrix<ctype, valueSize, valueSize>(coeff(dNTransformed, coeffsIndex, spatialIndex));
       return W;
     }
 

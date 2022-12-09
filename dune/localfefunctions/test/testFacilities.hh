@@ -6,6 +6,7 @@
 #include <functional>
 #include <string>
 
+#include "dune/localfefunctions/linearAlgebraHelper.hh"
 #include <dune/common/float_cmp.hh>
 #include <dune/functions/analyticfunctions/polynomial.hh>
 
@@ -81,12 +82,17 @@ namespace Testing {
    */
   template <typename NonlinearOperator>
   bool checkJacobian(NonlinearOperator& nonLinOp, double tol) {
-    auto& x         = nonLinOp.firstParameter();
-    const auto xOld = x;
+    nonLinOp.template updateAll();
+    auto& x          = nonLinOp.firstParameter();
+    const auto xOld  = x;
+    using UpdateType = typename NonlinearOperator::ParameterValue;
     typename NonlinearOperator::ParameterValue b;
-    b.resizeLike(nonLinOp.derivative().row(0).transpose());
-    b.setRandom();
-    b /= b.norm();
+    if constexpr (Dune::Rows<UpdateType>::value != 1) {
+      b.resizeLike(nonLinOp.derivative().row(0).transpose());
+      b.setRandom();
+      b /= b.norm();
+    } else
+      b(0, 0) = 1;
 
     nonLinOp.updateAll();
     const auto e = nonLinOp.value();

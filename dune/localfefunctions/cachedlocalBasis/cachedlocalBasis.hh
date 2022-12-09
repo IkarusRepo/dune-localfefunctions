@@ -37,9 +37,10 @@ namespace Dune {
     using DomainFieldType = typename DuneLocalBasis::Traits::DomainFieldType;
     using RangeFieldType  = typename DuneLocalBasis::Traits::RangeFieldType;
 
-    using JacobianType         = Dune::BlockVector<Dune::FieldVector<RangeFieldType, gridDim>>;
-    using SecondDerivativeType = Dune::BlockVector<Dune::FieldVector<RangeFieldType, gridDim*(gridDim + 1) / 2>>;
-    using AnsatzFunctionType   = Dune::BlockVector<RangeFieldType>;
+    using JacobianType = DefaultLinearAlgebra::template VarFixSizedMatrix<RangeFieldType, gridDim>;
+    using SecondDerivativeType
+        = DefaultLinearAlgebra::template VarFixSizedMatrix<RangeFieldType, gridDim*(gridDim + 1) / 2>;
+    using AnsatzFunctionType = DefaultLinearAlgebra::template VariableSizedVector<RangeFieldType>;
 
     /* Evaluates the ansatz functions into the given Eigen Vector N */
     void evaluateFunction(const DomainType& local, AnsatzFunctionType& N) const;
@@ -51,8 +52,7 @@ namespace Dune {
     void evaluateSecondDerivatives(const DomainType& local, SecondDerivativeType& ddN) const;
 
     /* Evaluates the ansatz functions and derivatives into the given Eigen Vector/Matrix N,dN */
-    void evaluateFunctionAndJacobian(const DomainType& local, AnsatzFunctionType& N,
-                                     JacobianType& dN) const;
+    void evaluateFunctionAndJacobian(const DomainType& local, AnsatzFunctionType& N, JacobianType& dN) const;
 
     /* Returns the number of ansatz functions */
     unsigned int size() const { return duneLocalBasis->size(); }

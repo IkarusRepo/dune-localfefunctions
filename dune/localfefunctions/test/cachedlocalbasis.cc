@@ -3,12 +3,14 @@
 
 #include <config.h>
 
-#include <dune/common/parallel/mpihelper.hh>
-#include <dune/common/test/testsuite.hh>
 #include <autodiff/forward/dual.hpp>
 #include <autodiff/forward/dual/eigen.hpp>
+
+#include <dune/common/parallel/mpihelper.hh>
+#include <dune/common/test/testsuite.hh>
 using Dune::TestSuite;
 
+#include "testFacilities.hh"
 
 #include <complex>
 
@@ -19,13 +21,11 @@ using Dune::TestSuite;
 #include <dune/grid/yaspgrid.hh>
 
 #include <Eigen/Core>
-
-#include "testFacilities.hh"
 //#include <ikarus/localFunctions/expressions.hh>
 //#include <ikarus/manifolds/unitVector.hh>
-#include <dune/localfefunctions/linearAlgebraHelper.hh>
 #include <dune/localfefunctions/cachedlocalBasis/cachedlocalBasis.hh>
 #include <dune/localfefunctions/eigenDuneTransformations.hh>
+#include <dune/localfefunctions/linearAlgebraHelper.hh>
 
 using namespace Dune::Functions::BasisFactory;
 
@@ -45,22 +45,21 @@ auto testLocalBasis(LB& localBasis, const Dune::GeometryType& type) {
       /// Check if spatial derivatives are really derivatives
       /// Perturb in a random direction in the elements parameter space and check spatial derivative
       auto func = [&](auto& gpOffset_) {
-        Eigen::VectorXd N;
+        DefaultLinearAlgebra::template VariableSizedVector<double> N;
         localBasis.evaluateFunction(gp.position() + toDune(gpOffset_), N);
 
-        return N;
+        return toEigen(N);
       };
       auto jacobianLambda = [&](auto& gpOffset_) {
-        Eigen::Matrix<double, Eigen::Dynamic, gridDim> dN;
+        DefaultLinearAlgebra::template VarFixSizedMatrix<double, gridDim> dN;
         localBasis.evaluateJacobian(gp.position() + toDune(gpOffset_), dN);
-        return dN.eval();
+        return toEigen(dN);
       };
 
       Eigen::Vector<double, gridDim> ipOffset = (Eigen::Vector<double, gridDim>::Random()).normalized() / 8;
 
-      auto nonLinOpSpatialAll
-          = NonLinearOperator(func, jacobianLambda,ipOffset);
-      t.check(checkJacobian( nonLinOpSpatialAll,1e-2));
+      auto nonLinOpSpatialAll = NonLinearOperator(func, jacobianLambda, ipOffset);
+      t.check(checkJacobian(nonLinOpSpatialAll, 1e-2));
       if constexpr (gridDim > 1) {
         std::cout << "Test Second Derivatives" << std::endl;
 
@@ -76,20 +75,19 @@ auto testLocalBasis(LB& localBasis, const Dune::GeometryType& type) {
           };
           constexpr int secondDerivatives = gridDim * (gridDim + 1) / 2;
           auto hessianLambda              = [&](const auto& gpOffset_) {
-            Eigen::Matrix<double, Eigen::Dynamic, secondDerivatives> ddN;
+            DefaultLinearAlgebra::template VarFixSizedMatrix<double, secondDerivatives> ddN;
             Dune::FieldVector<double, gridDim> gpOffset2D;
             std::ranges::fill(gpOffset2D, 0);
             gpOffset2D[firstDirection] = gpOffset_[0];
             localBasis.evaluateSecondDerivatives(gp.position() + gpOffset2D, ddN);
-            return ddN.col(i).eval();
+            return toEigen(Dune::eval(col(ddN, i)));
           };
 
           Eigen::Vector<double, 1> ipOffset1D(1);
 
-          auto nonLinOpHg = NonLinearOperator(jacobianLambda1D, hessianLambda,ipOffset1D);
+          auto nonLinOpHg = NonLinearOperator(jacobianLambda1D, hessianLambda, ipOffset1D);
 
-          t.check((checkJacobian<decltype(nonLinOpHg), Eigen::Vector<double, 1>>(
-              nonLinOpHg, {.draw = false, .writeSlopeStatementIfFailed = true, .tolerance = 1e-2})));
+          t.check(checkJacobian(nonLinOpHg, 1e-2));
           ++i;
         }
       }

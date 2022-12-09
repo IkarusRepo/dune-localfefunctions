@@ -1,5 +1,6 @@
 // SPDX-FileCopyrightText: 2022 The dune-localfefunction developers mueller@ibb.uni-stuttgart.de
 // SPDX-License-Identifier: LGPL-2.1-or-later
+#include <dune/localfefunctions/eigenDuneTransformations.hh>
 
 namespace Dune {
 
@@ -14,11 +15,11 @@ namespace Dune {
   template <Concepts::LocalBasis DuneLocalBasis>
   void CachedLocalBasis<DuneLocalBasis>::evaluateJacobian(const DomainType& local, JacobianType& dN) const {
     duneLocalBasis->evaluateJacobian(local, dNdune);
-    dN.resize(dNdune.size());
+    resize(dN,dNdune.size());
 
     for (auto i = 0U; i < dNdune.size(); ++i)
       for (int j = 0; j < gridDim; ++j)
-        dN[i][j] = dNdune[i][0][j];
+        coeff(dN,i,j) = dNdune[i][0][j];
   }
 
   template <Concepts::LocalBasis DuneLocalBasis>
@@ -39,12 +40,13 @@ namespace Dune {
   void CachedLocalBasis<DuneLocalBasis>::evaluateSecondDerivatives(const DomainType& local, SecondDerivativeType& ddN) const {
     std::array<unsigned int, gridDim> order;
     std::ranges::fill(order, 0);
+      resize(ddN,dNdune.size());
 
     for (int i = 0; i < gridDim; ++i) { //Diagonal terms
       order[i] = 2;
       duneLocalBasis->partial(order,local, ddNdune);
       for (size_t j = 0; j < ddNdune.size(); ++j)
-        ddN[j][i]=ddNdune[j][0];
+          coeff(ddN,j,i)=ddNdune[j][0];
 
       order[i] = 0;
     }
@@ -55,7 +57,7 @@ namespace Dune {
         order[i] = 0;
       duneLocalBasis->partial(order,local, ddNdune);
       for (size_t j = 0; j < ddNdune.size(); ++j)
-        ddN[j][i+gridDim]=ddNdune[j][0];
+          coeff(ddN,j,i+gridDim)=ddNdune[j][0];
       order[i] = 1;
     }
 

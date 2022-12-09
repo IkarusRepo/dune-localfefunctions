@@ -60,7 +60,7 @@ namespace Dune {
 
   /** \brief Does nothing if Matrix is already eigen */
   template <typename Derived>
-  auto toEigen(const Eigen::MatrixBase<Derived>& mat) {
+  auto& toEigen(const Eigen::MatrixBase<Derived>& mat) {
     return mat.derived();
   }
 
@@ -86,12 +86,19 @@ namespace Dune {
 
   /** \brief Creates a Eigen::Matrix from a given Dune::FieldMatrix  */
   template <typename ScalarType, int size1, int size2>
-  Dune::FieldMatrix<ScalarType, size1, size2> toDune(const Eigen::Matrix<ScalarType, size1, size2>& mat) {
-    Dune::FieldMatrix<ScalarType, size1, size2> duneMatrix;
-    for (int i = 0; i < size1; ++i)
-      for (int j = 0; j < size2; ++j)
-        duneMatrix[i][j] = mat(i, j);
-    return duneMatrix;
+  auto toDune(const Eigen::Matrix<ScalarType, size1, size2>& mat) {
+    if constexpr (size2 == 1) {
+      Dune::FieldVector<ScalarType, size1> duneVector;
+      for (int i = 0; i < size1; ++i)
+        duneVector[i] = mat(i, 0);
+      return duneVector;
+    } else {
+      Dune::FieldMatrix<ScalarType, size1, size2> duneMatrix;
+      for (int i = 0; i < size1; ++i)
+        for (int j = 0; j < size2; ++j)
+          duneMatrix[i][j] = mat(i, j);
+      return duneMatrix;
+    }
   }
 
   /** \brief Depending on the Selected LinearAlgebra the Eigen::Matrix is converted to an Dune::FieldMatrix */
@@ -131,6 +138,16 @@ namespace Dune {
     for (int i = 0; i < size1; ++i)
       eigenmatrix(i, i) = mat[i][i];
     return eigenmatrix;
+  }
+
+  template <typename ScalarType, int cols>
+  void resize(Dune::BlockVector<Dune::FieldVector<ScalarType, cols>>& mat, size_t newSize) {
+    mat.resize(newSize);
+  }
+
+  template <typename ScalarType, int cols>
+  void resize(Eigen::Matrix<ScalarType, Eigen::Dynamic, cols>& mat, size_t newSize) {
+    mat.resize(newSize, Eigen::NoChange);
   }
 
 }  // namespace Dune

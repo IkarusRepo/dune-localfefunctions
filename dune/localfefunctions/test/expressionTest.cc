@@ -593,12 +593,12 @@ auto localFunctionTestConstructor(const Dune::GeometryType &geometryType, size_t
         const MatrixType dkdijExpected3 = createScaledIdentityMatrix<double, worldDim, worldDim>(2 * N[iC] * N[jC]);
         t.check(isApproxSame(dkdijExpected3, dkdij3, tol));
 
-        const MatrixType dkdSij  = k2.evaluateDerivative(gpIndex, wrt(spatial(0), coeff(_0, iC, _1, jC)),
-                                                         Dune::on(DerivativeDirections::referenceElement));
-        const MatrixType dkdSijR = k2.evaluateDerivative(gpIndex, wrt(coeff(_0, iC, _1, jC), spatial(0)),
-                                                         Dune::on(DerivativeDirections::referenceElement));
-        const MatrixType dkdSijExpected
-            = createScaledIdentityMatrix<double, worldDim, worldDim>(dN[jC][0] * N[iC] + N[jC] * dN[iC][0]);
+        const MatrixType dkdSij         = k2.evaluateDerivative(gpIndex, wrt(spatial(0), coeff(_0, iC, _1, jC)),
+                                                                Dune::on(DerivativeDirections::referenceElement));
+        const MatrixType dkdSijR        = k2.evaluateDerivative(gpIndex, wrt(coeff(_0, iC, _1, jC), spatial(0)),
+                                                                Dune::on(DerivativeDirections::referenceElement));
+        const MatrixType dkdSijExpected = createScaledIdentityMatrix<double, worldDim, worldDim>(
+            coeff(dN, jC, 0) * N[iC] + N[jC] * coeff(dN, iC, 0));
         t.check(isApproxSame(dkdSijR, dkdSij, tol));
         t.check(isApproxSame(dkdSijExpected, dkdSij, tol));
       }
