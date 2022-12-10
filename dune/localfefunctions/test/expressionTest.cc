@@ -63,7 +63,7 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
   constexpr int coeffCorrectionSize    = Manifold::correctionSize;
 
   // dynamic sized vectors before the loop
-  Eigen::VectorXdual2nd xvr(valueSize(coeffs));
+  Eigen::VectorXdual2nd xvr(coeffs.size() * coeffValueSize);
   xvr.setZero();
   Eigen::VectorXd gradienWRTCoeffs;
   Eigen::MatrixXd hessianWRTCoeffs;

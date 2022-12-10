@@ -47,7 +47,7 @@
 #define DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING @DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING@
 
 /* Defines a variable to use Eigen for LinearAlgebra */
-#define DUNE_LOCALFEFUNCTIONS_USE_EIGEN @DUNE_LOCALFEFUNCTIONS_USE_EIGEN@
+#cmakedefine DUNE_LOCALFEFUNCTIONS_USE_EIGEN 1
 
 /* end dune-localfefunctions
    Everything below here will be overwritten

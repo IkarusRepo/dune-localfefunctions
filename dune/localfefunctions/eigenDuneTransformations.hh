@@ -1,15 +1,12 @@
 // SPDX-FileCopyrightText: 2022 The dune-localfefunction developers mueller@ibb.uni-stuttgart.de
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-//
-// Created by Alex on 10.05.2021.
-//
-
 #pragma once
 
 #include <dune/common/diagonalmatrix.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/common/fvector.hh>
+#include <dune/localfefunctions/linalgconcepts.hh>
 
 #include <Eigen/Core>
 
@@ -138,6 +135,26 @@ namespace Dune {
     for (int i = 0; i < size1; ++i)
       eigenmatrix(i, i) = mat[i][i];
     return eigenmatrix;
+  }
+
+  template <typename ScalarType, int cols>
+  auto toEigen(const Dune::BlockVector<Dune::FieldVector<ScalarType, cols>>& mat) {
+    Eigen::Matrix<ScalarType, Eigen::Dynamic, cols> matE;
+    matE.resize(mat.size(), Eigen::NoChange);
+    for (auto i = 0U; i < mat.size(); ++i)
+      for (auto j = 0U; j < cols; ++j)
+        matE(i, j) = mat[i][j];
+    return matE;
+  }
+
+  template <typename ScalarType>
+  requires std::is_arithmetic_v<ScalarType>
+  auto toEigen(const Dune::BlockVector<ScalarType>& vec) {
+    Eigen::Vector<ScalarType, Eigen::Dynamic> vecE;
+    vecE.resize(vec.size());
+    for (auto i = 0U; i < vec.size(); ++i)
+      vecE(i) = vec[i];
+    return vecE;
   }
 
   template <typename ScalarType, int cols>

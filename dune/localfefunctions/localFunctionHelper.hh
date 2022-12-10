@@ -4,6 +4,7 @@
 #pragma once
 
 #include "localFunctionInterface.hh"
+#include <sstream>
 namespace Dune {
 
   /** Helper to evaluate the local basis ansatz function and gradient with an integration point index or coordinate
@@ -75,17 +76,25 @@ namespace Dune {
                       DerivativeDirections::GridElement> and Geometry::mydimension == Geometry::coorddimension) {
       if constexpr (std::numeric_limits<DomainTypeOrIntegrationPointIndex>::is_integer) {
         const auto& gp  = basis.indexToIntegrationPoint(localOrIpId);
-        const auto jInv = geo->jacobianInverseTransposed(gp.position());
-
+#if DUNE_LOCALFEFUNCTIONS_USE_EIGEN == 1
+        const auto jInv = toEigen(geo->jacobianTransposed(gp.position())).inverse().transpose();
+        dNTransformed = dNraw * jInv;
+#else
+        const auto jInv = toEigen(geo->jacobianInverseTransposed(localOrIpId));
         dNTransformed.resize(dNraw.size());
         for (int i = 0; i < dNraw.size(); ++i)
           jInv.mv(dNraw[i], dNTransformed[i]);
+#endif
       } else if (std::is_same_v<DomainTypeOrIntegrationPointIndex, typename Basis::DomainType>) {
-        const auto jInv = geo->jacobianInverseTransposed(localOrIpId);
-
+#if DUNE_LOCALFEFUNCTIONS_USE_EIGEN == 1
+        const auto jInv = toEigen(geo->jacobianTransposed(localOrIpId)).inverse().transpose();
+        dNTransformed = dNraw * jInv;
+#else
+        const auto jInv = toEigen(geo->jacobianInverseTransposed(localOrIpId));
         dNTransformed.resize(dNraw.size());
         for (int i = 0; i < dNraw.size(); ++i)
           jInv.mv(dNraw[i], dNTransformed[i]);
+#endif
       }
     } else  // DerivativeDirections::ReferenceElement if the quantity should live on the reference element we don't have
             // to transform the derivatives

@@ -4,7 +4,8 @@
 cmake_minimum_required(VERSION 3.18)
 project(dune-localfefunctions CXX)
 
-option(DUNE_LOCALFEFUNCTIONS_USE_EIGEN "Use Eigen" ON)
+# set(DUNE_LOCALFEFUNCTIONS_USE_EIGEN True CACHE BOOL "Use Eigen for linear
+# algebra")
 
 if(NOT
    (dune-common_DIR
@@ -22,18 +23,16 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules"
 # include the dune macros
 include(DuneMacros)
 
-# file( GLOB_RECURSE sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-# CONFIGURE_DEPENDS dune/localfefunctions/*.cpp )
-
 # start a dune project with information from dune.module
 dune_project()
 
 dune_add_library(dune-localfefunctions)
-if(DUNE_LOCALFEFUNCTIONS_USE_EIGEN)
-  message(STATUS "Eigen Linear Algebra")
-  target_compile_definitions(dune-localfefunctions
-                             PUBLIC DUNE_LOCALFEFUNCTIONS_USE_EIGEN)
-endif()
+
+# target_compile_definitions(dune-localfefunctions PUBLIC ENABLE_USE_EIGEN=1)
+# option(LOCALFEFUNCTIONS_USE_EIGEN ON)
+set(DUNE_LOCALFEFUNCTIONS_USE_EIGEN
+    True
+    CACHE BOOL "")
 
 target_compile_features(dune-localfefunctions PRIVATE cxx_std_20)
 target_compile_options(

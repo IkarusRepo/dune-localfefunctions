@@ -148,6 +148,7 @@ namespace Dune {
     /** \brief Compute an orthonormal basis of the tangent space of S^n.
      * Taken from Oliver Sander's dune-gfe */
     DefaultLinearAlgebra::FixedSizedMatrix<ctype, valueSize, correctionSize> orthonormalFrame() const {
+#if DUNE_LOCALFEFUNCTIONS_USE_EIGEN == 1
       using ResultType = Eigen::Matrix<ctype, valueSize, correctionSize>;
       ResultType result;
 
@@ -173,7 +174,50 @@ namespace Dune {
       // normalize the cols to make the orthogonal basis orthonormal
       result.colwise().normalize();
 
-      return maybeToDune(result);
+      return result;
+#else
+      Dune::FieldMatrix<ctype, valueSize, correctionSize> result;
+
+      // Coordinates of the stereographic projection
+      Dune::FieldVector<ctype, correctionSize> X;
+
+      if (var[correctionSize] <= 0) {
+        // Stereographic projection from the north pole onto R^{N-1}
+        for (size_t i = 0; i < correctionSize; i++)
+          X[i] = var[i] / (1 - var[correctionSize]);
+      } else {
+        // Stereographic projection from the south pole onto R^{N-1}
+        for (size_t i = 0; i < correctionSize; i++)
+          X[i] = var[i] / (1 + var[correctionSize]);
+      }
+
+      ctype RSquared = X.two_norm2();
+
+      for (size_t i = 0; i < correctionSize; i++)
+        for (size_t j = 0; j < correctionSize; j++)
+          result[i][j] = 2 * (i == j) * (1 + RSquared) - 4 * X[i] * X[j];
+
+      for (size_t j = 0; j < correctionSize; j++)
+        result[correctionSize][j] = 4 * X[j];
+
+      // Upper hemisphere: adapt formulas so it is the stereographic projection from the south pole
+      if (var[correctionSize] > 0)
+        for (size_t j = 0; j < correctionSize; j++)
+          result[correctionSize][j] *= -1;
+
+      // normalize the columns to make the orthogonal basis orthonormal
+      for (size_t i = 0; i < correctionSize; i++) {
+        ctype colLength = 0;
+        for (size_t j = 0; j < valueSize; j++)
+          colLength += result[j][i] * result[j][i];
+        using std::sqrt;
+        colLength = sqrt(colLength);
+        for (size_t j = 0; j < valueSize; j++)
+          result[j][i] /= colLength;
+      }
+
+      return result;
+#endif
     }
 
     template <typename ctOther, int dOther>

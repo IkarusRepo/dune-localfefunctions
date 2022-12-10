@@ -10,6 +10,8 @@
 #include <dune/common/fvector.hh>
 #include <dune/geometry/quadraturerules.hh>
 #include <dune/localfefunctions/concepts.hh>
+#include <dune/localfefunctions/linalgconcepts.hh>
+#include <dune/localfefunctions/linearAlgebraHelper.hh>
 
 #include <Eigen/Core>
 

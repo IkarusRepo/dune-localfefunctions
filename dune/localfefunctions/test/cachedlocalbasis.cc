@@ -19,13 +19,11 @@ using Dune::TestSuite;
 #include <dune/common/fvector.hh>
 #include <dune/functions/functionspacebases/lagrangebasis.hh>
 #include <dune/grid/yaspgrid.hh>
-
-#include <Eigen/Core>
-//#include <ikarus/localFunctions/expressions.hh>
-//#include <ikarus/manifolds/unitVector.hh>
 #include <dune/localfefunctions/cachedlocalBasis/cachedlocalBasis.hh>
 #include <dune/localfefunctions/eigenDuneTransformations.hh>
 #include <dune/localfefunctions/linearAlgebraHelper.hh>
+
+#include <Eigen/Core>
 
 using namespace Dune::Functions::BasisFactory;
 
@@ -66,12 +64,12 @@ auto testLocalBasis(LB& localBasis, const Dune::GeometryType& type) {
         for (int i = 0; const auto [firstDirection, secondDirection] : Dune::voigtNotationContainer<gridDim>) {
           std::cout << "Test Mixed Directions: " << firstDirection << " " << secondDirection << std::endl;
           auto jacobianLambda1D = [&](const auto& gpOffset_) {
-            Eigen::Matrix<double, Eigen::Dynamic, gridDim> dN;
+            DefaultLinearAlgebra::template VarFixSizedMatrix<double, gridDim> dN;
             Dune::FieldVector<double, gridDim> gpOffset2D;
             std::ranges::fill(gpOffset2D, 0);
             gpOffset2D[firstDirection] = gpOffset_[0];
             localBasis.evaluateJacobian(gp.position() + gpOffset2D, dN);
-            return dN.col(secondDirection).eval();
+            return toEigen(Dune::eval(col(dN, secondDirection)));
           };
           constexpr int secondDerivatives = gridDim * (gridDim + 1) / 2;
           auto hessianLambda              = [&](const auto& gpOffset_) {

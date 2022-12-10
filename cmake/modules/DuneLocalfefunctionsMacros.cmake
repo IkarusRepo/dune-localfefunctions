@@ -4,3 +4,5 @@
 # File for module specific CMake tests.
 
 find_package(Eigen3)
+
+# if(Eigen3_FOUND) option(LOCALFEFUNCTIONS_USE_EIGEN 0) endif()

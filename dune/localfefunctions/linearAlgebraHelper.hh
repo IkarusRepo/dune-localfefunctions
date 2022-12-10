@@ -129,6 +129,17 @@ namespace Dune {
     return col;
   }
 
+  /** \brief Get the requested column of Dune::BlockVector<Dune::FieldVector> */
+  template <typename field_type, int cols>
+  auto col(const Dune::BlockVector<Dune::FieldVector<field_type, cols>>& mat, const int requestedCol) {
+    Dune::BlockVector<field_type> col;
+    col.resize(mat.size());
+    for (int i = 0; i < mat.size(); ++i)
+      col[i] = mat[i][requestedCol];
+
+    return col;
+  }
+
   /** \brief Get the requested column of fieldmatrix */
   template <typename field_type, int rows, int cols>
   auto& row(const Dune::FieldMatrix<field_type, rows, cols>& mat, const int requestedRow) {
@@ -645,6 +656,11 @@ namespace Dune {
     return a;
   }
 
+  template <typename field_type>
+  auto& eval(const Dune::BlockVector<field_type>& a) {
+    return a;
+  }
+
   /** \brief Dummy eval function to support eigen*/
   template <typename field_type, int rows>
   auto& eval(const Dune::DiagonalMatrix<field_type, rows>& a) {
@@ -835,63 +851,13 @@ namespace Dune {
     return vec;
   }
 
-  /* Returns the total correction size of a block vector with a Manifold as type */
-  template <typename Type>
-  size_t correctionSize(const Dune::BlockVector<Type>& a) requires requires {
-    Type::correctionSize;
-  }
-  { return a.size() * Type::correctionSize; }
-
-  /* Returns the total value size of a block vector with a Manifold as type */
-  template <typename Type>
-  size_t valueSize(const Dune::BlockVector<Type>& a) requires requires {
-    Type::valueSize;
-  }
-  { return a.size() * Type::valueSize; }
-
-  /* Enables the += operator for Dune::BlockVector += Eigen::Vector */
-  template <typename Type, typename Derived>
-  Dune::BlockVector<Type>& operator+=(Dune::BlockVector<Type>& a, const Eigen::MatrixBase<Derived>& b) requires(
-      Dune::Concepts::AddAssignAble<Type, decltype(segment<Type::correctionSize>(b, 0))>and requires() {
-        Type::correctionSize;
-      }) {
-    assert(correctionSize(a) == static_cast<size_t>(b.size()) && " The passed vector has wrong size");
-    for (auto i = 0U; i < a.size(); ++i)
-      a[i] += segment<Type::correctionSize>(b, i * Type::correctionSize);
-    return a;
-  }
-
-  /* Enables the -= operator for Dune::BlockVector += Eigen::Vector */
-  template <typename Type, typename Derived>
-  Dune::BlockVector<Type>& operator-=(Dune::BlockVector<Type>& a, const Eigen::MatrixBase<Derived>& b) requires(
-      Dune::Concepts::AddAssignAble<Type, decltype(b.template segment<Type::correctionSize>(0))>and requires() {
-        Type::correctionSize;
-      }) {
-    return a += (-b);
-  }
-
-  /* Enables the += operator for Dune::MultiTypeBlockVector += Eigen::Vector */
-  template <typename... Types, typename Derived>
-  Dune::MultiTypeBlockVector<Types...>& operator+=(Dune::MultiTypeBlockVector<Types...>& a,
-                                                   const Eigen::MatrixBase<Derived>& b) {
-    using namespace Dune::Indices;
-    size_t posStart = 0;
-    Dune::Hybrid::forEach(Dune::Hybrid::integralRange(Dune::index_constant<a.size()>()), [&](const auto i) {
-      const size_t size = correctionSize(a[i]);
-      a[i] += b(Eigen::seqN(posStart, size));
-      posStart += size;
-    });
-
-    return a;
-  }
-
   /* Enables the += operator for Dune::BlockVector += Eigen::Vector */
   template <typename Type, typename Derived>
   Dune::BlockVector<Type>& addInEmbedding(Dune::BlockVector<Type>& a, const Eigen::MatrixBase<Derived>& b)
 
   {
     auto& bE = b.derived().eval();  // useless copy
-    assert(valueSize(a) == static_cast<size_t>(bE.size()) && " The passed vector has wrong size");
+    assert(a.size() * Type::valueSize == static_cast<size_t>(bE.size()) && " The passed vector has wrong size");
     for (auto i = 0U; i < a.size(); ++i)
       a[i].addInEmbedding(segment<Type::valueSize>(bE, i * Type::valueSize));
     return a;
