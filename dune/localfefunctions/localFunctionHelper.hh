@@ -4,6 +4,7 @@
 #pragma once
 
 #include "localFunctionInterface.hh"
+
 #include <sstream>
 namespace Dune {
 
@@ -75,10 +76,10 @@ namespace Dune {
                       TransformArg,
                       DerivativeDirections::GridElement> and Geometry::mydimension == Geometry::coorddimension) {
       if constexpr (std::numeric_limits<DomainTypeOrIntegrationPointIndex>::is_integer) {
-        const auto& gp  = basis.indexToIntegrationPoint(localOrIpId);
+        const auto& gp = basis.indexToIntegrationPoint(localOrIpId);
 #if DUNE_LOCALFEFUNCTIONS_USE_EIGEN == 1
-        const auto jInv = toEigen(geo->jacobianTransposed(gp.position())).inverse().transpose();
-        dNTransformed = dNraw * jInv;
+        const auto jInv = toEigen(geo->jacobianTransposed(gp.position())).eval().inverse().transpose().eval();
+        dNTransformed   = dNraw * jInv;
 #else
         const auto jInv = toEigen(geo->jacobianInverseTransposed(localOrIpId));
         dNTransformed.resize(dNraw.size());
@@ -87,8 +88,8 @@ namespace Dune {
 #endif
       } else if (std::is_same_v<DomainTypeOrIntegrationPointIndex, typename Basis::DomainType>) {
 #if DUNE_LOCALFEFUNCTIONS_USE_EIGEN == 1
-        const auto jInv = toEigen(geo->jacobianTransposed(localOrIpId)).inverse().transpose();
-        dNTransformed = dNraw * jInv;
+        const auto jInv = toEigen(geo->jacobianTransposed(localOrIpId)).eval().inverse().transpose().eval();
+        dNTransformed   = dNraw * jInv;
 #else
         const auto jInv = toEigen(geo->jacobianInverseTransposed(localOrIpId));
         dNTransformed.resize(dNraw.size());

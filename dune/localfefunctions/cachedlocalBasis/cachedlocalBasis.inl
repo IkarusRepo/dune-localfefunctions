@@ -40,7 +40,7 @@ namespace Dune {
   void CachedLocalBasis<DuneLocalBasis>::evaluateSecondDerivatives(const DomainType& local, SecondDerivativeType& ddN) const {
     std::array<unsigned int, gridDim> order;
     std::ranges::fill(order, 0);
-      resize(ddN,dNdune.size());
+      resize(ddN,ddNdune.size());
 
     for (int i = 0; i < gridDim; ++i) { //Diagonal terms
       order[i] = 2;
