@@ -25,7 +25,7 @@ namespace Dune {
   template <Concepts::LocalBasis DuneLocalBasis>
   const Dune::QuadraturePoint<typename CachedLocalBasis<DuneLocalBasis>::DomainFieldType, CachedLocalBasis<DuneLocalBasis>::gridDim>& CachedLocalBasis<DuneLocalBasis>::indexToIntegrationPoint(int i) const
   {
-    if(isBound())
+    if(isBound(0) or isBound(1) or isBound(2))
       return rule.value()[i];
     else
       assert(false && "You need to call bind first");

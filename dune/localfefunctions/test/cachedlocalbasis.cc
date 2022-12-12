@@ -92,7 +92,9 @@ auto testLocalBasis(LB& localBasis, const Dune::GeometryType& type) {
     }
   }
   // Unbound basis checks
-  t.check(not localBasis.isBound());
+  t.check(not localBasis.isBound(0));
+  t.check(not localBasis.isBound(1));
+  t.check(not localBasis.isBound(2));
   try {
     localBasis.evaluateFunction(0);
     t.check(false, "The prior function call should have thrown! You should not end up here.");
@@ -110,10 +112,15 @@ auto testLocalBasis(LB& localBasis, const Dune::GeometryType& type) {
     } catch (const std::logic_error&) {
     }
     localBasis.bind(rule, Dune::bindDerivatives(0, 1, 2));
+    t.check( localBasis.isBound(0));
+    t.check( localBasis.isBound(1));
+    t.check( localBasis.isBound(2));
   } else {
     localBasis.bind(rule, Dune::bindDerivatives(0, 1));
+    t.check(localBasis.isBound(0));
+    t.check(localBasis.isBound(1));
   }
-  t.check(localBasis.isBound());
+
   return t;
 }
 

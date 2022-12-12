@@ -94,7 +94,16 @@ namespace Dune {
     }
 
     /* Returns true if the local basis is currently bound to an integration rule */
-    bool isBound() const { return (dNbound and Nbound); }
+    bool isBound(int i) const {
+      if (i == 0) {
+        return Nbound.has_value();
+      } else if (i == 1) {
+        return dNbound.has_value();
+      } else if (i == 2) {
+        return ddNbound.has_value();
+      } else
+        throw std::logic_error("Dune::CachedLocalBasis does not bind higher derivatives as 2 lower than 0.");
+    }
 
     struct FunctionAndJacobian {
       long unsigned index{};
