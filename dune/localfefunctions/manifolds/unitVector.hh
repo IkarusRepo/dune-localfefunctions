@@ -286,4 +286,11 @@ namespace Dune {
     return rt * factor;
   }
 
+  template<typename ScalarType,int d>
+  struct FieldTraits< UnitVector<ScalarType,d> >
+  {
+    using field_type = ScalarType;
+    using real_type = ScalarType;
+  };
+
 }  // namespace Dune

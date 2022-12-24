@@ -13,15 +13,15 @@ namespace Dune {
     SingleCoeff<0> coeff(size_t i) {
       using namespace Dune::Indices;
       SingleCoeff<0> coeffs;
-      std::get<1>(coeffs.index[_0]._data) = i;
+      std::get<1>(coeffs.index._data) = i;
       return coeffs;
     }
 
     TwoCoeff<0, 0> coeff(size_t i, size_t j) {
       using namespace Dune::Indices;
       TwoCoeff<0, 0> coeffs;
-      std::get<1>(coeffs.index[_0]._data) = i;
-      std::get<1>(coeffs.index[_1]._data) = j;
+      std::get<1>(coeffs.index.first._data)  = i;
+      std::get<1>(coeffs.index.second._data) = j;
       return coeffs;
     }
   }  // namespace DerivativeDirections

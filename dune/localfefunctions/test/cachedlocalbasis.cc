@@ -112,9 +112,9 @@ auto testLocalBasis(LB& localBasis, const Dune::GeometryType& type) {
     } catch (const std::logic_error&) {
     }
     localBasis.bind(rule, Dune::bindDerivatives(0, 1, 2));
-    t.check( localBasis.isBound(0));
-    t.check( localBasis.isBound(1));
-    t.check( localBasis.isBound(2));
+    t.check(localBasis.isBound(0));
+    t.check(localBasis.isBound(1));
+    t.check(localBasis.isBound(2));
   } else {
     localBasis.bind(rule, Dune::bindDerivatives(0, 1));
     t.check(localBasis.isBound(0));

@@ -39,10 +39,8 @@ namespace Dune {
                                 const Along<AlongArgs...>& along, const On<TransformArgs>& transArgs)
         : integrationPointOrIndex{localOrIpId}, wrtArgs{args}, alongArgs{along}, transformWithArgs{transArgs} {
       const auto coeffIndicesOfArgs = Dune::DerivativeDirections::extractCoeffIndices(args);
-      Dune::Hybrid::forEach(Dune::Hybrid::integralRange(Dune::index_constant<coeffIndicesOfArgs.size()>{}),
-                            [&](auto&& i) { coeffsIndices[i]._data = coeffIndicesOfArgs[i]._data; });
-
-      spatialPartialIndices = Dune::DerivativeDirections::extractSpatialPartialIndices(args);
+      coeffsIndices                 = coeffIndicesOfArgs;
+      spatialPartialIndices         = Dune::DerivativeDirections::extractSpatialPartialIndices(args);
     }
 
     // Constructor that does not calculate extractCoeffIndices and extractSpatialPartialIndices
@@ -103,13 +101,13 @@ namespace Dune {
     auto extractWrtArgsWithGivenType() const {
       using namespace Dune::Indices;
       if constexpr (Std::isSameTemplate_v<DerivativeDirections::TwoCoeff, DerivativeDirection>) {
-        auto wrtArg = wrt(DerivativeDirections::coeff(coeffsIndices[_0][_0], coeffsIndices[_0][1],
-                                                      coeffsIndices[_1][_0], coeffsIndices[_1][1]));
+        auto wrtArg = wrt(DerivativeDirections::coeff(coeffsIndices.first[_0], coeffsIndices.first[1],
+                                                      coeffsIndices.second[_0], coeffsIndices.second[1]));
         return LocalFunctionEvaluationArgs<decltype(wrtArg), Along<AlongArgs...>, On<TransformArgs>,
                                            DomainTypeOrIntegrationPointIndex>(integrationPointOrIndex, wrtArg,
                                                                               alongArgs, transformWithArgs);
       } else if constexpr (Std::isSameTemplate_v<DerivativeDirections::SingleCoeff, DerivativeDirection>) {
-        auto wrtArg = wrt(DerivativeDirections::coeff(coeffsIndices[_0][_0], coeffsIndices[_0][1]));
+        auto wrtArg = wrt(DerivativeDirections::coeff(coeffsIndices[_0], coeffsIndices[1]));
         return LocalFunctionEvaluationArgs<decltype(wrtArg), Along<AlongArgs...>, On<TransformArgs>,
                                            DomainTypeOrIntegrationPointIndex>(integrationPointOrIndex, wrtArg,
                                                                               alongArgs, transformWithArgs);
@@ -158,8 +156,8 @@ namespace Dune {
       const LocalFunctionEvaluationArgs<Wrt<WrtArgs...>, Along<AlongArgs...>, On<TransformArgs>,
                                         DomainTypeOrIntegrationPointIndex>& a) {
     using namespace Dune::Indices;
-    auto wrtArg0 = wrt(DerivativeDirections::coeff(a.coeffsIndices[_0][_0], a.coeffsIndices[_0][1]));
-    auto wrtArg1 = wrt(DerivativeDirections::coeff(a.coeffsIndices[_1][_0], a.coeffsIndices[_1][1]));
+    auto wrtArg0 = wrt(DerivativeDirections::coeff(a.coeffsIndices.first[_0], a.coeffsIndices.first[1]));
+    auto wrtArg1 = wrt(DerivativeDirections::coeff(a.coeffsIndices.second[_0], a.coeffsIndices.second[1]));
 
     return std::make_pair(
         LocalFunctionEvaluationArgs(a.integrationPointOrIndex, wrtArg0, a.alongArgs, a.transformWithArgs),
@@ -191,9 +189,8 @@ namespace Dune {
         args.integrationPointOrIndex, args.wrtArgs, alongArgs, args.transformWithArgs, false);
 
     using namespace Dune::Indices;
-    std::get<1>(newArgs.coeffsIndices[_0]._data) = std::get<1>(args.coeffsIndices[_0]._data);
-    std::get<1>(newArgs.coeffsIndices[_1]._data) = std::get<1>(args.coeffsIndices[_1]._data);
-    newArgs.spatialPartialIndices                = args.spatialPartialIndices;
+    newArgs.coeffsIndices         = args.coeffsIndices;
+    newArgs.spatialPartialIndices = args.spatialPartialIndices;
 
     return newArgs;
   }
@@ -211,13 +208,7 @@ namespace Dune {
                                                DomainTypeOrIntegrationPointIndex>(
         args.integrationPointOrIndex, newWrtArgs, args.alongArgs, args.transformWithArgs, false);
 
-    using namespace Dune::Indices;
-    if constexpr (newArgs.hasSingleCoeff)
-      std::get<1>(newArgs.coeffsIndices[_0]._data) = std::get<1>(args.coeffsIndices[_0]._data);
-    if constexpr (newArgs.hasTwoCoeff) {
-      std::get<1>(newArgs.coeffsIndices[_0]._data) = std::get<1>(args.coeffsIndices[_0]._data);
-      std::get<1>(newArgs.coeffsIndices[_1]._data) = std::get<1>(args.coeffsIndices[_1]._data);
-    }
+    newArgs.coeffsIndices         = args.coeffsIndices;
     newArgs.spatialPartialIndices = args.spatialPartialIndices;
 
     return newArgs;

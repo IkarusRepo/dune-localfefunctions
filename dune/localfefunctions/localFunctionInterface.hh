@@ -217,37 +217,37 @@ namespace Dune {
                                                             localFunctionArgs.transformWithArgs);
         }
       } else if constexpr (LocalFunctionArguments::hasSingleCoeff) {
-        if constexpr (decltype(localFunctionArgs.coeffsIndices[_0][_0])::value != LocalFunctionImpl::id[0])
+        if constexpr (decltype(localFunctionArgs.coeffsIndices[_0])::value != LocalFunctionImpl::id[0])
           return DerivativeDirections::ZeroMatrix();
         else if constexpr (LocalFunctionArguments::hasNoSpatial) {
           return f.impl().evaluateDerivativeWRTCoeffsImpl(localFunctionArgs.integrationPointOrIndex,
-                                                          localFunctionArgs.coeffsIndices[_0][1],
+                                                          localFunctionArgs.coeffsIndices[1],
                                                           localFunctionArgs.transformWithArgs);
         } else if constexpr (LocalFunctionArguments::hasOneSpatialSingle) {
           return f.impl().evaluateDerivativeWRTCoeffsANDSpatialSingleImpl(
-              localFunctionArgs.integrationPointOrIndex, localFunctionArgs.coeffsIndices[_0][1],
+              localFunctionArgs.integrationPointOrIndex, localFunctionArgs.coeffsIndices[1],
               localFunctionArgs.spatialPartialIndices, localFunctionArgs.transformWithArgs);
         } else if constexpr (LocalFunctionArguments::hasOneSpatialAll) {
           return f.impl().evaluateDerivativeWRTCoeffsANDSpatialImpl(localFunctionArgs.integrationPointOrIndex,
-                                                                    localFunctionArgs.coeffsIndices[_0][1],
+                                                                    localFunctionArgs.coeffsIndices[1],
                                                                     localFunctionArgs.transformWithArgs);
         }
       } else if constexpr (LocalFunctionArguments::hasTwoCoeff) {
         if constexpr (LocalFunctionArguments::hasNoSpatial) {
           return f.impl().evaluateSecondDerivativeWRTCoeffsImpl(
               localFunctionArgs.integrationPointOrIndex,
-              {localFunctionArgs.coeffsIndices[_0][1], localFunctionArgs.coeffsIndices[_1][1]},
+              {localFunctionArgs.coeffsIndices.first[1], localFunctionArgs.coeffsIndices.second[1]},
               localFunctionArgs.alongArgs, localFunctionArgs.transformWithArgs);
         } else if constexpr (LocalFunctionArguments::hasOneSpatialSingle) {
           return f.impl().evaluateThirdDerivativeWRTCoeffsTwoTimesAndSpatialSingleImpl(
               localFunctionArgs.integrationPointOrIndex,
-              {localFunctionArgs.coeffsIndices[_0][1], localFunctionArgs.coeffsIndices[_1][1]},
+              {localFunctionArgs.coeffsIndices.first[1], localFunctionArgs.coeffsIndices.second[1]},
               localFunctionArgs.spatialPartialIndices, localFunctionArgs.alongArgs,
               localFunctionArgs.transformWithArgs);
         } else if constexpr (LocalFunctionArguments::hasOneSpatialAll) {
           return f.impl().evaluateThirdDerivativeWRTCoeffsTwoTimesAndSpatialImpl(
               localFunctionArgs.integrationPointOrIndex,
-              {localFunctionArgs.coeffsIndices[_0][1], localFunctionArgs.coeffsIndices[_1][1]},
+              {localFunctionArgs.coeffsIndices.first[1], localFunctionArgs.coeffsIndices.second[1]},
               localFunctionArgs.alongArgs, localFunctionArgs.transformWithArgs);
         }
       }

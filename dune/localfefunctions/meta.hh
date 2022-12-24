@@ -56,34 +56,31 @@ namespace Dune {
 
     template <std::size_t I>
     struct SingleCoeff {
-      Dune::MultiTypeBlockVector<decltype(Dune::TypeTree::treePath(std::declval<Dune::index_constant<I>>(),
-                                                                   std::declval<size_t>()))>
-          index{};
+      decltype(Dune::TypeTree::treePath(std::declval<Dune::index_constant<I>>(), std::declval<size_t>())) index{};
     };
 
     template <std::size_t I, std::size_t J>
     struct TwoCoeff {
-      Dune::MultiTypeBlockVector<
-          decltype(Dune::TypeTree::treePath(std::declval<Dune::index_constant<I>>(), std::declval<size_t>())),
-          decltype(Dune::TypeTree::treePath(std::declval<Dune::index_constant<J>>(), std::declval<size_t>()))>
+      std::pair<decltype(Dune::TypeTree::treePath(std::declval<Dune::index_constant<I>>(), std::declval<size_t>())),
+                decltype(Dune::TypeTree::treePath(std::declval<Dune::index_constant<J>>(), std::declval<size_t>()))>
           index{};
     };
 
     SpatialPartial spatial(size_t i);
 
     template <std::size_t I>
-    SingleCoeff<I> coeff(Dune::index_constant<I> iObj, size_t i) {
+    SingleCoeff<I> coeff(Dune::index_constant<I>, size_t i) {
       using namespace Dune::Indices;
       SingleCoeff<I> coeffs;
-      std::get<1>(coeffs.index[_0]._data) = i;
+      std::get<1>(coeffs.index._data) = i;
       return coeffs;
     }
     template <std::size_t I, std::size_t J>
-    TwoCoeff<I, J> coeff(Dune::index_constant<I> iObj, size_t i, Dune::index_constant<J> jObj, size_t j) {
+    TwoCoeff<I, J> coeff(Dune::index_constant<I>, size_t i, Dune::index_constant<J>, size_t j) {
       using namespace Dune::Indices;
       TwoCoeff<I, J> coeffs;
-      std::get<1>(coeffs.index[_0]._data) = i;
-      std::get<1>(coeffs.index[_1]._data) = j;
+      std::get<1>(coeffs.index.first._data)  = i;
+      std::get<1>(coeffs.index.second._data) = j;
       return coeffs;
     }
 

@@ -8,6 +8,8 @@ if(DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING)
   option(ENABLE_TEST_COVERAGE "Enable test coverage" OFF)
 
   file(GLOB programSourceFiles CONFIGURE_DEPENDS *.cc)
+  list(REMOVE_ITEM programSourceFiles
+       ${CMAKE_CURRENT_SOURCE_DIR}/testFacilities.cc)
 
   foreach(programSourceFile ${programSourceFiles})
     get_filename_component(programName ${programSourceFile} NAME_WLE)
