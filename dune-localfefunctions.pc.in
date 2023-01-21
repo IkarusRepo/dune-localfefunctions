@@ -13,6 +13,6 @@ Name: @PACKAGE_NAME@
 Version: @VERSION@
 Description: dune-localfefunctions module
 URL: http://dune-project.org/
-Requires: dune-common dune-functions dune-typetree dune-localfunctions dune-geometry
+Requires: dune-common dune-functions dune-typetree dune-localfunctions dune-geometry dune-matrix-vector
 Libs: -L${libdir}
 Cflags: -I${includedir}
