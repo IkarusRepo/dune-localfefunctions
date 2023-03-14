@@ -133,7 +133,7 @@ namespace Dune {
     Eigen::Matrix<ScalarType, size1, size1> eigenmatrix;
     eigenmatrix.setZero();
     for (int i = 0; i < size1; ++i)
-      eigenmatrix(i, i) = mat[i][i];
+      eigenmatrix(i, i) = mat.diagonal(i);
     return eigenmatrix;
   }
 
