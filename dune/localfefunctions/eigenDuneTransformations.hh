@@ -81,9 +81,6 @@ namespace Dune {
       return vec;
   }
   
-
-  
-
   /** \brief Creates a Eigen::Matrix from a given Dune::FieldMatrix  */
   template <typename ScalarType, int size1, int size2>
   auto toDune(const Eigen::Matrix<ScalarType, size1, size2>& mat) {
