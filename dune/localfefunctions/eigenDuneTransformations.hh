@@ -80,6 +80,9 @@ namespace Dune {
 #endif
       return vec;
   }
+  
+
+  
 
   /** \brief Creates a Eigen::Matrix from a given Dune::FieldMatrix  */
   template <typename ScalarType, int size1, int size2>
@@ -135,6 +138,17 @@ namespace Dune {
     for (int i = 0; i < size1; ++i)
       eigenmatrix(i, i) = mat.diagonal(i);
     return eigenmatrix;
+  }
+  
+   /** \brief Depending on the Selected LinearAlgebra the Dune::Fieldmatrix is converted to an Eigen::Matrix */
+  template <typename ScalarType, int rows, typename LinAlg = DefaultLinearAlgebra>
+  auto maybeToEigen(const Dune::DiagonalMatrix<ScalarType, rows>& mat) {
+#if DUNE_LOCALFEFUNCTIONS_USE_EIGEN == 1
+    if constexpr (std::is_same_v<LinAlg, EigenLinearAlgebra>)
+      return toEigen(mat);
+    else
+#endif
+      return mat;
   }
 
   template <typename ScalarType, int cols>
