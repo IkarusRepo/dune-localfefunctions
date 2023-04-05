@@ -907,16 +907,6 @@ namespace Dune {
     return a;
   }
 
-  template <typename Scalar, int size>
-  auto operator*(const Dune::FieldMatrix<Scalar, size, size>& a, const Dune::ScaledIdentityMatrix<Scalar, size>& b) {
-    Dune::FieldMatrix<Scalar, size, size> c = a;
-
-    for (int i = 0; i < size; ++i) {
-      c[i][i] += b.scalar();
-    }
-    return a;
-  }
-
   template <typename Scalar, int rows, int cols>
   auto operator*(const Dune::FieldVector<Scalar, rows>& x, const Dune::FieldMatrix<Scalar, 1, cols>& A) {
     Dune::FieldMatrix<Scalar, rows, cols> c;
