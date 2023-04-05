@@ -150,11 +150,10 @@ namespace Dune {
     return v1.getValue() == v2.getValue();
   }
 
-  template<typename ScalarType,int d>
-  struct FieldTraits< RealTuple<ScalarType,d> >
-  {
+  template <typename ScalarType, int d>
+  struct FieldTraits<RealTuple<ScalarType, d> > {
     using field_type = ScalarType;
-    using real_type = ScalarType;
+    using real_type  = ScalarType;
   };
 
 }  // namespace Dune
