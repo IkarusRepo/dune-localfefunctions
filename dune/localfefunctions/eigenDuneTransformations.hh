@@ -137,6 +137,17 @@ namespace Dune {
     return eigenmatrix;
   }
 
+  /** \brief Depending on the Selected LinearAlgebra the Dune::DiagonalMatrix is converted to an Eigen::Matrix */
+  template <typename ScalarType, int rows, typename LinAlg = DefaultLinearAlgebra>
+  auto maybeToEigen(const Dune::DiagonalMatrix<ScalarType, rows>& mat) {
+#if DUNE_LOCALFEFUNCTIONS_USE_EIGEN == 1
+    if constexpr (std::is_same_v<LinAlg, EigenLinearAlgebra>)
+      return toEigen(mat);
+    else
+#endif
+      return mat;
+  }
+
   template <typename ScalarType, int cols>
   auto toEigen(const Dune::BlockVector<Dune::FieldVector<ScalarType, cols>>& mat) {
     Eigen::Matrix<ScalarType, Eigen::Dynamic, cols> matE;
