@@ -2,13 +2,12 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 //
-// Created by lex on 4/25/22.
+// Created by Alex on 4/25/22.
 //
 
 #pragma once
-#include "rebind.hh"
-
 #include <dune/localfefunctions/expressions/expressionHelper.hh>
+#include <dune/localfefunctions/expressions/rebind.hh>
 #include <dune/localfefunctions/expressions/unaryExpr.hh>
 #include <dune/localfefunctions/helper.hh>
 
@@ -38,10 +37,13 @@ namespace Dune {
     auto evaluateValueOfExpression(const LFArgs& lfArgs) const {
       const auto integrationPointPosition
           = returnIntegrationPointPosition(lfArgs.integrationPointOrIndex, this->m().basis());
-      const auto referenceJacobian = maybeToEigen(this->m().geometry()->jacobianTransposed(integrationPointPosition));
+      auto referenceJacobian = maybeToEigen(this->m().geometry()->jacobianTransposed(integrationPointPosition));
       static_assert(std::is_same_v<typename decltype(referenceJacobian)::value_type, double>);
       const auto gradArgs = replaceWrt(lfArgs, wrt(DerivativeDirections::spatialAll));
       const auto gradu    = transposeEvaluated(evaluateDerivativeImpl(this->m(), gradArgs));
+
+      if constexpr (std::is_same_v<typename decltype(lfArgs.transformWithArgs)::T, DerivativeDirections::GridElement>)
+        referenceJacobian = createScaledIdentityMatrix<ctype, displacementSize, displacementSize>();
 
       typename LinearAlgebra::template FixedSizedVector<ctype, strainSize> E;
       // E= 1/2*(H^T * G + G^T * H + H^T * H) with H = gradu
@@ -75,8 +77,10 @@ namespace Dune {
       if constexpr (DerivativeOrder == 1 and LFArgs::hasSingleCoeff) {
         const auto integrationPointPosition
             = returnIntegrationPointPosition(lfArgs.integrationPointOrIndex, this->m().basis());
-        const auto referenceJacobian = maybeToEigen(
+        auto referenceJacobian = maybeToEigen(
             this->m().geometry()->jacobianTransposed(integrationPointPosition));  // the rows are X_{,1} and X_{,2}
+        if constexpr (std::is_same_v<typename decltype(lfArgs.transformWithArgs)::T, DerivativeDirections::GridElement>)
+          referenceJacobian = createScaledIdentityMatrix<ctype, displacementSize, displacementSize>();
         const auto gradArgs = replaceWrt(lfArgs, wrt(DerivativeDirections::spatialAll));
         const auto gradu
             = transposeEvaluated(evaluateDerivativeImpl(this->m(), gradArgs));  // the rows are u_{,1} and u_{,2}
@@ -90,6 +94,8 @@ namespace Dune {
           coeff(bopI, 0, 0) = getDiagonalEntry(gradUdI[0], 0) * g1[0];
         } else if constexpr (displacementSize == 2) {
           typename DefaultLinearAlgebra::template FixedSizedVector<ctype, gridDim> g2 = row(referenceJacobian, 1);
+          g2[0]                                                                       = 0;
+          g2[1]                                                                       = 1;
           g2 += row(gradu, 1);
           const auto& dNIdT1 = getDiagonalEntry(gradUdI[0], 0);
           const auto& dNIdT2 = getDiagonalEntry(gradUdI[1], 0);
