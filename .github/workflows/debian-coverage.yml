@@ -9,7 +9,7 @@ on:
     paths-ignore:
       - 'docs/**'
       - '.github/workflows/ghpages.yml'
-      - '.github/workflows/createDockerContainer.yml'      
+      - '.github/workflows/createDockerContainer.yml'
 
   pull_request:
     branches:

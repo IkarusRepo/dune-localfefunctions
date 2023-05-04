@@ -17,7 +17,7 @@ namespace Dune {
 
     template <size_t ID_ = 0>
     static constexpr int orderID
-        = std::min(Base::E1Raw::template orderID<ID_> + Base::E2Raw::template orderID<ID_>, nonLinear);
+        = std::min(Base::E1Raw::template orderID<ID_> + Base::E2Raw::template orderID<ID_>, nonlinear);
 
     template <typename LocalFunctionEvaluationArgs_>
     auto evaluateValueOfExpression(const LocalFunctionEvaluationArgs_& localFunctionArgs) const {

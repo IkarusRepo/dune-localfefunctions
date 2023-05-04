@@ -42,8 +42,12 @@ namespace Dune {
   }  // namespace Impl
 
   template <typename LF>
-  consteval int countNonArithmeticLeafNodes(const LocalFunctionInterface<LF>& a) {
+  consteval int countNonArithmeticLeafNodes() {
     return Impl::countNonArithmeticLeafNodesImpl<LF>();
+  }
+  template <typename LF>
+  consteval int countNonArithmeticLeafNodes(const LocalFunctionInterface<LF>&) {
+    return countNonArithmeticLeafNodes<LF>();
   }
 
   template <typename LF>

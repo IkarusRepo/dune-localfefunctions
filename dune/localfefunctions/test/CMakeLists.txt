@@ -11,6 +11,11 @@ if(DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING)
   list(REMOVE_ITEM programSourceFiles
        ${CMAKE_CURRENT_SOURCE_DIR}/testFacilities.cc)
 
+  add_library(TestFacilities OBJECT
+              ${CMAKE_CURRENT_SOURCE_DIR}/testFacilities.cc)
+
+  target_compile_features(TestFacilities PRIVATE cxx_std_20)
+
   foreach(programSourceFile ${programSourceFiles})
     get_filename_component(programName ${programSourceFile} NAME_WLE)
 
@@ -19,7 +24,7 @@ if(DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING)
       ${programName}
       SOURCES
       ${programSourceFile}
-      testFacilities.cc
+      $<TARGET_OBJECTS:TestFacilities>
       LINK_LIBRARIES
       Eigen3::Eigen
       dune-localfefunctions)
@@ -32,8 +37,15 @@ if(DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING)
     endif()
     target_compile_options(
       ${programName}
-      PRIVATE -ftemplate-backtrace-limit=0 -fdiagnostics-show-template-tree
-              -fno-elide-type -fconcepts-diagnostics-depth=2)
+      PRIVATE -ftemplate-backtrace-limit=0
+              -fdiagnostics-show-template-tree
+              -fno-elide-type
+              -fconcepts-diagnostics-depth=2
+              -Wall
+              -Wextra
+              -Wshadow
+              -Wnon-virtual-dtor
+              -pedantic)
 
     target_compile_features(${programName} PRIVATE cxx_std_20)
   endforeach()

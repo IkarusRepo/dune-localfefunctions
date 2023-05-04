@@ -20,7 +20,7 @@ namespace Dune {
     using E1Raw = std::remove_cvref_t<E1>;
 
     template <size_t ID_ = 0>
-    static constexpr int orderID = nonLinear;
+    static constexpr int orderID = nonlinear;
 
     template <typename LFArgs>
     auto evaluateValueOfExpression(const LFArgs& lfArgs) const {

@@ -25,7 +25,7 @@ namespace Dune {
     using Interface = LocalFunctionInterface<ProjectionBasedLocalFunction>;
 
     template <size_t ID_ = 0>
-    static constexpr int orderID = ID_ == ID ? nonLinear : constant;
+    static constexpr int orderID = ID_ == ID ? nonlinear : constant;
 
   public:
     friend Interface;
@@ -152,7 +152,7 @@ namespace Dune {
 
     template <typename DomainTypeOrIntegrationPointIndex, typename TransformArgs>
     CoeffDerivEukRieMatrix evaluateDerivativeWRTCoeffsImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
-                                                           int coeffsIndex, const On<TransformArgs>& transArgs) const {
+                                                           int coeffsIndex, const On<TransformArgs>&) const {
       const auto& N = evaluateFunctionWithIPorCoord(ipIndexOrPosition, basis_);
       return (evaluateDerivativeWRTCoeffsEukImpl(N, coeffsIndex) * coeffs[coeffsIndex].orthonormalFrame());
     }
@@ -166,7 +166,7 @@ namespace Dune {
     CoeffDerivMatrix evaluateSecondDerivativeWRTCoeffsImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
                                                            const std::array<size_t, 2>& coeffsIndex,
                                                            const Along<AlongArgs...>& alongArgs,
-                                                           const On<TransformArgs>& transArgs) const {
+                                                           const On<TransformArgs>&) const {
       const auto& N                 = evaluateFunctionWithIPorCoord(ipIndexOrPosition, basis_);
       const FunctionReturnType valE = evaluateEmbeddingFunctionImpl(N);
 
@@ -323,8 +323,8 @@ namespace Dune {
     JacobianColType evaluateEmbeddingJacobianColImpl(const AnsatzFunctionJacobian& dN, int spaceIndex) const {
       JacobianColType Jcol;
       setZero(Jcol);
-      for (int j = 0; j < Rows<JacobianColType>::value; ++j) {
-        for (int i = 0; i < coeffs.size(); ++i)
+      for (size_t j = 0; j < Rows<JacobianColType>::value; ++j) {
+        for (size_t i = 0; i < coeffs.size(); ++i)
           Jcol[j] += coeffs[i].getValue()[j] * coeff(dN, i, spaceIndex);
       }
 
@@ -334,9 +334,9 @@ namespace Dune {
     Jacobian evaluateEmbeddingJacobianImpl(const AnsatzFunctionJacobian& dN) const {
       Jacobian J;
       setZero(J);
-      for (int j = 0; j < gridDim; ++j)
-        for (int k = 0; k < valueSize; ++k)
-          for (int i = 0; i < coeffs.size(); ++i)
+      for (size_t j = 0; j < gridDim; ++j)
+        for (size_t k = 0; k < valueSize; ++k)
+          for (size_t i = 0; i < coeffs.size(); ++i)
             coeff(J, k, j) += coeffs[i].getValue()[k] * coeff(dN, i, j);
 
       return J;
@@ -345,8 +345,8 @@ namespace Dune {
     FunctionReturnType evaluateEmbeddingFunctionImpl(const AnsatzFunctionType& N) const {
       FunctionReturnType res;
       setZero(res);
-      for (int i = 0; i < coeffs.size(); ++i)
-        for (int k = 0; k < valueSize; ++k)
+      for (size_t i = 0; i < coeffs.size(); ++i)
+        for (size_t k = 0; k < valueSize; ++k)
           res[k] += coeffs[i].getValue()[k] * N[i];
       return res;
     }

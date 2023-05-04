@@ -69,7 +69,7 @@ namespace Dune {
   /** Helper to transform the derivatives if the transform argument is DerivativeDirections::GridElement
    * Furthermore we only transform derivatives with geometry with zero codimension */
   template <typename TransformArg, typename Geometry, typename DomainTypeOrIntegrationPointIndex, typename Basis>
-  void maytransformDerivatives(const auto& dNraw, auto& dNTransformed, const On<TransformArg>& transArgs,
+  void maytransformDerivatives(const auto& dNraw, auto& dNTransformed, const On<TransformArg>&,
                                const std::shared_ptr<const Geometry>& geo,
                                const DomainTypeOrIntegrationPointIndex& localOrIpId, const Basis& basis) {
     if constexpr (std::is_same_v<

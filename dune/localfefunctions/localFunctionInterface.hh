@@ -95,10 +95,8 @@ namespace Dune {
     /* Default implementation returns Zero expression if they are not overloaded */
     template <typename DomainTypeOrIntegrationPointIndex, typename... AlongArgs,
               typename Transform = DerivativeDirections::GridElement>
-    auto evaluateSecondDerivativeWRTCoeffsImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
-                                               const std::array<size_t, 2>& coeffsIndex,
-                                               const Along<AlongArgs...>& alongArgs,
-                                               const On<Transform>& transform = {}) const {
+    auto evaluateSecondDerivativeWRTCoeffsImpl(const DomainTypeOrIntegrationPointIndex&, const std::array<size_t, 2>&,
+                                               const Along<AlongArgs...>&, const On<Transform>& = {}) const {
       return createZeroMatrix<typename LocalFunctionImpl::ctype, LocalFunctionImpl::correctionSize,
                               LocalFunctionImpl::correctionSize>();
     }
@@ -106,9 +104,10 @@ namespace Dune {
     /* Default implementation returns Zero expression if they are not overloaded */
     template <typename DomainTypeOrIntegrationPointIndex, typename... AlongArgs,
               typename Transform = DerivativeDirections::GridElement>
-    auto evaluateThirdDerivativeWRTCoeffsTwoTimesAndSpatialSingleImpl(
-        const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition, const std::array<size_t, 2>& coeffsIndex,
-        const int spatialIndex, const Along<AlongArgs...>& alongArgs, const On<Transform>& transArgs) const {
+    auto evaluateThirdDerivativeWRTCoeffsTwoTimesAndSpatialSingleImpl(const DomainTypeOrIntegrationPointIndex&,
+                                                                      const std::array<size_t, 2>&, const int,
+                                                                      const Along<AlongArgs...>&,
+                                                                      const On<Transform>&) const {
       return createZeroMatrix<typename LocalFunctionImpl::ctype, LocalFunctionImpl::correctionSize,
                               LocalFunctionImpl::correctionSize>();
     }
@@ -146,9 +145,10 @@ namespace Dune {
     /* Default implementation returns Zero expression if they are not overloaded  */
     template <typename DomainTypeOrIntegrationPointIndex, typename... AlongArgs,
               typename Transform = DerivativeDirections::GridElement>
-    auto evaluateThirdDerivativeWRTCoeffsTwoTimesAndSpatialImpl(
-        const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition, const std::array<size_t, 2>& coeffsIndex,
-        const Along<AlongArgs...>& alongArgs, const On<Transform>& transArgs) const {
+    auto evaluateThirdDerivativeWRTCoeffsTwoTimesAndSpatialImpl(const DomainTypeOrIntegrationPointIndex&,
+                                                                const std::array<size_t, 2>&,
+                                                                const Along<AlongArgs...>&,
+                                                                const On<Transform>&) const {
       return createZeroMatrix<typename LocalFunctionImpl::ctype, LocalFunctionImpl::correctionSize,
                               LocalFunctionImpl::correctionSize>();
     }

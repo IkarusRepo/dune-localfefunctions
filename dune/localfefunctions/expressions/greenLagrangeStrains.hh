@@ -1,10 +1,6 @@
 // SPDX-FileCopyrightText: 2022 The dune-localfefunction developers mueller@ibb.uni-stuttgart.de
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-//
-// Created by Alex on 4/25/22.
-//
-
 #pragma once
 #include <dune/localfefunctions/expressions/expressionHelper.hh>
 #include <dune/localfefunctions/expressions/rebind.hh>
@@ -94,8 +90,6 @@ namespace Dune {
           coeff(bopI, 0, 0) = getDiagonalEntry(gradUdI[0], 0) * g1[0];
         } else if constexpr (displacementSize == 2) {
           typename DefaultLinearAlgebra::template FixedSizedVector<ctype, gridDim> g2 = row(referenceJacobian, 1);
-          g2[0]                                                                       = 0;
-          g2[1]                                                                       = 1;
           g2 += row(gradu, 1);
           const auto& dNIdT1 = getDiagonalEntry(gradUdI[0], 0);
           const auto& dNIdT2 = getDiagonalEntry(gradUdI[1], 0);
