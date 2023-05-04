@@ -12,7 +12,7 @@ namespace Dune {
     bool isValid            = true;
     if constexpr (leafNodeCollection.size() > 0) {
       std::array<bool, 3> isBound;
-      for (int i = 0; i < isBound.size(); ++i)
+      for (size_t i = 0; i < isBound.size(); ++i)
         isBound[i] = leafNodeCollection.node(_0).basis().isBound(i);
 
       unsigned int integrationRuleSize = std::ranges::any_of(isBound, [](auto v) { return v; })
@@ -24,7 +24,7 @@ namespace Dune {
                               } else {
                                 auto nodeBasis = leafNodeCollection.node(i).basis();
                                 std::array<bool, 3> isBoundOther;
-                                for (int j = 0; j < isBound.size(); ++j)
+                                for (size_t j = 0; j < isBound.size(); ++j)
                                   isBoundOther[j] = nodeBasis.isBound(j);
                                 if (isBoundOther != isBound)
                                   isValid = false;

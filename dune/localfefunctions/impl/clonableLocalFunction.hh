@@ -14,7 +14,7 @@ namespace Dune {
     }
 
     template <typename OtherType, size_t ID = 0>
-    auto rebindClone(OtherType&& t, Dune::index_constant<ID>&& id = Dune::index_constant<0>()) const {
+    auto rebindClone(OtherType&&, Dune::index_constant<ID>&& = Dune::index_constant<0>()) const {
       if constexpr (LFImpl::id[0] == ID)
         return typename LFImpl::template rebind<OtherType>::other(
             underlying().basis(), convertUnderlying<OtherType>(underlying().coeffs), underlying().geometry(),

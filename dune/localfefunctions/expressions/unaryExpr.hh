@@ -30,7 +30,7 @@ namespace Dune {
 
     /** Rebind the value type of the underlying local function with the id ID */
     template <typename OtherType, size_t ID = 0>
-    auto rebindClone(OtherType&&, Dune::index_constant<ID>&& id_ = Dune::index_constant<0>()) const {
+    auto rebindClone(OtherType&&, Dune::index_constant<ID>&& = Dune::index_constant<0>()) const {
       return rebind<Op, E1, OtherType, ID, Args...>(m(), Dune::index_constant<ID>());
     }
 

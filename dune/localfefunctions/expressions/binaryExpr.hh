@@ -14,18 +14,18 @@ namespace Dune {
     using E1Raw         = std::remove_cvref_t<E1>;
     using E2Raw         = std::remove_cvref_t<E2>;
     using LinearAlgebra = typename E1Raw::LinearAlgebra;
-    constexpr const E1& l() const { return std::get<0>(expr); }
-    constexpr const E2& r() const { return std::get<1>(expr); }
+    constexpr const E1& l() const { return expr.first; }
+    constexpr const E2& r() const { return expr.second; }
 
-    constexpr E1& l() { return std::get<0>(expr); }
+    constexpr E1& l() { return expr.first; }
 
-    constexpr E2& r() { return std::get<1>(expr); }
+    constexpr E2& r() { return expr.second; }
 
     auto clone() const { return Op<decltype(l().clone()), decltype(r().clone())>(l().clone(), r().clone()); }
 
     /** Rebind the value type of the underlying local function with the id ID */
     template <typename OtherType, size_t ID = 0>
-    auto rebindClone(OtherType&&, Dune::index_constant<ID>&& id = Dune::index_constant<0UL>()) const {
+    auto rebindClone(OtherType&&, Dune::index_constant<ID>&& = Dune::index_constant<0UL>()) const {
       return rebind<Op, E1, E2, OtherType>(l(), r(), Dune::index_constant<ID>());
     }
 
@@ -44,7 +44,7 @@ namespace Dune {
     static constexpr int children = 2;
 
   private:
-    std::tuple<E1, E2> expr;
+    std::pair<E1, E2> expr;
   };
 
 }  // namespace Dune

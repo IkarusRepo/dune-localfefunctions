@@ -610,7 +610,7 @@ namespace Dune {
   }
 
   template <typename MatrixOrVector>
-  auto leftMultiplyTranspose(const MatrixOrVector&, const Dune::DerivativeDirections::ZeroMatrix& A) {
+  auto leftMultiplyTranspose(const MatrixOrVector&, const Dune::DerivativeDirections::ZeroMatrix&) {
     return Dune::DerivativeDirections::ZeroMatrix();
   }
 
@@ -1238,6 +1238,18 @@ namespace Dune {
     for (size_t i = 0U; i < d; ++i)
       res[i] = a[i] + b[i];
     return res;
+  }
+
+  /* Enables the += operator for std::array and zeromatrix  */
+  template <typename Type, std::size_t d>
+  std::array<Type, d> operator+(const std::array<Type, d>& a, const Dune::DerivativeDirections::ZeroMatrix&) {
+    return a;
+  }
+
+  /* Enables the += operator for std::array and zeromatrix  */
+  template <typename Type, std::size_t d>
+  std::array<Type, d> operator+(const Dune::DerivativeDirections::ZeroMatrix&, const std::array<Type, d>& a) {
+    return a;
   }
 
   /* Enables the - operator for std::array if the underlying objects are negate able  */

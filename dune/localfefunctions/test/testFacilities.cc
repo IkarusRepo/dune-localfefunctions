@@ -1,5 +1,4 @@
 // SPDX-FileCopyrightText: 2022 The dune-localfefunction developers mueller@ibb.uni-stuttgart.de
-// SPDX-FileCopyrightText: 2022 The dune-localfefunction developers mueller@ibb.uni-stuttgart.de
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #include "testFacilities.hh"
@@ -57,7 +56,7 @@ namespace Testing {
 
     std::vector<double> fexpectedSlope;
     std::ranges::transform(t, std::back_inserter(fexpectedSlope),
-                           [slopeOfReference](auto t) { return Dune::power(t, slopeOfReference); });
+                           [slopeOfReference](auto tL) { return Dune::power(tL, slopeOfReference); });
     const int rangeSize      = 10;
     const auto [poly, range] = findLineSegment(data.array().log10(), yE.array().log10(), rangeSize);
 

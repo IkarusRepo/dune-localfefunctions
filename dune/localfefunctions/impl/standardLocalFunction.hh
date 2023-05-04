@@ -102,8 +102,8 @@ namespace Dune {
       const auto& N = evaluateFunctionWithIPorCoord(ipIndexOrPosition, basis_);
       FunctionReturnType res;
       setZero(res);
-      for (int i = 0; i < coeffs.size(); ++i)
-        for (int j = 0; j < Rows<FunctionReturnType>::value; ++j) {
+      for (size_t i = 0; i < coeffs.size(); ++i)
+        for (size_t j = 0; j < Rows<FunctionReturnType>::value; ++j) {
           res[j] += coeffs[i].getValue()[j] * N[i];
         }
 
@@ -117,9 +117,9 @@ namespace Dune {
       maytransformDerivatives(dNraw, dNTransformed, transArgs, geometry_, ipIndexOrPosition, basis_);
       Jacobian J;
       setZero(J);
-      for (int j = 0; j < gridDim; ++j)
-        for (int k = 0; k < valueSize; ++k)
-          for (int i = 0; i < coeffs.size(); ++i)
+      for (size_t j = 0; j < gridDim; ++j)
+        for (size_t k = 0; k < valueSize; ++k)
+          for (size_t i = 0; i < coeffs.size(); ++i)
             coeff(J, k, j) += coeffs[i].getValue()[k] * coeff(dNTransformed, i, j);
       return J;
     }
@@ -132,8 +132,8 @@ namespace Dune {
 
       JacobianColType Jcol;
       setZero(Jcol);
-      for (int j = 0; j < Rows<JacobianColType>::value; ++j) {
-        for (int i = 0; i < coeffs.size(); ++i)
+      for (size_t j = 0; j < Rows<JacobianColType>::value; ++j) {
+        for (size_t i = 0; i < coeffs.size(); ++i)
           Jcol[j] += coeffs[i].getValue()[j] * coeff(dNTransformed, i, spaceIndex);
       }
 
@@ -142,7 +142,7 @@ namespace Dune {
 
     template <typename DomainTypeOrIntegrationPointIndex, typename TransformArgs>
     CoeffDerivMatrix evaluateDerivativeWRTCoeffsImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
-                                                     int coeffsIndex, const On<TransformArgs>& transArgs) const {
+                                                     int coeffsIndex, const On<TransformArgs>&) const {
       const auto& N        = evaluateFunctionWithIPorCoord(ipIndexOrPosition, basis_);
       CoeffDerivMatrix mat = createScaledIdentityMatrix<ctype, valueSize, valueSize>(N[coeffsIndex]);
 

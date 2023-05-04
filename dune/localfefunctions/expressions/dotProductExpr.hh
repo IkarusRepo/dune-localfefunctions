@@ -4,9 +4,8 @@
 #pragma once
 #include "rebind.hh"
 
-#include <dune/localfefunctions/expressions/binaryExpr.hh>
-//#include <ikarus/manifolds/realTuple.hh>
 #include <dune/common/transpose.hh>
+#include <dune/localfefunctions/expressions/binaryExpr.hh>
 #include <dune/localfefunctions/linearAlgebraHelper.hh>
 namespace Dune {
 
@@ -24,7 +23,7 @@ namespace Dune {
 
     template <size_t ID_ = 0>
     static constexpr int orderID
-        = std::min(Base::E1Raw::template order<ID_>() + Base::E2Raw::template order<ID_>(), nonLinear);
+        = std::min(Base::E1Raw::template order<ID_>() + Base::E2Raw::template order<ID_>(), nonlinear);
 
     template <typename LFArgs>
     auto evaluateValueOfExpression(const LFArgs &lfArgs) const {

@@ -7,9 +7,9 @@
 #include <dune/common/test/testsuite.hh>
 using Dune::TestSuite;
 
-#include "factories.hh"
 #include "testFacilities.hh"
 #include "testHelpers.hh"
+#include "testfactories.hh"
 
 #include <array>
 #include <autodiff/forward/dual.hpp>
@@ -17,31 +17,56 @@ using Dune::TestSuite;
 #include <complex>
 #include <vector>
 
-#include <dune/common/classname.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/common/fvector.hh>
-#include <dune/common/parallel/mpihelper.hh>
-#include <dune/common/test/testsuite.hh>
 #include <dune/common/transpose.hh>
-#include <dune/functions/functionspacebases/basistags.hh>
-#include <dune/functions/functionspacebases/lagrangebasis.hh>
-#include <dune/functions/functionspacebases/powerbasis.hh>
 #include <dune/geometry/multilineargeometry.hh>
-#include <dune/grid/yaspgrid.hh>
 #include <dune/istl/bvector.hh>
 #include <dune/istl/matrix.hh>
-#include <dune/localfefunctions/expressions.hh>
 #include <dune/localfefunctions/impl/projectionBasedLocalFunction.hh>
 #include <dune/localfefunctions/impl/standardLocalFunction.hh>
 #include <dune/localfefunctions/localFunctionName.hh>
-#include <dune/localfefunctions/manifolds/realTuple.hh>
-#include <dune/localfefunctions/manifolds/unitVector.hh>
+#include <dune/localfunctions/lagrange/pqkfactory.hh>
 #include <dune/matrix-vector/transpose.hh>
 
 #include <Eigen/Core>
 
+template <typename M, typename id>
+struct ManiFoldIDPair {
+  using Manifold = M;
+  using ID       = id;
+};
+
+template <template <int> typename M, auto id>
+struct ManiFoldTemplateIDPair {
+  template <int dim>
+  using ManiFoldIDPair = ManiFoldIDPair<M<dim>, decltype(id)>;
+};
+
+auto singleStandardLocalFunction = [](auto& localBasis, auto& vBlockedLocal0, auto& geometry, auto& ID) {
+  return Dune::StandardLocalFunction(localBasis, vBlockedLocal0, geometry, ID);
+};
+
+auto singleProjectionBasedLocalFunction = [](auto& localBasis, auto& vBlockedLocal0, auto& geometry, auto& ID) {
+  return Dune::ProjectionBasedLocalFunction(localBasis, vBlockedLocal0, geometry, ID);
+};
+
+auto doubleStandardLocalFunctionDouble
+    = [](auto& localBasis0, auto& vBlockedLocal0, auto& ID0, auto&, auto&, auto& ID1, auto& geometry) {
+        auto f = Dune::StandardLocalFunction(localBasis0, vBlockedLocal0, geometry, ID0);
+        auto g = Dune::StandardLocalFunction(localBasis0, vBlockedLocal0, geometry, ID1);
+        return std::make_tuple(f, g);
+      };
+
+auto doubleStandardLocalFunctionDistinct = [](auto& localBasis0, auto& vBlockedLocal0, auto& ID0, auto& localBasis1,
+                                              auto& vBlockedLocal1, auto& ID1, auto& geometry) {
+  auto f = Dune::StandardLocalFunction(localBasis0, vBlockedLocal0, geometry, ID0);
+  auto g = Dune::StandardLocalFunction(localBasis1, vBlockedLocal1, geometry, ID1);
+  return std::make_tuple(f, g);
+};
+
 template <typename LF>
-TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
+TestSuite testLocalFunction(const LF& lf, bool isCopy = false) {
   auto localFunctionName = Dune::localFunctionName(lf);
   TestSuite t(std::string(isCopy ? "Copy " : "") + localFunctionName);
   std::cout << "Testing: " + std::string(isCopy ? "Copy " : "") + localFunctionName << std::endl;
@@ -50,17 +75,17 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
   using namespace autodiff;
   using namespace Dune;
   using namespace Testing;
-  const auto &coeffs     = lf.node().coefficientsRef();
+  const auto& coeffs     = lf.node().coefficientsRef();
   const size_t coeffSize = coeffs.size();
   auto geometry          = lf.node().geometry();
 
-  constexpr int gridDim                = LF::gridDim;
-  constexpr int worldDimension         = LF::worldDimension;
+  constexpr int gridDim = LF::gridDim;
+  //  constexpr int worldDimension         = LF::worldDimension;
   using Manifold                       = typename std::remove_cvref_t<decltype(coeffs)>::value_type;
   constexpr int localFunctionValueSize = LF::Traits::valueSize;
   constexpr int coeffValueSize         = Manifold::valueSize;
-  using ctype                          = typename Manifold::ctype;
-  constexpr int coeffCorrectionSize    = Manifold::correctionSize;
+  //  using ctype                          = typename Manifold::ctype;
+  constexpr int coeffCorrectionSize = Manifold::correctionSize;
 
   // dynamic sized vectors before the loop
   Eigen::VectorXdual2nd xvr(coeffs.size() * coeffValueSize);
@@ -71,7 +96,7 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
   Eigen::MatrixXd hessianWRTCoeffsSpatialAll;
   std::array<Eigen::MatrixXd, gridDim> hessianWRTCoeffsTwoTimesSingleSpatial;
   std::array<Eigen::VectorXd, gridDim> gradientWRTCoeffsTwoTimesSingleSpatial;
-  for (const auto &[ipIndex, ip] : lf.viewOverIntegrationPoints()) {
+  for (const auto& [ipIndex, ip] : lf.viewOverIntegrationPoints()) {
     /// Check spatial derivatives
     /// Check spatial derivatives return sizes
     {
@@ -96,10 +121,10 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
 
       /// Check if spatial derivatives are really derivatives
       /// Perturb in a random direction in the elements parameter space and check spatial derivative
-      auto func = [&](auto &gpOffset_) {
+      auto func = [&](auto& gpOffset_) {
         return toEigen(lf.evaluate(toFieldVector(gpOffset_), Dune::on(DerivativeDirections::referenceElement)));
       };
-      auto spatialDerivAll = [&](auto &gpOffset_) {
+      auto spatialDerivAll = [&](auto& gpOffset_) {
         return toEigen(Dune::eval(lf.evaluateDerivative(toFieldVector(gpOffset_), Dune::wrt(spatialAll),
                                                         Dune::on(DerivativeDirections::referenceElement))));
       };
@@ -109,7 +134,7 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
         auto nonLinOpSpatialAll = NonLinearOperator(func, spatialDerivAll, ipOffset);
 
         t.check(checkJacobian(nonLinOpSpatialAll, 1e-2), "Check spatial derivative in all directions");
-      } catch (const Dune::NotImplemented &exception) {
+      } catch (const Dune::NotImplemented& exception) {
         std::cout
             << "SpatialDerivative in all directions not tested, since it is not implemented by the local function "
                    + ("(" + localFunctionName + ")")
@@ -126,7 +151,7 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
                                                           Dune::on(DerivativeDirections::referenceElement))));
         };
 
-        auto funcSingle = [&](const auto &gpOffset_) {
+        auto funcSingle = [&](const auto& gpOffset_) {
           auto offSetSingle = ipOffset;
           offSetSingle[i] += gpOffset_[0];
           return toEigen(lf.evaluate(toFieldVector(offSetSingle), Dune::on(DerivativeDirections::referenceElement)));
@@ -135,7 +160,7 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
         try {
           auto nonLinOpSpatialSingle = NonLinearOperator(funcSingle, derivDerivSingleI, ipOffsetSingle);
           t.check(checkJacobian(nonLinOpSpatialSingle, 1e-2), "Check single spatial derivative");
-        } catch (const Dune::NotImplemented &exception) {
+        } catch (const Dune::NotImplemented& exception) {
           std::cout << "Single SpatialDerivative not tested, since it is not implemented by the local function "
                            + ("(" + localFunctionName + ")")
                     << std::endl;
@@ -153,14 +178,14 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
     auto lfDual2nd                   = lf.rebindClone(dual2nd());
     auto lfDual2ndLeafNodeCollection = collectLeafNodeLocalFunctions(lfDual2nd);
 
-    auto localFdual2nd = [&](const auto &x) {
+    auto localFdual2nd = [&](const auto& x) {
       lfDual2ndLeafNodeCollection.addToCoeffsInEmbedding(x);
       auto value = inner(lfDual2nd.evaluate(ipIndex, Dune::on(DerivativeDirections::referenceElement)), alongVec);
       lfDual2ndLeafNodeCollection.addToCoeffsInEmbedding(-x);
       return value;
     };
 
-    auto localFdual2ndSpatialSingle = [&](const auto &x, int i) {
+    auto localFdual2ndSpatialSingle = [&](const auto& x, int i) {
       lfDual2ndLeafNodeCollection.addToCoeffsInEmbedding(x);
       auto value = inner(lfDual2nd.evaluateDerivative(ipIndex, Dune::wrt(spatial(i)),
                                                       Dune::on(DerivativeDirections::referenceElement)),
@@ -170,7 +195,7 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
       return value;
     };
 
-    auto localFdual2ndSpatialAll = [&](const auto &x) {
+    auto localFdual2ndSpatialAll = [&](const auto& x) {
       lfDual2ndLeafNodeCollection.addToCoeffsInEmbedding(x);
       auto value = inner(lfDual2nd.evaluateDerivative(ipIndex, Dune::wrt(spatialAll),
                                                       Dune::on(DerivativeDirections::referenceElement)),
@@ -187,7 +212,7 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
     try {
       autodiff::hessian(localFdual2ndSpatialAll, autodiff::wrt(xvr), autodiff::at(xvr), u, gradienWRTCoeffsSpatialAll,
                         hessianWRTCoeffsSpatialAll);
-    } catch (const Dune::NotImplemented &exception) {
+    } catch (const Dune::NotImplemented& exception) {
       std::cout << "SpatialDerivative in all directions not tested, since it is not implemented by the local function "
                        + ("(" + localFunctionName + ")")
                 << std::endl;
@@ -198,7 +223,7 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
         autodiff::hessian(localFdual2ndSpatialSingle, autodiff::wrt(xvr), autodiff::at(xvr, d), u,
                           gradientWRTCoeffsTwoTimesSingleSpatial[d], hessianWRTCoeffsTwoTimesSingleSpatial[d]);
 
-    } catch (const Dune::NotImplemented &exception) {
+    } catch (const Dune::NotImplemented& exception) {
       std::cout << "Single SpatialDerivative not tested, since it is not implemented by the local function "
                        + ("(" + localFunctionName + ")")
                 << std::endl;
@@ -343,10 +368,10 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
             t.check(two_norm(jacobianWRTCoeffsTwoTimesSpatialAllExpected) < tol,
                     "For first order linear local functions the second derivative should vanish");
           } else {
-            const bool passed
+            const bool passed2
                 = isApproxSame(jacobianWRTCoeffsTwoTimesSpatialAll, jacobianWRTCoeffsTwoTimesSpatialAllExpected, tol);
-            t.check(passed, "Test third derivatives wrt coeffs, coeffs and spatialall");
-            if (not passed)
+            t.check(passed2, "Test third derivatives wrt coeffs, coeffs and spatialall");
+            if (not passed2)
               std::cout << "Actual: \n"
                         << jacobianWRTCoeffsTwoTimesSpatialAll << "\n Expected: \n"
                         << jacobianWRTCoeffsTwoTimesSpatialAllExpected << "\n Diff: \n"
@@ -369,10 +394,10 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
                              + (i == j)
                                    * coeffs[j].weingarten(segment<coeffValueSize>(
                                        gradientWRTCoeffsTwoTimesSingleSpatial[d], i * coeffValueSize)));
-            const bool passed = isApproxSame(jacobianWRTCoeffsTwoTimesSingleSpatial,
-                                             jacobianWRTCoeffsTwoTimesSingleSpatialExpected, tol);
-            t.check(passed, "Test third derivatives wrt coeffs, coeffs and spatial single");
-            if (not passed)
+            const bool passed3 = isApproxSame(jacobianWRTCoeffsTwoTimesSingleSpatial,
+                                              jacobianWRTCoeffsTwoTimesSingleSpatialExpected, tol);
+            t.check(passed3, "Test third derivatives wrt coeffs, coeffs and spatial single");
+            if (not passed3)
               std::cout << "Actual: \n"
                         << jacobianWRTCoeffsTwoTimesSingleSpatial << "\n Expected: \n"
                         << jacobianWRTCoeffsTwoTimesSingleSpatialExpected << "\n Diff: \n"
@@ -385,7 +410,7 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
   std::puts("done.\n");
   if (not isCopy) {  //  test the cloned local function
     const auto lfCopy     = lf.clone();
-    const auto &coeffCopy = lfCopy.node().coefficientsRef();
+    const auto& coeffCopy = lfCopy.node().coefficientsRef();
     for (size_t i = 0; i < coeffSize; ++i)
       t.check(coeffCopy[i] == coeffs[i], "Copied coeffs coincide");
 
@@ -396,298 +421,193 @@ TestSuite testLocalFunction(const LF &lf, bool isCopy = false) {
   return t;
 }
 
-template <int domainDim, int worldDim, int order>
-auto localFunctionTestConstructor(const Dune::GeometryType &geometryType, size_t nNodalTestPointsI = 1) {
-  TestSuite t;
+template <typename Manifold, int domainDim, int order>
+auto createVectorOfNodalValues(const Dune::GeometryType& geometryType, size_t nNodalTestPointsI = 1) {
+  static constexpr int worldDim = Manifold::valueSize;
   using namespace Dune;
   using namespace Dune::Indices;
-  const auto &refElement = Dune::ReferenceElements<double, domainDim>::general(geometryType);
+  const auto& refElement = Dune::ReferenceElements<double, domainDim>::general(geometryType);
   std::vector<Dune::FieldVector<double, worldDim>> corners;
   CornerFactory<worldDim>::construct(corners, refElement.size(domainDim));
   auto geometry = std::make_shared<const Dune::MultiLinearGeometry<double, domainDim, worldDim>>(refElement, corners);
 
-  using Manifold     = Dune::RealTuple<double, worldDim>;
-  using Manifold2    = Dune::UnitVector<double, worldDim>;
-  using VectorType   = DefaultLinearAlgebra::FixedSizedVector<double, worldDim>;
-  using MatrixType   = DefaultLinearAlgebra::FixedSizedMatrix<double, worldDim, worldDim>;
-  constexpr int size = Manifold::valueSize;
   Dune::BlockVector<Manifold> testNodalPoints;
   using FECache = Dune::PQkLocalFiniteElementCache<double, double, domainDim, order>;
   FECache feCache;
-  const auto &fe      = feCache.get(geometryType);
-  auto localBasis     = Dune::CachedLocalBasis(fe.localBasis());
-  const size_t nNodes = fe.size();
-  Dune::BlockVector<Manifold> testNodalPoints1, testNodalPoints2;
+  const auto& fe             = feCache.get(geometryType);
+  const size_t nNodes        = fe.size();
   const int nNodalTestPoints = std::max(nNodalTestPointsI, nNodes);
-  Dune::ValueFactory<Manifold>::construct(testNodalPoints1, nNodalTestPoints);
-  Dune::ValueFactory<Manifold>::construct(testNodalPoints2, nNodalTestPoints);
-
-  Dune::BlockVector<Manifold2> testNodalPoints3;
-  Dune::ValueFactory<Manifold2>::construct(testNodalPoints3, nNodalTestPoints);
-
+  Dune::ValueFactory<Manifold>::construct(testNodalPoints, nNodalTestPoints);
   Dune::BlockVector<Manifold> vBlockedLocal(nNodes);
-  Dune::BlockVector<Manifold> vBlockedLocal2(nNodes);
-  Dune::BlockVector<Manifold2> vBlockedLocal3(nNodes);
 
-  const auto &rule = Dune::QuadratureRules<double, domainDim>::rule(fe.type(), 2);
+  for (size_t j = 0; j < fe.size(); ++j)
+    vBlockedLocal[j] = testNodalPoints[j];
+
+  return vBlockedLocal;
+}
+
+template <int domainDim, int order, typename Expr, typename ExprTest, typename BaseFunctionConstructor,
+          typename ManifoldIDPair0, typename ManifoldIDPair1, bool doDefaultTests = true>
+auto localFunctionTestConstructorNew(const Dune::GeometryType& geometryType, Expr& expr, ExprTest& exprSpecialTests,
+                                     const BaseFunctionConstructor& baseFunctionConstructor,
+                                     size_t nNodalTestPointsI = 1) {
+  TestSuite t;
+  using namespace Dune;
+  using namespace Dune::Indices;
+  using Manifold0 = typename ManifoldIDPair0::Manifold;
+  using ID0       = typename ManifoldIDPair0::ID;
+
+  using Manifold1 = typename ManifoldIDPair1::Manifold;
+  using ID1       = typename ManifoldIDPair1::ID;
+
+  static constexpr int worldDim = Manifold0::valueSize;
+  const auto& refElement        = Dune::ReferenceElements<double, domainDim>::general(geometryType);
+
+  std::vector<Dune::FieldVector<double, worldDim>> corners;
+  CornerFactory<worldDim>::construct(corners, refElement.size(domainDim));
+  auto geometry = std::make_shared<const Dune::MultiLinearGeometry<double, domainDim, worldDim>>(refElement, corners);
+
+  using FECache = Dune::PQkLocalFiniteElementCache<double, double, domainDim, order>;
+  FECache feCache;
+  const auto& fe  = feCache.get(geometryType);
+  auto localBasis = Dune::CachedLocalBasis(fe.localBasis());
+
+  auto vBlockedLocal0 = createVectorOfNodalValues<Manifold0, domainDim, order>(geometryType, nNodalTestPointsI);
+  auto vBlockedLocal1 = createVectorOfNodalValues<Manifold1, domainDim, order>(geometryType, nNodalTestPointsI);
+
+  const auto& rule = Dune::QuadratureRules<double, domainDim>::rule(fe.type(), 2);
   localBasis.bind(rule, bindDerivatives(0, 1));
 
-  // More thorough testing by swapping indices and testing again
-  //  for (size_t i = 0; i < multIndex.cycles(); ++i, ++multIndex) {
-  //    auto sortedMultiIndex = multIndex;
-  //    std::ranges::sort(sortedMultiIndex);
-  //    if (std::ranges::adjacent_find(sortedMultiIndex)
-  //        != sortedMultiIndex.end())  // skip multiIndices with duplicates. Since otherwise duplicate points are
-  //                                    // interpolated the jacobian is ill-defined
-  //      continue;
+  auto [f, g] = baseFunctionConstructor(localBasis, vBlockedLocal0, ID0{}, localBasis, vBlockedLocal1, ID1{}, geometry);
+  auto h      = expr(f, g);
+  t.subTest(exprSpecialTests(h, vBlockedLocal0, vBlockedLocal1, fe));
+  if constexpr (doDefaultTests) t.subTest(testLocalFunction(h));
 
-  for (size_t j = 0; j < fe.size(); ++j) {
-    vBlockedLocal[j]  = testNodalPoints1[j];
-    vBlockedLocal2[j] = testNodalPoints2[j];
-    vBlockedLocal3[j] = testNodalPoints3[j];
-  }
-
-  auto f = Dune::StandardLocalFunction(localBasis, vBlockedLocal, geometry);
-  t.subTest(testLocalFunction(f));
-  static_assert(f.order() == linear);
-  static_assert(countNonArithmeticLeafNodes(f) == 1);
-
-  auto g = Dune::StandardLocalFunction(localBasis, vBlockedLocal, geometry);
-  static_assert(countNonArithmeticLeafNodes(g) == 1);
-  static_assert(g.order() == linear);
-
-  auto h = f + g;
-  t.subTest(testLocalFunction(h));
-  static_assert(h.order() == linear);
-  for (size_t k = 0; k < fe.size(); ++k) {
-    t.check(h.node(_0).coefficientsRef()[k] == vBlockedLocal[k],
-            "Check if coeffref returns the correct coeffs in slot 0");
-    t.check(h.node(_1).coefficientsRef()[k] == vBlockedLocal[k],
-            "Check if coeffref returns the correct coeffs in slot 1");
-  }
-  static_assert(std::tuple_size_v<decltype(collectNonArithmeticLeafNodes(h))> == 2);
-  static_assert(countNonArithmeticLeafNodes(h) == 2);
-  static_assert(decltype(h)::id[0] == 0 and decltype(h)::id[1] == 0);
-
-  auto ft2 = 2 * f;
-  t.subTest(testLocalFunction(ft2));
-  static_assert(ft2.order() == linear);
-
-  auto f23 = 2 * f * 3;
-  t.subTest(testLocalFunction(f23));
-  static_assert(f23.order() == linear);
-
-  auto mf = -f;
-  t.subTest(testLocalFunction(mf));
-  static_assert(f.order() == mf.order());
-
-  if constexpr (domainDim == worldDim) {
-    auto eps = linearStrains(f);
-    t.subTest(testLocalFunction(eps));
-    static_assert(eps.order() == linear);
-
-    auto gls = greenLagrangeStrains(f);
-    t.subTest(testLocalFunction(gls));
-
-    static_assert(gls.order() == quadratic);
-  }
-
-  auto k = -dot(f + f, 3.0 * (g / 5.0) * 5.0);
-  t.subTest(testLocalFunction(k));
-  static_assert(k.order() == quadratic);
-  static_assert(std::tuple_size_v<decltype(collectNonArithmeticLeafNodes(k))> == 3);
-  static_assert(countNonArithmeticLeafNodes(k) == 3);
-
-  auto dotfg = dot(f, g);
-  t.subTest(testLocalFunction(dotfg));
-  static_assert(countNonArithmeticLeafNodes(dotfg) == 2);
-  static_assert(dotfg.order() == quadratic);
-  static_assert(decltype(dotfg)::id[0] == 0 and decltype(dotfg)::id[1] == 0);
-
-  auto normSq = normSquared(f);
-  t.subTest(testLocalFunction(normSq));
-  static_assert(normSq.order() == quadratic);
-
-  auto logg = log(dotfg);
-  t.subTest(testLocalFunction(logg));
-
-  auto powf = pow<3>(dotfg);
-  t.subTest(testLocalFunction(powf));
-
-  auto powfgsqrtdotfg = sqrt(powf);
-  t.subTest(testLocalFunction(powfgsqrtdotfg));
-
-  if constexpr (size > 1)  // Projection-Based only makes sense in 2d+
-  {
-    auto gP = Dune::ProjectionBasedLocalFunction(localBasis, vBlockedLocal3, geometry);
-    static_assert(gP.order() == nonLinear);
-    t.subTest(testLocalFunction(gP));
-  }
-
-  using namespace Dune::DerivativeDirections;
-
-  const double tol = 1e-13;
-
-  auto f2 = Dune::StandardLocalFunction(localBasis, vBlockedLocal, geometry, _0);
-  auto g2 = Dune::StandardLocalFunction(localBasis, vBlockedLocal2, geometry, _1);
-  static_assert(countNonArithmeticLeafNodes(f2) == 1);
-  static_assert(countNonArithmeticLeafNodes(g2) == 1);
-
-  auto k2 = dot(f2 + g2, g2);
-  static_assert(countNonArithmeticLeafNodes(k2) == 3);
-  static_assert(decltype(k2)::id[0] == 0 and decltype(k2)::id[1] == 1 and decltype(k2)::id[2] == 1);
-
-  auto b2 = collectNonArithmeticLeafNodes(k2);
-  static_assert(std::tuple_size_v<decltype(b2)> == 3);
-
-  for (int gpIndex = 0; [[maybe_unused]] auto &gp : rule) {
-    const auto &N  = localBasis.evaluateFunction(gpIndex);
-    const auto &dN = localBasis.evaluateJacobian(gpIndex);
-    t.check(Dune::FloatCmp::eq(inner(f2.evaluate(gpIndex, Dune::on(DerivativeDirections::referenceElement))
-                                         + g2.evaluate(gpIndex, Dune::on(DerivativeDirections::referenceElement)),
-                                     g2.evaluate(gpIndex, Dune::on(DerivativeDirections::referenceElement))),
-                               coeff(k2.evaluate(gpIndex, Dune::on(DerivativeDirections::referenceElement)), 0, 0)),
-            "Check function value");
-    auto df2 = f2.evaluateDerivative(gpIndex, wrt(spatial(0)), Dune::on(DerivativeDirections::referenceElement));
-    auto dg2 = g2.evaluateDerivative(gpIndex, wrt(spatial(0)), Dune::on(DerivativeDirections::referenceElement));
-    auto g2E = g2.evaluate(gpIndex, Dune::on(DerivativeDirections::referenceElement));
-    auto f2E = f2.evaluate(gpIndex, Dune::on(DerivativeDirections::referenceElement));
-    auto resSingleSpatial = Dune::eval(inner(df2 + dg2, g2E) + inner(f2E + g2E, dg2));
-    t.check(Dune::FloatCmp::eq(
-        resSingleSpatial,
-        coeff(k2.evaluateDerivative(gpIndex, wrt(spatial(0)), Dune::on(DerivativeDirections::referenceElement)), 0, 0),
-        tol));
-
-    auto df2A = f2.evaluateDerivative(gpIndex, wrt(spatialAll), Dune::on(DerivativeDirections::referenceElement));
-    auto dg2A = g2.evaluateDerivative(gpIndex, wrt(spatialAll), Dune::on(DerivativeDirections::referenceElement));
-
-    auto resSpatialAll
-        = eval(transposeEvaluated(leftMultiplyTranspose(df2A + dg2A, g2E)) + leftMultiplyTranspose(f2E + g2E, dg2A));
-    static_assert(Cols<decltype(resSpatialAll)>::value == domainDim);
-    static_assert(Rows<decltype(resSpatialAll)>::value == 1);
-
-    t.check(isApproxSame(
-        resSpatialAll,
-        k2.evaluateDerivative(gpIndex, wrt(spatialAll), Dune::on(DerivativeDirections::referenceElement)), tol));
-
-    for (size_t iC = 0; iC < fe.size(); ++iC) {
-      const VectorType dfdi = g2.evaluate(gpIndex, Dune::on(DerivativeDirections::referenceElement)) * N[iC];
-
-      const auto dkdi = Dune::eval(transposeEvaluated(
-          k2.evaluateDerivative(gpIndex, wrt(coeff(_0, iC)), Dune::on(DerivativeDirections::referenceElement))));
-
-      t.check(isApproxSame(dfdi, dkdi, tol));
-
-      for (size_t jC = 0; jC < fe.size(); ++jC) {
-        const MatrixType dkdij         = k2.evaluateDerivative(gpIndex, wrt(coeff(_0, iC, _1, jC)),
-                                                               Dune::on(DerivativeDirections::referenceElement));
-        const MatrixType dkdijExpected = createScaledIdentityMatrix<double, worldDim, worldDim>(N[jC] * N[iC]);
-        t.check(isApproxSame(dkdijExpected, dkdij, tol));
-
-        const MatrixType dkdij2         = k2.evaluateDerivative(gpIndex, wrt(coeff(_0, iC, _0, jC)),
-                                                                Dune::on(DerivativeDirections::referenceElement));
-        const MatrixType dkdijExpected2 = createZeroMatrix<double, worldDim, worldDim>();
-        t.check(isApproxSame(dkdijExpected2, dkdij2, tol));
-        const MatrixType dkdij3         = k2.evaluateDerivative(gpIndex, wrt(coeff(_1, iC, _1, jC)),
-                                                                Dune::on(DerivativeDirections::referenceElement));
-        const MatrixType dkdijExpected3 = createScaledIdentityMatrix<double, worldDim, worldDim>(2 * N[iC] * N[jC]);
-        t.check(isApproxSame(dkdijExpected3, dkdij3, tol));
-
-        const MatrixType dkdSij         = k2.evaluateDerivative(gpIndex, wrt(spatial(0), coeff(_0, iC, _1, jC)),
-                                                                Dune::on(DerivativeDirections::referenceElement));
-        const MatrixType dkdSijR        = k2.evaluateDerivative(gpIndex, wrt(coeff(_0, iC, _1, jC), spatial(0)),
-                                                                Dune::on(DerivativeDirections::referenceElement));
-        const MatrixType dkdSijExpected = createScaledIdentityMatrix<double, worldDim, worldDim>(
-            coeff(dN, jC, 0) * N[iC] + N[jC] * coeff(dN, iC, 0));
-        t.check(isApproxSame(dkdSijR, dkdSij, tol));
-        t.check(isApproxSame(dkdSijExpected, dkdSij, tol));
-      }
-    }
-    ++gpIndex;
-  }
-  //    }
   return t;
 }
 
-// Most of the following tests are commented out due to very long compile times and long runtimes in debug mode we hope
-//  to still capture most the bugs
+template <int domainDim, int order, typename Expr, typename ExprTest, typename BaseFunctionConstructor,
+          typename ManifoldIDPair, bool doDefaultTests = true>
+auto localFunctionTestConstructorNew(const Dune::GeometryType& geometryType, Expr& expr, ExprTest& exprSpecialTests,
+                                     const BaseFunctionConstructor& baseFunctionConstructor,
+                                     size_t nNodalTestPointsI = 1) {
+  TestSuite t;
+  using namespace Dune;
+  using namespace Dune::Indices;
+  using Manifold                = typename ManifoldIDPair::Manifold;
+  using ID                      = typename ManifoldIDPair::ID;
+  static constexpr int worldDim = Manifold::valueSize;
+  const auto& refElement        = Dune::ReferenceElements<double, domainDim>::general(geometryType);
+
+  std::vector<Dune::FieldVector<double, worldDim>> corners;
+  CornerFactory<worldDim>::construct(corners, refElement.size(domainDim));
+  auto geometry = std::make_shared<const Dune::MultiLinearGeometry<double, domainDim, worldDim>>(refElement, corners);
+
+  using FECache = Dune::PQkLocalFiniteElementCache<double, double, domainDim, order>;
+  FECache feCache;
+  const auto& fe  = feCache.get(geometryType);
+  auto localBasis = Dune::CachedLocalBasis(fe.localBasis());
+
+  auto vBlockedLocal0 = createVectorOfNodalValues<Manifold, domainDim, order>(geometryType, nNodalTestPointsI);
+
+  const auto& rule = Dune::QuadratureRules<double, domainDim>::rule(fe.type(), 2);
+  localBasis.bind(rule, bindDerivatives(0, 1));
+
+  auto f = baseFunctionConstructor(localBasis, vBlockedLocal0, geometry, ID{});
+
+  auto h = expr(f);
+  t.subTest(exprSpecialTests(h, vBlockedLocal0, fe));
+  if constexpr (doDefaultTests) t.subTest(testLocalFunction(h));
+
+  return t;
+}
+
 using namespace Dune::GeometryTypes;
-auto testExpressionsOnLine() {
-  TestSuite t("testExpressionsOnLine");
-  std::cout << "line with linear ansatz functions and 1d local function" << std::endl;
-  localFunctionTestConstructor<1, 1, 1>(line);
-  //  localFunctionTestConstructor<1, 2, 1>(line);  // line with linear ansatz functions and 2d lf
-  //  std::cout << "line with linear ansatz functions and 3d local function" << std::endl;
-  //  localFunctionTestConstructor<1, 3, 1>(line);
-  //    std::cout << "line with quadratic ansatz functions and 1d local function" << std::endl;
-  //    localFunctionTestConstructor<1, 1, 2>(line);
-  //  localFunctionTestConstructor<1, 2, 2>(line);  // line with quadratic ansatz functions and 2d lf
-  std::cout << "line with quadratic ansatz functions and 3d local function" << std::endl;
-  t.subTest(localFunctionTestConstructor<1, 3, 2>(line));
-  return t;
-}
 
-auto testExpressionsOnTriangle() {
+template <typename Expr, typename ExprTests, typename BaseFunctionConstructor, bool doDefaultTests = true,
+          typename... ManiFoldTemplateIDPairS>
+auto testExpressionsOnTriangle(Expr& expr, ExprTests& exprTests,
+                               const BaseFunctionConstructor& baseFunctionConstructor) {
   TestSuite t("testExpressionsOnTriangle");
 
-  //  std::cout << "triangle with linear ansatz functions and 1d local function" << std::endl;
-  //  localFunctionTestConstructor<2, 1, 1>(triangle);
   std::cout << "triangle with linear ansatz functions and 2d local function" << std::endl;
-  t.subTest(localFunctionTestConstructor<2, 2, 1>(triangle));
-  //  std::cout << "triangle with linear ansatz functions and 3d local function" << std::endl;
-  //  localFunctionTestConstructor<2, 3, 1>(triangle);
-  //  std::cout << "triangle with quadratic ansatz functions and 1d local function" << std::endl;
-  //  localFunctionTestConstructor<2, 1, 2>(triangle);
-  //  localFunctionTestConstructor<2, 2, 2>(triangle);  // triangle with quadratic ansatz functions and 2d lf
+  t.subTest(
+      localFunctionTestConstructorNew<2, 1, Expr, ExprTests, BaseFunctionConstructor,
+                                      typename ManiFoldTemplateIDPairS::template ManiFoldIDPair<2>..., doDefaultTests>(
+          triangle, expr, exprTests, baseFunctionConstructor));
   std::cout << "triangle with quadratic ansatz functions and 3d local function" << std::endl;
-  t.subTest(localFunctionTestConstructor<2, 3, 2>(triangle));
+  t.subTest(
+      localFunctionTestConstructorNew<2, 1, Expr, ExprTests, BaseFunctionConstructor,
+                                      typename ManiFoldTemplateIDPairS::template ManiFoldIDPair<3>..., doDefaultTests>(
+          triangle, expr, exprTests, baseFunctionConstructor));
   return t;
 }
 
-auto testExpressionsOnQuadrilateral() {
+template <typename Expr, typename ExprTests, typename BaseFunctionConstructor, bool doDefaultTests = true,
+          typename... ManiFoldTemplateIDPairS>
+auto testExpressionsOnQuadrilateral(Expr& expr, ExprTests& exprTests,
+                                    const BaseFunctionConstructor& baseFunctionConstructor) {
   TestSuite t("testExpressionsOnQuadrilateral");
-  //  std::cout << "quadrilateral with linear ansatz functions and 1d local function" << std::endl;
-  //  localFunctionTestConstructor<2, 1, 1>(quadrilateral);
   std::cout << "quadrilateral with linear ansatz functions and 2d local function" << std::endl;
-  t.subTest(localFunctionTestConstructor<2, 2, 1>(quadrilateral));
-  //  std::cout << "quadrilateral with linear ansatz functions and 3d local function" << std::endl;
-  //  localFunctionTestConstructor<2, 3, 1>(quadrilateral);
-  //  std::cout << "quadrilateral with quadratic ansatz functions and 1d local function" << std::endl;
-  //  localFunctionTestConstructor<2, 1, 2>(quadrilateral);
-  //  localFunctionTestConstructor<2, 2, 2>(quadrilateral);  // quadrilateral with quadratic ansatz functions and 2d lf
+  t.subTest(
+      localFunctionTestConstructorNew<2, 1, Expr, ExprTests, BaseFunctionConstructor,
+                                      typename ManiFoldTemplateIDPairS::template ManiFoldIDPair<2>..., doDefaultTests>(
+          quadrilateral, expr, exprTests, baseFunctionConstructor));
   std::cout << "quadrilateral with quadratic ansatz functions and 3d local function" << std::endl;
-  t.subTest(localFunctionTestConstructor<2, 3, 2>(quadrilateral));
+  t.subTest(
+      localFunctionTestConstructorNew<2, 2, Expr, ExprTests, BaseFunctionConstructor,
+                                      typename ManiFoldTemplateIDPairS::template ManiFoldIDPair<3>..., doDefaultTests>(
+          quadrilateral, expr, exprTests, baseFunctionConstructor));
   return t;
 }
 
-auto testExpressionsOnHexahedron() {
+template <typename Expr, typename ExprTests, typename BaseFunctionConstructor, bool doDefaultTests = true,
+          typename... ManiFoldTemplateIDPairS>
+auto testExpressionsOnHexahedron(Expr& expr, ExprTests& exprTests,
+                                 const BaseFunctionConstructor& baseFunctionConstructor) {
   TestSuite t("testExpressionsOnHexahedron");
-  //  std::cout << "hexahedron with linear ansatz functions and 1d local function" << std::endl;
-  //  localFunctionTestConstructor<3, 1, 1>(hexahedron);  // hexahedron with linear ansatz functions and 1d lf
-  //  localFunctionTestConstructor<3, 2, 1>(hexahedron);  // hexahedron with linear ansatz functions and 2d lf
+
   std::cout << "hexahedron with linear ansatz functions and 3d local function" << std::endl;
-  t.subTest(localFunctionTestConstructor<3, 3, 1>(hexahedron));
-  //  std::cout << "hexahedron with quadratic ansatz functions and 1d local function" << std::endl;
-  //  localFunctionTestConstructor<3, 1, 2>(hexahedron);
-  //  localFunctionTestConstructor<3, 2, 2>(hexahedron);  // hexahedron with quadratic ansatz functions and 2d lf
-  //  std::cout << "hexahedron with quadratic ansatz functions and 3d local function" << std::endl;
-  //  localFunctionTestConstructor<3, 3, 2>(hexahedron);  // hexahedron with quadratic ansatz functions and 3d lf
+  t.subTest(
+      localFunctionTestConstructorNew<3, 1, Expr, ExprTests, BaseFunctionConstructor,
+                                      typename ManiFoldTemplateIDPairS::template ManiFoldIDPair<3>..., doDefaultTests>(
+          hexahedron, expr, exprTests, baseFunctionConstructor));
+  std::cout << "hexahedron with quadratic ansatz functions and 3d local function" << std::endl;
+  t.subTest(
+      localFunctionTestConstructorNew<3, 2, Expr, ExprTests, BaseFunctionConstructor,
+                                      typename ManiFoldTemplateIDPairS::template ManiFoldIDPair<3>..., doDefaultTests>(
+          hexahedron, expr, exprTests, baseFunctionConstructor));
+
   return t;
 }
 
-int main(int argc, char **argv) {
-  Dune::MPIHelper::instance(argc, argv);
-  TestSuite t;
+template <typename Expr, typename ExprTests, typename BaseFunctionConstructor, bool doDefaultTests = true,
+          typename... ManiFoldTemplateIDPairS>
+auto testExpressionsOnLine(Expr& expr, ExprTests& exprTests, const BaseFunctionConstructor& baseFunctionConstructor) {
+  TestSuite t("testExpressionsOnLine");
+  std::cout << "line with linear ansatz functions and 1d local function" << std::endl;
+  t.subTest(
+      localFunctionTestConstructorNew<1, 1, Expr, ExprTests, BaseFunctionConstructor,
+                                      typename ManiFoldTemplateIDPairS::template ManiFoldIDPair<1>..., doDefaultTests>(
+          line, expr, exprTests, baseFunctionConstructor));
+  std::cout << "line with quadratic ansatz functions and 3d local function" << std::endl;
+  t.subTest(
+      localFunctionTestConstructorNew<1, 2, Expr, ExprTests, BaseFunctionConstructor,
+                                      typename ManiFoldTemplateIDPairS::template ManiFoldIDPair<3>..., doDefaultTests>(
+          line, expr, exprTests, baseFunctionConstructor));
+  return t;
+}
 
-  using namespace std::chrono;
-  using namespace std;
-  auto start = high_resolution_clock::now();
-  t.subTest(testExpressionsOnLine());
-  t.subTest(testExpressionsOnTriangle());
-  t.subTest(testExpressionsOnQuadrilateral());
-  t.subTest(testExpressionsOnHexahedron());
-  auto stop     = high_resolution_clock::now();
-  auto duration = duration_cast<milliseconds>(stop - start);
-  cout << "The test execution took: " << duration.count() << endl;
-  return t.exit();
+template <int domainDim, int order, int worldDim, typename Expr, typename ExprTests, typename BaseFunctionConstructor,
+          bool doDefaultTests = true, typename... ManiFoldTemplateIDPairS>
+auto testExpressionsOnCustomGeometry(const Dune::GeometryType& geometryType, Expr& expr, ExprTests& exprTests,
+                                     const BaseFunctionConstructor& baseFunctionConstructor) {
+  using namespace std::string_literals;
+  TestSuite t("testExpressionsOnCustomGeometry" + " domainDim: "s + std::to_string(domainDim) + " order: "s
+              + std::to_string(order) + " worldDim: "s + std::to_string(worldDim));
+  std::cout << "line with linear ansatz functions and 1d local function" << std::endl;
+  t.subTest(localFunctionTestConstructorNew<domainDim, order, Expr, ExprTests, BaseFunctionConstructor,
+                                            typename ManiFoldTemplateIDPairS::template ManiFoldIDPair<worldDim>...,
+                                            doDefaultTests>(geometryType, expr, exprTests, baseFunctionConstructor));
+  return t;
 }

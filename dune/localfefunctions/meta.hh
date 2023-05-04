@@ -39,7 +39,9 @@ namespace Dune {
 
   namespace DerivativeDirections {
 
-    struct ZeroMatrix {};
+    struct ZeroMatrix {
+      auto operator[](int) const { return ZeroMatrix{}; }
+    };
 
     [[maybe_unused]] static struct SpatialAll {
     } spatialAll;
@@ -209,10 +211,57 @@ namespace Dune {
   template <typename... LF>
   concept IsLocalFunction = (LocalFunction<LF> and ...);
 
-  static constexpr int nonLinear = 1000;
+  static constexpr int nonlinear = 1000;
   static constexpr int constant  = 0;
   static constexpr int linear    = 1;
   static constexpr int quadratic = 2;
   static constexpr int cubic     = 3;
+
+  /**
+   * \brief In the following several traits for functions are defined
+   *        Here we start with the unused general template
+   */
+  template <typename T, typename = void>
+  struct FunctionTraits;
+
+  /**
+   * \brief Specialization for general functions
+   */
+  template <typename R, typename... Args>
+  struct FunctionTraits<R (*)(Args...)> {
+    using return_type = R;
+    template <int i>
+    using args_type                        = typename std::tuple_element<i, std::tuple<Args...>>::type;
+    static constexpr int numberOfArguments = sizeof...(Args);
+  };
+
+  /**
+   * \brief Specialization for const member functions
+   */
+  template <typename R, typename C, typename... Args>
+  struct FunctionTraits<R (C::*)(Args...) const> {
+    using return_type = R;
+    template <int i>
+    using args_type                        = typename std::tuple_element<i, std::tuple<Args...>>::type;
+    static constexpr int numberOfArguments = sizeof...(Args);
+  };
+
+  /**
+   * \brief Specialization for non-const member functions
+   */
+  template <typename R, typename C, typename... Args>
+  struct FunctionTraits<R (C::*)(Args...)> {
+    using return_type = R;
+    template <int i>
+    using args_type                        = typename std::tuple_element<i, std::tuple<Args...>>::type;
+    static constexpr int numberOfArguments = sizeof...(Args);
+  };
+
+  /**
+   * \brief Specialization for lambdas using std::void_t to allow a specialization of the original template
+   *        The lambda is forwarded using lambdas operator() to the general function traits
+   */
+  template <typename T>
+  struct FunctionTraits<T, Dune::void_t<decltype(&T::operator())>> : public FunctionTraits<decltype(&T::operator())> {};
 
 }  // namespace Dune

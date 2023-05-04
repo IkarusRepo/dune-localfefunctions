@@ -22,7 +22,7 @@ namespace Dune {
     static constexpr int gridDim   = Traits::gridDim;
 
     template <size_t ID_ = 0>
-    static constexpr int orderID = std::min(2 * Base::E1Raw::template order<ID_>(), nonLinear);
+    static constexpr int orderID = std::min(2 * Base::E1Raw::template order<ID_>(), nonlinear);
 
     template <typename LFArgs>
     auto evaluateValueOfExpression(const LFArgs &lfArgs) const {
