@@ -39,7 +39,7 @@ namespace Dune {
       const auto gradu    = transposeEvaluated(evaluateDerivativeImpl(this->m(), gradArgs));
 
       if constexpr (std::is_same_v<typename decltype(lfArgs.transformWithArgs)::T, DerivativeDirections::GridElement>)
-        referenceJacobian = createScaledIdentityMatrix<ctype, displacementSize, displacementSize>();
+        referenceJacobian = createScaledIdentityMatrix<double, displacementSize, displacementSize>();
 
       typename LinearAlgebra::template FixedSizedVector<ctype, strainSize> E;
       // E= 1/2*(H^T * G + G^T * H + H^T * H) with H = gradu
