@@ -68,7 +68,7 @@ namespace Dune {
     using VarFixSizedMatrix = Eigen::Matrix<ScalarType, Eigen::Dynamic, cols>;
 
     template <typename ScalarType, int rows>
-    using FixedSizedScaledIdentityMatrix = Eigen::Matrix<ScalarType, rows, rows>;
+    using FixedSizedScaledIdentityMatrix = Eigen::DiagonalMatrix<ScalarType, rows, rows>;
 
     template <typename ScalarType, int rows>
     static auto createZeroVector() {
