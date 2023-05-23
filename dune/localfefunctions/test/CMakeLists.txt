@@ -26,8 +26,7 @@ if(DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING)
       ${programSourceFile}
       $<TARGET_OBJECTS:TestFacilities>
       LINK_LIBRARIES
-      Eigen3::Eigen
-      dune-localfefunctions)
+      Eigen3::Eigen)
     if(ENABLE_TEST_COVERAGE)
       message("Enable Test Coverage")
       target_compile_options(${programName} PUBLIC -O0 -g -fprofile-arcs

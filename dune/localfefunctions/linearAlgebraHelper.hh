@@ -105,12 +105,12 @@ namespace Dune {
 
   template <typename Derived>
   auto transposeEvaluated(const Eigen::MatrixBase<Derived>& A) {
-    return A.transpose().eval();
+    return A.derived().transpose().eval();
   }
 
   template <typename Derived>
   auto transpose(const Eigen::MatrixBase<Derived>& A) {
-    return A.transpose();
+    return A.derived().transpose();
   }
 
   template <typename field_type, int rows, int cols>
@@ -754,6 +754,7 @@ namespace Dune {
     return a.two_norm2();
   }
 
+#if DUNE_LOCALFEFUNCTIONS_USE_EIGEN == 1
   /** \brief Orthonormalizes all Matrix columns */
   template <typename Derived>
   auto orthonormalizeMatrixColumns(const Eigen::MatrixBase<Derived>& A) {
@@ -768,6 +769,27 @@ namespace Dune {
     }
 
     return Q;
+  }
+#endif
+
+  template <typename ScalarType, int rows, int cols>
+  Dune::FieldMatrix<ScalarType, rows, cols> orthonormalizeMatrixColumns(
+      const Dune::FieldMatrix<ScalarType, rows, cols>& A) {
+    // Gram Schmidt Ortho
+    // we make copies here of the transposed to only access the columns as rows i.e. as Dune::FieldVectors
+    Dune::FieldMatrix<ScalarType, cols, rows> AT = transpose(A);
+    Dune::FieldMatrix<ScalarType, cols, rows> QT = AT;
+
+    QT[0] /= QT[0].two_norm();
+
+    for (int j = 1; j < rows; j++) {
+      for (int i = 0; i < j; ++i) {
+        QT[j] -= (AT[j] * QT[i]) * QT[i];
+      }
+      QT[j] /= QT[j].two_norm();
+    }
+
+    return transpose(QT);
   }
 
   /** \brief View Dune::BlockVector as a Eigen::Vector */
@@ -1092,11 +1114,15 @@ namespace Dune {
     return a.derived();
   }
 
-  Dune::DerivativeDirections::ZeroMatrix operator+(Dune::DerivativeDirections::ZeroMatrix,
-                                                   Dune::DerivativeDirections::ZeroMatrix);
+  inline Dune::DerivativeDirections::ZeroMatrix operator+(Dune::DerivativeDirections::ZeroMatrix,
+                                                          Dune::DerivativeDirections::ZeroMatrix) {
+    return {};
+  }
 
-  Dune::DerivativeDirections::ZeroMatrix operator-(Dune::DerivativeDirections::ZeroMatrix,
-                                                   Dune::DerivativeDirections::ZeroMatrix);
+  inline Dune::DerivativeDirections::ZeroMatrix operator-(Dune::DerivativeDirections::ZeroMatrix,
+                                                          Dune::DerivativeDirections::ZeroMatrix) {
+    return {};
+  }
 
   template <typename Derived>
   auto operator*(const Eigen::MatrixBase<Derived>& a, Dune::DerivativeDirections::ZeroMatrix) {
@@ -1138,7 +1164,7 @@ namespace Dune {
     return a;
   }
 
-  Dune::DerivativeDirections::ZeroMatrix operator-(Dune::DerivativeDirections::ZeroMatrix);
+  inline Dune::DerivativeDirections::ZeroMatrix operator-(Dune::DerivativeDirections::ZeroMatrix) { return {}; }
 
   template <typename Derived>
   auto operator+(Dune::DerivativeDirections::ZeroMatrix, const Eigen::DiagonalWrapper<Derived>& a) {
@@ -1216,8 +1242,8 @@ namespace Dune {
     return t;
   }
 
-  Dune::DerivativeDirections::ZeroMatrix transpose(const Dune::DerivativeDirections::ZeroMatrix&);
-  Dune::DerivativeDirections::ZeroMatrix eval(const Dune::DerivativeDirections::ZeroMatrix&);
+  inline Dune::DerivativeDirections::ZeroMatrix transpose(const Dune::DerivativeDirections::ZeroMatrix&) { return {}; }
+  inline Dune::DerivativeDirections::ZeroMatrix eval(const Dune::DerivativeDirections::ZeroMatrix&) { return {}; }
 
   template <typename To, typename From>
   requires std::convertible_to<typename From::ctype, To>
@@ -1307,6 +1333,21 @@ namespace Dune {
                 << Dune::FieldMatrix<Scalar, diag_size, diag_size>(A.derived().diagonal().asDiagonal()).format(mapleFmt)
                 << std::endl;
     }
+  }
+
+  template <typename ScalarType>
+  auto cross(const Dune::FieldVector<ScalarType, 3>& a, const Dune::FieldVector<ScalarType, 3>& b) {
+    Dune::FieldVector<ScalarType, 3> res;
+
+    res[0] = a[1] * b[2] - a[2] * b[1];
+    res[1] = a[2] * b[0] - a[0] * b[2];
+    res[2] = a[0] * b[1] - a[1] * b[0];
+    return res;
+  }
+
+  template <typename Derived, typename Derived2>
+  auto cross(const Eigen::MatrixBase<Derived>& a, const Eigen::MatrixBase<Derived2>& b) {
+    return a.cross(b);
   }
 
   namespace Impl {

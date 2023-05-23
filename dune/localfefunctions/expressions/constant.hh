@@ -12,6 +12,7 @@ namespace Dune {
   public:
     using LinearAlgebra = LinAlg;
     explicit ConstantExpr(Type val_) : val{val_} {}
+    static constexpr bool providesDerivativeTransformations = true;
 
     const Type& value() const { return val; }
     Type& value() { return val; }

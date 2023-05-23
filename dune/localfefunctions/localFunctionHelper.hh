@@ -6,6 +6,8 @@
 #include "localFunctionInterface.hh"
 
 #include <sstream>
+
+#include <dune/localfefunctions/derivativetransformators.hh>
 namespace Dune {
 
   /** Helper to evaluate the local basis ansatz function and gradient with an integration point index or coordinate
@@ -68,34 +70,18 @@ namespace Dune {
 
   /** Helper to transform the derivatives if the transform argument is DerivativeDirections::GridElement
    * Furthermore we only transform derivatives with geometry with zero codimension */
-  template <typename TransformArg, typename Geometry, typename DomainTypeOrIntegrationPointIndex, typename Basis>
-  void maytransformDerivatives(const auto& dNraw, auto& dNTransformed, const On<TransformArg>&,
+  template <typename TransformArg, typename Geometry, typename DomainTypeOrIntegrationPointIndex, typename Basis,
+            typename TransformFunctor = Dune::DefaultFirstOrderTransformFunctor>
+  void maytransformDerivatives(const auto& dNraw, auto& dNTransformed,
+                               const On<TransformArg, TransformFunctor>& derivativeTransformer,
                                const std::shared_ptr<const Geometry>& geo,
                                const DomainTypeOrIntegrationPointIndex& localOrIpId, const Basis& basis) {
-    if constexpr (std::is_same_v<
-                      TransformArg,
-                      DerivativeDirections::GridElement> and Geometry::mydimension == Geometry::coorddimension) {
+    if constexpr (std::is_same_v<TransformArg, DerivativeDirections::GridElement>) {
       if constexpr (std::numeric_limits<DomainTypeOrIntegrationPointIndex>::is_integer) {
         const auto& gp = basis.indexToIntegrationPoint(localOrIpId);
-#if DUNE_LOCALFEFUNCTIONS_USE_EIGEN == 1
-        const auto jInv = toEigen(geo->jacobianTransposed(gp.position())).eval().inverse().transpose().eval();
-        dNTransformed   = dNraw * jInv;
-#else
-        const auto jInv = toEigen(geo->jacobianInverseTransposed(localOrIpId));
-        dNTransformed.resize(dNraw.size());
-        for (int i = 0; i < dNraw.size(); ++i)
-          jInv.mv(dNraw[i], dNTransformed[i]);
-#endif
+        derivativeTransformer.f(*geo, gp.position(), dNraw, dNTransformed);
       } else if (std::is_same_v<DomainTypeOrIntegrationPointIndex, typename Basis::DomainType>) {
-#if DUNE_LOCALFEFUNCTIONS_USE_EIGEN == 1
-        const auto jInv = toEigen(geo->jacobianTransposed(localOrIpId)).eval().inverse().transpose().eval();
-        dNTransformed   = dNraw * jInv;
-#else
-        const auto jInv = toEigen(geo->jacobianInverseTransposed(localOrIpId));
-        dNTransformed.resize(dNraw.size());
-        for (int i = 0; i < dNraw.size(); ++i)
-          jInv.mv(dNraw[i], dNTransformed[i]);
-#endif
+        derivativeTransformer.f(*geo, localOrIpId, dNraw, dNTransformed);
       }
     } else  // DerivativeDirections::ReferenceElement if the quantity should live on the reference element we don't have
             // to transform the derivatives

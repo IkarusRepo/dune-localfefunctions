@@ -26,7 +26,7 @@ include(DuneMacros)
 # start a dune project with information from dune.module
 dune_project()
 
-dune_add_library(dune-localfefunctions)
+# dune_add_library(dune-localfefunctions)
 
 # target_compile_definitions(dune-localfefunctions PUBLIC ENABLE_USE_EIGEN=1)
 # option(LOCALFEFUNCTIONS_USE_EIGEN ON)
@@ -34,18 +34,17 @@ set(DUNE_LOCALFEFUNCTIONS_USE_EIGEN
     True
     CACHE BOOL "")
 
-target_compile_features(dune-localfefunctions PRIVATE cxx_std_20)
-target_compile_options(
-  dune-localfefunctions
-  PRIVATE -ftemplate-backtrace-limit=0 -fdiagnostics-show-template-tree
-          -fno-elide-type -fconcepts-diagnostics-depth=2)
+# target_compile_features(dune-localfefunctions PRIVATE cxx_std_20)
+# target_compile_options( dune-localfefunctions PRIVATE
+# -ftemplate-backtrace-limit=0 -fdiagnostics-show-template-tree -fno-elide-type
+# -fconcepts-diagnostics-depth=2)
 find_package(Eigen3 3.3.9 REQUIRED)
 
 dune_register_package_flags(INCLUDE_DIRS ${Eigen3_INCLUDE_DIRS} LIBRARIES
                             Eigen3::Eigen)
 dune_enable_all_packages()
-target_link_dune_default_libraries(${PROJECT_NAME}) # link compiled dune libs
-add_dune_all_flags(${PROJECT_NAME})
+# target_link_dune_default_libraries(${PROJECT_NAME}) # link compiled dune libs
+# add_dune_all_flags(${PROJECT_NAME})
 add_subdirectory(dune)
 add_subdirectory(cmake/modules)
 add_subdirectory(cmake/FormatTarget)

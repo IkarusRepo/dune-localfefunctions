@@ -28,15 +28,15 @@ namespace Dune {
   };
 
   /** This class contains all the arguments a local function evaluation consumes */
-  template <typename... WrtArgs, typename TransformArgs, typename... AlongArgs,
+  template <typename... WrtArgs, typename... TransformArgs, typename... AlongArgs,
             typename DomainTypeOrIntegrationPointIndex>
-  struct LocalFunctionEvaluationArgs<Wrt<WrtArgs...>, Along<AlongArgs...>, On<TransformArgs>,
+  struct LocalFunctionEvaluationArgs<Wrt<WrtArgs...>, Along<AlongArgs...>, On<TransformArgs...>,
                                      DomainTypeOrIntegrationPointIndex> {
     template <typename, typename, typename, typename>
     friend class LocalFunctionEvaluationArgs;
 
     LocalFunctionEvaluationArgs(const DomainTypeOrIntegrationPointIndex& localOrIpId, const Wrt<WrtArgs...>& args,
-                                const Along<AlongArgs...>& along, const On<TransformArgs>& transArgs)
+                                const Along<AlongArgs...>& along, const On<TransformArgs...>& transArgs)
         : integrationPointOrIndex{localOrIpId}, wrtArgs{args}, alongArgs{along}, transformWithArgs{transArgs} {
       const auto coeffIndicesOfArgs = Dune::DerivativeDirections::extractCoeffIndices(args);
       coeffsIndices                 = coeffIndicesOfArgs;
@@ -45,7 +45,7 @@ namespace Dune {
 
     // Constructor that does not calculate extractCoeffIndices and extractSpatialPartialIndices
     LocalFunctionEvaluationArgs(const DomainTypeOrIntegrationPointIndex& localOrIpId, const Wrt<WrtArgs...>& args,
-                                const Along<AlongArgs...>& along, const On<TransformArgs>& transArgs, bool)
+                                const Along<AlongArgs...>& along, const On<TransformArgs...>& transArgs, bool)
         : integrationPointOrIndex{localOrIpId}, wrtArgs{args}, alongArgs{along}, transformWithArgs{transArgs} {}
 
   public:
@@ -77,7 +77,7 @@ namespace Dune {
     auto extractWrtArgs() const {
       auto wrt_lambda = [](auto... args) { return wrt(args...); };
       auto wrtArg = std::apply(wrt_lambda, Std::subTupleFromIndices<const decltype(wrtArgs.args)&, I...>(wrtArgs.args));
-      return LocalFunctionEvaluationArgs<decltype(wrtArg), Along<AlongArgs...>, On<TransformArgs>,
+      return LocalFunctionEvaluationArgs<decltype(wrtArg), Along<AlongArgs...>, On<TransformArgs...>,
                                          DomainTypeOrIntegrationPointIndex>(integrationPointOrIndex, wrtArg, alongArgs,
                                                                             transformWithArgs);
     }
@@ -86,12 +86,12 @@ namespace Dune {
     auto extractWrtArgsWithGivenType() const {
       if constexpr (std::is_same_v<DerivativeDirection, DerivativeDirections::SpatialPartial>) {
         auto wrtArg = wrt(DerivativeDirections::spatial(spatialPartialIndices));
-        return LocalFunctionEvaluationArgs<decltype(wrtArg), Along<AlongArgs...>, On<TransformArgs>,
+        return LocalFunctionEvaluationArgs<decltype(wrtArg), Along<AlongArgs...>, On<TransformArgs...>,
                                            DomainTypeOrIntegrationPointIndex>(integrationPointOrIndex, wrtArg,
                                                                               alongArgs, transformWithArgs);
       } else if constexpr (std::is_same_v<DerivativeDirection, DerivativeDirections::SpatialAll>) {
         auto wrtArg = wrt(DerivativeDirections::spatialAll);
-        return LocalFunctionEvaluationArgs<decltype(wrtArg), Along<AlongArgs...>, On<TransformArgs>,
+        return LocalFunctionEvaluationArgs<decltype(wrtArg), Along<AlongArgs...>, On<TransformArgs...>,
                                            DomainTypeOrIntegrationPointIndex>(integrationPointOrIndex, wrtArg,
                                                                               alongArgs, transformWithArgs);
       }
@@ -103,12 +103,12 @@ namespace Dune {
       if constexpr (Std::isSameTemplate_v<DerivativeDirections::TwoCoeff, DerivativeDirection>) {
         auto wrtArg = wrt(DerivativeDirections::coeff(coeffsIndices.first[_0], coeffsIndices.first[1],
                                                       coeffsIndices.second[_0], coeffsIndices.second[1]));
-        return LocalFunctionEvaluationArgs<decltype(wrtArg), Along<AlongArgs...>, On<TransformArgs>,
+        return LocalFunctionEvaluationArgs<decltype(wrtArg), Along<AlongArgs...>, On<TransformArgs...>,
                                            DomainTypeOrIntegrationPointIndex>(integrationPointOrIndex, wrtArg,
                                                                               alongArgs, transformWithArgs);
       } else if constexpr (Std::isSameTemplate_v<DerivativeDirections::SingleCoeff, DerivativeDirection>) {
         auto wrtArg = wrt(DerivativeDirections::coeff(coeffsIndices[_0], coeffsIndices[1]));
-        return LocalFunctionEvaluationArgs<decltype(wrtArg), Along<AlongArgs...>, On<TransformArgs>,
+        return LocalFunctionEvaluationArgs<decltype(wrtArg), Along<AlongArgs...>, On<TransformArgs...>,
                                            DomainTypeOrIntegrationPointIndex>(integrationPointOrIndex, wrtArg,
                                                                               alongArgs, transformWithArgs);
       }
@@ -131,29 +131,29 @@ namespace Dune {
 
     const Wrt<WrtArgs&&...> wrtArgs;
     const Along<AlongArgs&&...> alongArgs;
-    const On<TransformArgs> transformWithArgs;
+    const On<TransformArgs...> transformWithArgs;
     decltype(DerivativeDirections::extractCoeffIndices<Wrt<WrtArgs...>>(std::declval<Wrt<WrtArgs...>>())) coeffsIndices;
     decltype(DerivativeDirections::extractSpatialPartialIndices<Wrt<WrtArgs...>>(
         std::declval<Wrt<WrtArgs...>>())) spatialPartialIndices;
   };
 
-  template <typename... WrtArgs, typename... OtherWrtArgs, typename TransformArgs, typename... AlongArgs,
+  template <typename... WrtArgs, typename... OtherWrtArgs, typename... TransformArgs, typename... AlongArgs,
             typename DomainTypeOrIntegrationPointIndex>
-  auto joinWRTArgs(const LocalFunctionEvaluationArgs<Wrt<WrtArgs...>, Along<AlongArgs...>, On<TransformArgs>,
+  auto joinWRTArgs(const LocalFunctionEvaluationArgs<Wrt<WrtArgs...>, Along<AlongArgs...>, On<TransformArgs...>,
                                                      DomainTypeOrIntegrationPointIndex>& a,
-                   const LocalFunctionEvaluationArgs<Wrt<OtherWrtArgs...>, Along<AlongArgs...>, On<TransformArgs>,
+                   const LocalFunctionEvaluationArgs<Wrt<OtherWrtArgs...>, Along<AlongArgs...>, On<TransformArgs...>,
                                                      DomainTypeOrIntegrationPointIndex>& b) {
     auto wrt_lambda = [](auto... args) { return wrt(args...); };
     auto wrtArg     = std::apply(wrt_lambda, std::tuple_cat(a.wrtArgs.args, b.wrtArgs.args));
-    return LocalFunctionEvaluationArgs<decltype(wrtArg), Along<AlongArgs...>, On<TransformArgs>,
+    return LocalFunctionEvaluationArgs<decltype(wrtArg), Along<AlongArgs...>, On<TransformArgs...>,
                                        DomainTypeOrIntegrationPointIndex>(a.integrationPointOrIndex, wrtArg,
                                                                           a.alongArgs, a.transformWithArgs);
   }
 
-  template <typename... WrtArgs, typename TransformArgs, typename... AlongArgs,
+  template <typename... WrtArgs, typename... TransformArgs, typename... AlongArgs,
             typename DomainTypeOrIntegrationPointIndex>
   auto extractWrtArgsTwoCoeffsToSingleCoeff(
-      const LocalFunctionEvaluationArgs<Wrt<WrtArgs...>, Along<AlongArgs...>, On<TransformArgs>,
+      const LocalFunctionEvaluationArgs<Wrt<WrtArgs...>, Along<AlongArgs...>, On<TransformArgs...>,
                                         DomainTypeOrIntegrationPointIndex>& a) {
     using namespace Dune::Indices;
     auto wrtArg0 = wrt(DerivativeDirections::coeff(a.coeffsIndices.first[_0], a.coeffsIndices.first[1]));
@@ -165,9 +165,9 @@ namespace Dune {
   }
 
   // This function returns the first two args and returns the spatial derivative argument always as first
-  template <typename... WrtArgs, typename TransformArgs, typename... AlongArgs,
+  template <typename... WrtArgs, typename... TransformArgs, typename... AlongArgs,
             typename DomainTypeOrIntegrationPointIndex>
-  auto extractFirstTwoArgs(const LocalFunctionEvaluationArgs<Wrt<WrtArgs...>, Along<AlongArgs...>, On<TransformArgs>,
+  auto extractFirstTwoArgs(const LocalFunctionEvaluationArgs<Wrt<WrtArgs...>, Along<AlongArgs...>, On<TransformArgs...>,
                                                              DomainTypeOrIntegrationPointIndex>& a) {
     if constexpr (std::tuple_size_v<decltype(a.wrtArgs.args)> == 2) {
       if constexpr (DerivativeDirections::isSpatial<std::tuple_element_t<0, decltype(a.wrtArgs.args)>>)
@@ -179,12 +179,12 @@ namespace Dune {
   }
 
   /* This functions takes localfunction arguments and replaces the "along" argument with the given one */
-  template <typename... WrtArgs, typename TransformArgs, typename... AlongArgs, typename... AlongArgsOther,
+  template <typename... WrtArgs, typename... TransformArgs, typename... AlongArgs, typename... AlongArgsOther,
             typename DomainTypeOrIntegrationPointIndex>
-  auto replaceAlong(const LocalFunctionEvaluationArgs<Wrt<WrtArgs...>, Along<AlongArgs...>, On<TransformArgs>,
+  auto replaceAlong(const LocalFunctionEvaluationArgs<Wrt<WrtArgs...>, Along<AlongArgs...>, On<TransformArgs...>,
                                                       DomainTypeOrIntegrationPointIndex>& args,
                     const Along<AlongArgsOther...>& alongArgs) {
-    auto newArgs = LocalFunctionEvaluationArgs<Wrt<WrtArgs...>, Along<AlongArgsOther...>, On<TransformArgs>,
+    auto newArgs = LocalFunctionEvaluationArgs<Wrt<WrtArgs...>, Along<AlongArgsOther...>, On<TransformArgs...>,
                                                DomainTypeOrIntegrationPointIndex>(
         args.integrationPointOrIndex, args.wrtArgs, alongArgs, args.transformWithArgs, false);
 
@@ -196,15 +196,15 @@ namespace Dune {
   }
 
   /* This functions takes localfunction arguments and replaces the "along" argument with the given one */
-  template <typename... WrtArgs, typename TransformArgs, typename... AlongArgs, typename... WRTArgsOther,
+  template <typename... WrtArgs, typename... TransformArgs, typename... AlongArgs, typename... WRTArgsOther,
             typename DomainTypeOrIntegrationPointIndex>
-  auto addWrt(const LocalFunctionEvaluationArgs<Wrt<WrtArgs...>, Along<AlongArgs...>, On<TransformArgs>,
+  auto addWrt(const LocalFunctionEvaluationArgs<Wrt<WrtArgs...>, Along<AlongArgs...>, On<TransformArgs...>,
                                                 DomainTypeOrIntegrationPointIndex>& args,
               const Wrt<WRTArgsOther...>& wrtArgs) {
     auto newWrtArgs = std::apply(Dune::wrt<std::remove_cvref_t<WrtArgs>..., std::remove_cvref_t<WRTArgsOther>...>,
                                  std::tuple_cat(args.wrtArgs.args, wrtArgs.args));
 
-    auto newArgs = LocalFunctionEvaluationArgs<decltype(newWrtArgs), Along<AlongArgs...>, On<TransformArgs>,
+    auto newArgs = LocalFunctionEvaluationArgs<decltype(newWrtArgs), Along<AlongArgs...>, On<TransformArgs...>,
                                                DomainTypeOrIntegrationPointIndex>(
         args.integrationPointOrIndex, newWrtArgs, args.alongArgs, args.transformWithArgs, false);
 
@@ -214,12 +214,12 @@ namespace Dune {
     return newArgs;
   }
 
-  template <typename... WrtArgs, typename TransformArgs, typename... AlongArgs, typename... WRTArgsOther,
+  template <typename... WrtArgs, typename... TransformArgs, typename... AlongArgs, typename... WRTArgsOther,
             typename DomainTypeOrIntegrationPointIndex>
-  auto replaceWrt(const LocalFunctionEvaluationArgs<Wrt<WrtArgs...>, Along<AlongArgs...>, On<TransformArgs>,
+  auto replaceWrt(const LocalFunctionEvaluationArgs<Wrt<WrtArgs...>, Along<AlongArgs...>, On<TransformArgs...>,
                                                     DomainTypeOrIntegrationPointIndex>& args,
                   const Wrt<WRTArgsOther...>& wrtArgs) {
-    auto newArgs = LocalFunctionEvaluationArgs<Wrt<WRTArgsOther...>, Along<AlongArgs...>, On<TransformArgs>,
+    auto newArgs = LocalFunctionEvaluationArgs<Wrt<WRTArgsOther...>, Along<AlongArgs...>, On<TransformArgs...>,
                                                DomainTypeOrIntegrationPointIndex>(
         args.integrationPointOrIndex, wrtArgs, args.alongArgs, args.transformWithArgs, false);
 

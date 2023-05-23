@@ -2,13 +2,15 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #pragma once
-#include "helper.hh"
+#include <dune/localfefunctions/helper.hh>
 
 #include <cstddef>
 
 #include <dune/istl/multitypeblockvector.hh>
 #include <dune/typetree/typetree.hh>
 namespace Dune {
+
+  struct DefaultFirstOrderTransformFunctor;
 
   template <typename... Args_>
   struct Wrt {
@@ -31,11 +33,6 @@ namespace Dune {
   auto along(Args&&... args) {
     return Along<Args&...>{std::forward_as_tuple(std::forward<Args>(args)...)};
   }
-
-  template <typename T_>
-  struct On {
-    using T = T_;
-  };
 
   namespace DerivativeDirections {
 
@@ -68,7 +65,7 @@ namespace Dune {
           index{};
     };
 
-    SpatialPartial spatial(size_t i);
+    inline SpatialPartial spatial(size_t i) { return {i}; }
 
     template <std::size_t I>
     SingleCoeff<I> coeff(Dune::index_constant<I>, size_t i) {
@@ -86,15 +83,19 @@ namespace Dune {
       return coeffs;
     }
 
-    SingleCoeff<0> coeff(size_t i);
-    TwoCoeff<0, 0> coeff(size_t i, size_t j);
-
-    template <int Dim>
-    struct Counter {
-      int coeffDerivatives{};
-      int spatialall{};
-      int dynamicspatial{};
-    };
+    inline SingleCoeff<0> coeff(size_t i) {
+      using namespace Dune::Indices;
+      SingleCoeff<0> coeffs;
+      std::get<1>(coeffs.index._data) = i;
+      return coeffs;
+    }
+    inline TwoCoeff<0, 0> coeff(size_t i, size_t j) {
+      using namespace Dune::Indices;
+      TwoCoeff<0, 0> coeffs;
+      std::get<1>(coeffs.index.first._data)  = i;
+      std::get<1>(coeffs.index.second._data) = j;
+      return coeffs;
+    }
 
     template <typename WrtType>
     auto extractSpatialPartialIndices(WrtType&& wrt) {
@@ -172,8 +173,41 @@ namespace Dune {
 
   }  // namespace DerivativeDirections
 
-  On<DerivativeDirections::GridElement> on(DerivativeDirections::GridElement);
-  On<DerivativeDirections::ReferenceElement> on(DerivativeDirections::ReferenceElement);
+  template <typename... T_>
+  struct On;
+
+  template <typename T_, typename F_>
+  struct On<T_, F_> {
+    using T = T_;
+    using F = F_;
+    F f;
+  };
+
+  template <typename T_, typename F_, typename F2_>
+  struct On<T_, F_, F2_> {
+    using T  = T_;
+    using F  = F_;
+    using F2 = F2_;
+    F f;
+    F2 f2;
+  };
+
+  template <>
+  struct On<DerivativeDirections::ReferenceElement, void> {
+    using T = DerivativeDirections::ReferenceElement;
+  };
+
+  template <>
+  struct On<DerivativeDirections::ReferenceElement, void, void> {
+    using T = DerivativeDirections::ReferenceElement;
+  };
+
+  inline On<DerivativeDirections::ReferenceElement, void> on(DerivativeDirections::ReferenceElement) { return {}; }
+
+  template <typename F = Dune::DefaultFirstOrderTransformFunctor>
+  inline On<DerivativeDirections::GridElement, F> on(DerivativeDirections::GridElement, F&& = {}) {
+    return {};
+  }
 
   template <typename LF>
   concept IsUnaryExpr = LF::children == 1;
