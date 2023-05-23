@@ -16,6 +16,8 @@ namespace Dune {
     using LinearAlgebra = typename E1Raw::LinearAlgebra;
     constexpr const E1& l() const { return expr.first; }
     constexpr const E2& r() const { return expr.second; }
+    static constexpr bool providesDerivativeTransformations
+        = E1Raw::providesDerivativeTransformations and E2Raw::providesDerivativeTransformations;
 
     constexpr E1& l() { return expr.first; }
 
@@ -29,7 +31,7 @@ namespace Dune {
       return rebind<Op, E1, E2, OtherType>(l(), r(), Dune::index_constant<ID>());
     }
 
-    /* Creates a tuple of all subtype ids, size l or r is not a tuple, tuple_cat may not work.
+    /* Creates a tuple of all subtype ids, if l or r is not a tuple, tuple_cat may not work.
      * Thus, we artificially wrap them inside a tuple  */
     static constexpr auto id = Dune::Std::concatArray(E1Raw::id, E2Raw::id);
 

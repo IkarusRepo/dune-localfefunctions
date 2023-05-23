@@ -11,14 +11,12 @@ file(
 install(FILES ${headers}
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/localfefunctions)
 
-file(
-  GLOB_RECURSE sources
-  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-  CONFIGURE_DEPENDS *.cpp)
+# file( GLOB_RECURSE sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+# CONFIGURE_DEPENDS *.cpp)
+#
+# target_sources(dune-localfefunctions PRIVATE ${sources})
 
-target_sources(dune-localfefunctions PRIVATE ${sources})
-
-target_link_dune_default_libraries(${PROJECT_NAME})
+# target_link_dune_default_libraries(${PROJECT_NAME})
 
 add_subdirectory(expressions)
 add_subdirectory(impl)

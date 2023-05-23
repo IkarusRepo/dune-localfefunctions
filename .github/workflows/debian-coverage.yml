@@ -42,7 +42,7 @@ jobs:
         run: |
           ctest --output-on-failure --parallel 2 -C Debug
           cd ..
-          gcov -abcfu $(find ./cmake-build-debug -type f -name "*.gcno" | sed  's/gcno//g')
+          gcov -abcfu $(find ./cmake-build-debug -not -path "./dune/localfefunctions/test/*" -type f -name "*.gcno" | sed  's/gcno//g')
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2

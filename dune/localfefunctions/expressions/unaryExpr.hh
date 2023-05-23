@@ -12,8 +12,8 @@ namespace Dune {
   template <template <typename, typename...> class Op, typename E1, typename... Args>
   struct UnaryExpr : public Dune::LocalFunctionInterface<Op<E1, Args...>> {
     std::tuple<E1> expr;
-
-    using E1Raw = std::remove_cvref_t<E1>;
+    using E1Raw                                             = std::remove_cvref_t<E1>;
+    static constexpr bool providesDerivativeTransformations = E1Raw::providesDerivativeTransformations;
 
     template <size_t ID_ = 0>
     static constexpr int orderID = Op<E1, Args...>::template orderID<ID_>;
