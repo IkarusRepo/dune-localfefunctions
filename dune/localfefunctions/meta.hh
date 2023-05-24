@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #pragma once
-#include <dune/localfefunctions/helper.hh>
 
 #include <cstddef>
 
 #include <dune/istl/multitypeblockvector.hh>
+#include <dune/localfefunctions/helper.hh>
 #include <dune/typetree/typetree.hh>
 namespace Dune {
 

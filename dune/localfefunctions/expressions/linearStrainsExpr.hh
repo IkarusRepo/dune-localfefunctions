@@ -48,7 +48,7 @@ namespace Dune {
     template <int DerivativeOrder, typename LFArgs>
     auto evaluateDerivativeOfExpression(const LFArgs &lfArgs) const {
       if constexpr (DerivativeOrder == 1 and LFArgs::hasSingleCoeff) {
-        typename DefaultLinearAlgebra::template FixedSizedMatrix<double, strainSize, gridDim> bopI;
+        typename DefaultLinearAlgebra::template FixedSizedMatrix<ctype, strainSize, gridDim> bopI;
         const auto gradArgs = addWrt(lfArgs, wrt(DerivativeDirections::spatialAll));
         const auto gradUdI  = evaluateDerivativeImpl(this->m(), gradArgs);
         if constexpr (displacementSize == 1) {
