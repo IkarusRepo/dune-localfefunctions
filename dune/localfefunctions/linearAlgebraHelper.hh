@@ -1050,13 +1050,13 @@ namespace Dune {
     return a;
   }
 
-  template <typename Scalar, int size>
-  void setDiagonal(Dune::ScaledIdentityMatrix<Scalar, size>& a, const Scalar& val) {
+  template <typename Scalar, typename Scalar2, int size>
+  void setDiagonal(Dune::ScaledIdentityMatrix<Scalar, size>& a, const Scalar2& val) {
     a.scalar() = val;
   }
 
-  template <typename Scalar, int size>
-  void setDiagonal(Eigen::Matrix<Scalar, size, size>& a, const Scalar& val) {
+  template <typename Scalar, typename Scalar2, int size>
+  void setDiagonal(Eigen::Matrix<Scalar, size, size>& a, const Scalar2& val) {
     a.diagonal().array() = val;
   }
 
