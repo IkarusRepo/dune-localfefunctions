@@ -83,7 +83,7 @@ namespace Dune {
         const auto gradArgsdI = addWrt(lfArgs, wrt(DerivativeDirections::spatialAll));
         const auto gradUdI    = evaluateDerivativeImpl(this->m(), gradArgsdI);  // derivative of grad u wrt I-th coeff
 
-        typename LinearAlgebra::template FixedSizedMatrix<double, strainSize, gridDim> bopI{};
+        typename LinearAlgebra::template FixedSizedMatrix<ctype, strainSize, gridDim> bopI{};
         typename LinearAlgebra::template FixedSizedVector<ctype, gridDim> g1 = row(referenceJacobian, 0);
         g1 += row(gradu, 0);
         if constexpr (displacementSize == 1) {
