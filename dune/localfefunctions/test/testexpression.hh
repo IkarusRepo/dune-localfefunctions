@@ -7,6 +7,7 @@
 #include <dune/common/test/testsuite.hh>
 using Dune::TestSuite;
 
+#include "fecache.hh"
 #include "testFacilities.hh"
 #include "testHelpers.hh"
 #include "testfactories.hh"
@@ -26,7 +27,6 @@ using Dune::TestSuite;
 #include <dune/localfefunctions/impl/projectionBasedLocalFunction.hh>
 #include <dune/localfefunctions/impl/standardLocalFunction.hh>
 #include <dune/localfefunctions/localFunctionName.hh>
-#include <dune/localfunctions/lagrange/pqkfactory.hh>
 #include <dune/matrix-vector/transpose.hh>
 
 #include <Eigen/Core>
@@ -43,23 +43,23 @@ struct ManiFoldTemplateIDPair {
   using ManiFoldIDPair = ManiFoldIDPair<M<dim>, decltype(id)>;
 };
 
-auto singleStandardLocalFunction = [](auto& localBasis, auto& vBlockedLocal0, auto& geometry, auto& ID) {
+auto singleStandardLocalFunction = [](auto& localBasis, auto& vBlockedLocal0, auto& geometry, auto&& ID) {
   return Dune::StandardLocalFunction(localBasis, vBlockedLocal0, geometry, ID);
 };
 
-auto singleProjectionBasedLocalFunction = [](auto& localBasis, auto& vBlockedLocal0, auto& geometry, auto& ID) {
+auto singleProjectionBasedLocalFunction = [](auto& localBasis, auto& vBlockedLocal0, auto& geometry, auto&& ID) {
   return Dune::ProjectionBasedLocalFunction(localBasis, vBlockedLocal0, geometry, ID);
 };
 
 auto doubleStandardLocalFunctionDouble
-    = [](auto& localBasis0, auto& vBlockedLocal0, auto& ID0, auto&, auto&, auto& ID1, auto& geometry) {
+    = [](auto& localBasis0, auto& vBlockedLocal0, auto&& ID0, auto&, auto&, auto&& ID1, auto& geometry) {
         auto f = Dune::StandardLocalFunction(localBasis0, vBlockedLocal0, geometry, ID0);
         auto g = Dune::StandardLocalFunction(localBasis0, vBlockedLocal0, geometry, ID1);
         return std::make_tuple(f, g);
       };
 
-auto doubleStandardLocalFunctionDistinct = [](auto& localBasis0, auto& vBlockedLocal0, auto& ID0, auto& localBasis1,
-                                              auto& vBlockedLocal1, auto& ID1, auto& geometry) {
+auto doubleStandardLocalFunctionDistinct = [](auto& localBasis0, auto& vBlockedLocal0, auto&& ID0, auto& localBasis1,
+                                              auto& vBlockedLocal1, auto&& ID1, auto& geometry) {
   auto f = Dune::StandardLocalFunction(localBasis0, vBlockedLocal0, geometry, ID0);
   auto g = Dune::StandardLocalFunction(localBasis1, vBlockedLocal1, geometry, ID1);
   return std::make_tuple(f, g);
@@ -362,7 +362,7 @@ TestSuite testLocalFunction(const LF& lf, bool isCopy = false) {
                     * coeffs[j].weingarten(segment<coeffValueSize>(gradienWRTCoeffsSpatialAll, i * coeffValueSize)));
 
           /// if the order of the function value is less then quadratic then this should yield a vanishing derivative
-          if constexpr (lf.order() < quadratic) {
+          if (lf.order() < quadratic) {
             t.check(two_norm(jacobianWRTCoeffsTwoTimesSpatialAll) < tol,
                     "For first order linear local functions the second derivative should vanish");
             t.check(two_norm(jacobianWRTCoeffsTwoTimesSpatialAllExpected) < tol,
@@ -432,8 +432,8 @@ auto createVectorOfNodalValues(const Dune::GeometryType& geometryType, size_t nN
   auto geometry = std::make_shared<const Dune::MultiLinearGeometry<double, domainDim, worldDim>>(refElement, corners);
 
   Dune::BlockVector<Manifold> testNodalPoints;
-  using FECache = Dune::PQkLocalFiniteElementCache<double, double, domainDim, order>;
-  FECache feCache;
+
+  FECache<domainDim, order> feCache;
   const auto& fe             = feCache.get(geometryType);
   const size_t nNodes        = fe.size();
   const int nNodalTestPoints = std::max(nNodalTestPointsI, nNodes);
@@ -467,8 +467,7 @@ auto localFunctionTestConstructorNew(const Dune::GeometryType& geometryType, Exp
   CornerFactory<worldDim>::construct(corners, refElement.size(domainDim));
   auto geometry = std::make_shared<const Dune::MultiLinearGeometry<double, domainDim, worldDim>>(refElement, corners);
 
-  using FECache = Dune::PQkLocalFiniteElementCache<double, double, domainDim, order>;
-  FECache feCache;
+  FECache<domainDim, order> feCache;
   const auto& fe  = feCache.get(geometryType);
   auto localBasis = Dune::CachedLocalBasis(fe.localBasis());
 
@@ -503,8 +502,7 @@ auto localFunctionTestConstructorNew(const Dune::GeometryType& geometryType, Exp
   CornerFactory<worldDim>::construct(corners, refElement.size(domainDim));
   auto geometry = std::make_shared<const Dune::MultiLinearGeometry<double, domainDim, worldDim>>(refElement, corners);
 
-  using FECache = Dune::PQkLocalFiniteElementCache<double, double, domainDim, order>;
-  FECache feCache;
+  FECache<domainDim, order> feCache;
   const auto& fe  = feCache.get(geometryType);
   auto localBasis = Dune::CachedLocalBasis(fe.localBasis());
 

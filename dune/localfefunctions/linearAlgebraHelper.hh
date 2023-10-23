@@ -147,14 +147,14 @@ namespace Dune {
   }
 
   /** \brief Get the requested column of Eigen::Matrix */
-  template <typename field_type, int rows, int cols>
-  decltype(auto) row(const Eigen::Matrix<field_type, rows, cols>& mat, const int requestedRow) {
+  template <typename _Scalar, int Rows, int Cols, int Options, int MaxRows, int MaxCols>
+  decltype(auto) row(const Eigen::Matrix<_Scalar, Rows, Cols, Options, MaxRows, MaxCols>& mat, const int requestedRow) {
     return mat.row(requestedRow);
   }
 
   /** \brief Get the requested column of Eigen::Matrix */
-  template <typename field_type, int rows, int cols>
-  decltype(auto) row(Eigen::Matrix<field_type, rows, cols>& mat, const int requestedRow) {
+  template <typename _Scalar, int Rows, int Cols, int Options, int MaxRows, int MaxCols>
+  decltype(auto) row(Eigen::Matrix<_Scalar, Rows, Cols, Options, MaxRows, MaxCols>& mat, const int requestedRow) {
     return mat.row(requestedRow);
   }
 
@@ -1024,12 +1024,12 @@ namespace Dune {
   }
 
   template <typename Scalar, int size>
-  auto operator*(Dune::DerivativeDirections::ZeroMatrix, const Eigen::DiagonalMatrix<Scalar, size>& a) {
+  auto operator*(Dune::DerivativeDirections::ZeroMatrix, const Eigen::DiagonalMatrix<Scalar, size>&) {
     return Dune::DerivativeDirections::ZeroMatrix();
   }
 
   template <typename Scalar, int size>
-  auto operator*(Dune::DerivativeDirections::ZeroMatrix, const Dune::DiagonalMatrix<Scalar, size>& a) {
+  auto operator*(Dune::DerivativeDirections::ZeroMatrix, const Dune::DiagonalMatrix<Scalar, size>&) {
     return Dune::DerivativeDirections::ZeroMatrix();
   }
 

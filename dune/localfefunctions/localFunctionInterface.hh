@@ -123,16 +123,16 @@ namespace Dune {
     /* Default implementation returns Zero expression if they are not overloaded */
     template <typename DomainTypeOrIntegrationPointIndex, typename Transform = DerivativeDirections::GridElement,
               typename TransformFunctor = Dune::DefaultFirstOrderTransformFunctor>
-    auto evaluateDerivativeWRTSpaceAllImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
-                                           const On<Transform, TransformFunctor>& transArgs) const {
+    auto evaluateDerivativeWRTSpaceAllImpl(const DomainTypeOrIntegrationPointIndex&,
+                                           const On<Transform, TransformFunctor>&) const {
       return createZeroMatrix<typename LocalFunctionImpl::Jacobian>();
     }
 
     /* Default implementation returns Zero expression if they are not overloaded */
     template <typename DomainTypeOrIntegrationPointIndex, typename Transform = DerivativeDirections::GridElement,
               typename TransformFunctor = Dune::DefaultFirstOrderTransformFunctor>
-    auto evaluateDerivativeWRTCoeffsImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition, int coeffsIndex,
-                                         const On<Transform, TransformFunctor>& transArgs) const {
+    auto evaluateDerivativeWRTCoeffsImpl(const DomainTypeOrIntegrationPointIndex&, int,
+                                         const On<Transform, TransformFunctor>&) const {
       return createZeroMatrix<typename LocalFunctionImpl::ctype, LocalFunctionImpl::valueSize,
                               LocalFunctionImpl::correctionSize>();
     }
@@ -140,18 +140,16 @@ namespace Dune {
     /* Default implementation returns Zero expression if they are not overloaded  */
     template <typename DomainTypeOrIntegrationPointIndex, typename Transform = DerivativeDirections::GridElement,
               typename TransformFunctor = Dune::DefaultFirstOrderTransformFunctor>
-    auto evaluateDerivativeWRTCoeffsANDSpatialImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
-                                                   int coeffsIndex,
-                                                   const On<Transform, TransformFunctor>& transArgs) const {
+    auto evaluateDerivativeWRTCoeffsANDSpatialImpl(const DomainTypeOrIntegrationPointIndex&, int,
+                                                   const On<Transform, TransformFunctor>&) const {
       return std::array<Dune::DerivativeDirections::ZeroMatrix, gridDim>();
     }
 
     /* Default implementation returns Zero expression if they are not overloaded  */
     template <typename DomainTypeOrIntegrationPointIndex, typename Transform = DerivativeDirections::GridElement,
               typename TransformFunctor = Dune::DefaultFirstOrderTransformFunctor>
-    auto evaluateDerivativeWRTCoeffsANDSpatialSingleImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
-                                                         int coeffsIndex, int spatialIndex,
-                                                         const On<Transform, TransformFunctor>& transArgs) const {
+    auto evaluateDerivativeWRTCoeffsANDSpatialSingleImpl(const DomainTypeOrIntegrationPointIndex&, int, int,
+                                                         const On<Transform, TransformFunctor>&) const {
       return createZeroMatrix<typename LocalFunctionImpl::ctype, LocalFunctionImpl::valueSize,
                               LocalFunctionImpl::correctionSize>();
     }
@@ -170,8 +168,8 @@ namespace Dune {
     /* Default implementation returns Zero expression if they are not overloaded  */
     template <typename DomainTypeOrIntegrationPointIndex, typename Transform = DerivativeDirections::GridElement,
               typename TransformFunctor = Dune::DefaultFirstOrderTransformFunctor>
-    auto evaluateDerivativeWRTSpaceSingleImpl(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
-                                              int spaceIndex, const On<Transform, TransformFunctor>& transArgs) const {
+    auto evaluateDerivativeWRTSpaceSingleImpl(const DomainTypeOrIntegrationPointIndex&, int,
+                                              const On<Transform, TransformFunctor>&) const {
       return createZeroVector<typename LocalFunctionImpl::JacobianColType>();
     }
 

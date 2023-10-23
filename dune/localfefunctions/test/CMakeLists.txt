@@ -39,7 +39,6 @@ if(DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING)
       PRIVATE -ftemplate-backtrace-limit=0
               -fdiagnostics-show-template-tree
               -fno-elide-type
-              -fconcepts-diagnostics-depth=2
               -Wall
               -Wextra
               -Wshadow

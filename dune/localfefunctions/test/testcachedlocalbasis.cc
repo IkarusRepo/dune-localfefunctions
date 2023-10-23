@@ -17,6 +17,7 @@ using Dune::TestSuite;
 #include <dune/common/classname.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/common/fvector.hh>
+#include <dune/common/version.hh>
 #include <dune/functions/functionspacebases/lagrangebasis.hh>
 #include <dune/grid/yaspgrid.hh>
 #include <dune/localfefunctions/cachedlocalBasis/cachedlocalBasis.hh>
@@ -128,7 +129,11 @@ template <int domainDim, int order>
 auto localBasisTestConstructor(const Dune::GeometryType& geometryType, [[maybe_unused]] size_t nNodalTestPointsI = 6) {
   using namespace Dune::Indices;
 
+#if DUNE_VERSION_GTE(DUNE_FUNCTIONS, 2, 10)
+  using FECache = Dune::LagrangeLocalFiniteElementCache<double, double, domainDim, order>;
+#else
   using FECache = Dune::PQkLocalFiniteElementCache<double, double, domainDim, order>;
+#endif
   FECache feCache;
   const auto& fe  = feCache.get(geometryType);
   auto localBasis = Dune::CachedLocalBasis(fe.localBasis());

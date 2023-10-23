@@ -21,8 +21,7 @@ auto localFunctionTestConstructorNew(const Dune::GeometryType& geometryType, siz
   CornerFactory<worldDim>::construct(corners, refElement.size(domainDim));
   auto geometry = std::make_shared<const Dune::MultiLinearGeometry<double, domainDim, worldDim>>(refElement, corners);
 
-  using FECache   = Dune::PQkLocalFiniteElementCache<double, double, domainDim, order>;
-  auto feCache    = std::make_shared<FECache>();
+  auto feCache    = std::make_shared<FECache<domainDim, order>>();
   const auto& fe  = feCache->get(geometryType);
   auto localBasis = Dune::CachedLocalBasis(fe.localBasis());
 

@@ -82,7 +82,7 @@ namespace Testing {
    */
   template <typename NonlinearOperator>
   bool checkJacobian(NonlinearOperator& nonLinOp, double tol) {
-    nonLinOp.template updateAll();
+    nonLinOp.updateAll();
     auto& x          = nonLinOp.firstParameter();
     const auto xOld  = x;
     using UpdateType = typename NonlinearOperator::ParameterValue;
@@ -111,7 +111,7 @@ namespace Testing {
 
     const bool checkPassed = Dune::FloatCmp::le(2.0, slope, tol);
 
-    nonLinOp.template updateAll();
+    nonLinOp.updateAll();
     return checkPassed;
   }
 
