@@ -33,10 +33,10 @@ namespace Dune {
     dNTransformed = dN * invJT.inverse().eval();
   }
 
-  template <typename ScalarType, int worldDim, int GridDim>
+  template <typename ScalarType, int worldDim, int GridDim, int Options, int MaxWorldDim, int MaxGridDim>
   void calcCartesianDerivativesByGramSchmidt(
       const Eigen::Matrix<ScalarType, Eigen::Dynamic, GridDim> &dN,
-      const Eigen::Matrix<double, worldDim, GridDim> &A1andA2,
+      const Eigen::Matrix<double, worldDim, GridDim, Options, MaxWorldDim, MaxGridDim> &A1andA2,
       Eigen::Matrix<ScalarType, Eigen::Dynamic, GridDim> &dNTransformed) noexcept {
     const Eigen::Matrix<ScalarType, worldDim, GridDim> A1andA2Ortho = Dune::orthonormalizeMatrixColumns(A1andA2);
 
