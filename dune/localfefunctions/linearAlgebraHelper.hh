@@ -36,18 +36,16 @@ namespace Dune {
   struct IsNumber<autodiff::HigherOrderDual<2, double>> : public std::true_type {};
 
   /** \brief  Multiply with scalar and autodiff types */
-  template <typename T, int rows, int cols>
-  requires autodiff::detail::isDual<T> || autodiff::detail::isExpr<T> || autodiff::detail::isArithmetic<T>
-  auto operator*(T&& t, const Dune::FieldMatrix<decltype(autodiff::detail::eval(t)), rows, cols>& A) {
+  template <typename T1, typename T2, int rows, int cols>
+  requires autodiff::detail::isDual<T1> || autodiff::detail::isExpr<T1> || autodiff::detail::isArithmetic<T1>
+  auto operator*(T1&& t, const Dune::FieldMatrix<T2, rows, cols>& A) {
     return autodiff::detail::eval(t) * A;
   }
 
   /** \brief  Multiply with scalar and autodiff types */
-  template <typename T, int rows, int cols>
-  requires autodiff::detail::isDual<T> || autodiff::detail::isExpr<T> || autodiff::detail::isArithmetic<T>
-  auto operator*(const Dune::FieldMatrix<decltype(autodiff::detail::eval(std::declval<T>())), rows, cols>& A, T&& t) {
-    return autodiff::detail::eval(t) * A;
-  }
+  template <typename T1, typename T2, int rows, int cols>
+  requires autodiff::detail::isDual<T2> || autodiff::detail::isExpr<T2> || autodiff::detail::isArithmetic<T2>
+  auto operator*(const Dune::FieldMatrix<T1, rows, cols>& A, T2&& t) { return autodiff::detail::eval(t) * A; }
 
   /** \brief Computes norm squared (Frobenius) of the matrix  */
   template <typename T>
@@ -1140,7 +1138,7 @@ namespace Dune {
   }
 
   template <typename Derived>
-  auto operator*(Dune::DerivativeDirections::ZeroMatrix, const Eigen::MatrixBase<Derived>& a) {
+  auto operator*(Dune::DerivativeDirections::ZeroMatrix, const Eigen::MatrixBase<Derived>&) {
     return Dune::DerivativeDirections::ZeroMatrix();
   }
 

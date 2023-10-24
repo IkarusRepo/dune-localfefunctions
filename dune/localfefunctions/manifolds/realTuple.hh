@@ -96,7 +96,7 @@ namespace Dune {
       return *this;
     }
 
-    auto weingartenEmbedded(const CoordinateType &p) const { return createZeroMatrix<ctype, valueSize, valueSize>(); }
+    auto weingartenEmbedded(const CoordinateType &) const { return createZeroMatrix<ctype, valueSize, valueSize>(); }
 
     auto weingarten(const CoordinateType &) const { return createZeroMatrix<ctype, valueSize, valueSize>(); }
 

@@ -33,7 +33,7 @@ namespace Dune {
   struct LocalFunctionEvaluationArgs<Wrt<WrtArgs...>, Along<AlongArgs...>, On<TransformArgs...>,
                                      DomainTypeOrIntegrationPointIndex> {
     template <typename, typename, typename, typename>
-    friend class LocalFunctionEvaluationArgs;
+    friend struct LocalFunctionEvaluationArgs;
 
     LocalFunctionEvaluationArgs(const DomainTypeOrIntegrationPointIndex& localOrIpId, const Wrt<WrtArgs...>& args,
                                 const Along<AlongArgs...>& along, const On<TransformArgs...>& transArgs)
