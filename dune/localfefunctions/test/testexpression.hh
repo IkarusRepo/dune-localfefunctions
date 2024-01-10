@@ -422,7 +422,7 @@ TestSuite testLocalFunction(const LF& lf, bool isCopy = false) {
 }
 
 template <typename Manifold, int domainDim, int order>
-auto createVectorOfNodalValues(const Dune::GeometryType& geometryType, size_t nNodalTestPointsI = 1) {
+auto createVectorOfNodalValues(const Dune::GeometryType& geometryType, size_t nNodalTestPointsI) {
   static constexpr int worldDim = Manifold::valueSize;
   using namespace Dune;
   using namespace Dune::Indices;
