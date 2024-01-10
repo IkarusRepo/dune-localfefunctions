@@ -11,33 +11,6 @@
 #include <dune/localfefunctions/linearAlgebraHelper.hh>
 #include <dune/localfefunctions/manifolds/realTuple.hh>
 
-template <typename Manifold, int domainDim, int worldDim, int order>
-auto localFunctionTestConstructorNew(const Dune::GeometryType& geometryType, size_t nNodalTestPointsI = 1) {
-  using namespace Dune;
-  using namespace Dune::Indices;
-  const auto& refElement = Dune::ReferenceElements<double, domainDim>::general(geometryType);
-
-  std::vector<Dune::FieldVector<double, worldDim>> corners;
-  CornerFactory<worldDim>::construct(corners, refElement.size(domainDim));
-  auto geometry = std::make_shared<const Dune::MultiLinearGeometry<double, domainDim, worldDim>>(refElement, corners);
-
-  auto feCache    = std::make_shared<FECache<domainDim, order>>();
-  const auto& fe  = feCache->get(geometryType);
-  auto localBasis = Dune::CachedLocalBasis(fe.localBasis());
-
-  auto vBlockedLocal0 = createVectorOfNodalValues<Manifold, domainDim, order>(geometryType, nNodalTestPointsI);
-
-  const auto& rule = Dune::QuadratureRules<double, domainDim>::rule(fe.type(), 2);
-  localBasis.bind(rule, bindDerivatives(0, 1));
-  if constexpr (Dune::Std::IsSpecializationTypeAndNonTypes<Dune::RealTuple, Manifold>::value) {
-    auto f = Dune::StandardLocalFunction(localBasis, vBlockedLocal0, geometry);
-    return std::make_tuple(f, vBlockedLocal0, geometry, corners, feCache);
-  } else if constexpr (Dune::Std::IsSpecializationTypeAndNonTypes<Dune::UnitVector, Manifold>::value) {
-    auto f = Dune::ProjectionBasedLocalFunction(localBasis, vBlockedLocal0, geometry);
-    return std::make_tuple(f, vBlockedLocal0, geometry, corners, feCache);
-  }
-}
-
 template <typename Manifold, int gridDim, int worldDim, int order, typename FirstOrderTransForm>
 auto testTranform(const Dune::GeometryType& geometryType, FirstOrderTransForm&&) {
   std::stringstream ss;
@@ -68,7 +41,7 @@ auto testTranform(const Dune::GeometryType& geometryType, FirstOrderTransForm&&)
   typename Dune::DefaultLinearAlgebra::VarFixSizedMatrix<double, gridDim> dN;
   typename Dune::DefaultLinearAlgebra::VarFixSizedMatrix<double, gridDim> dNTransformed;
   auto [f, nodalPoints, geometry, corners, feCache]
-      = localFunctionTestConstructorNew<Manifold, gridDim, worldDim, order>(geometryType);
+      = Testing::localFunctionTestConstructorNew<Manifold, gridDim, worldDim, order>(geometryType);
   copyToEigenMatrix(nodalPoints, nodalPointsEigen);
   using Dune::eval;
   using Dune::transpose;

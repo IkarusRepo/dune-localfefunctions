@@ -13,17 +13,6 @@ namespace Dune {
   struct DefaultFirstOrderTransformFunctor;
 
   template <typename... Args_>
-  struct Wrt {
-    using Args = std::tuple<std::remove_cvref_t<Args_>...>;
-    Args args;
-  };
-
-  template <typename... Args>
-  auto wrt(Args&&... args) {
-    return Wrt<Args&&...>{std::forward_as_tuple(std::forward<Args>(args)...)};
-  }
-
-  template <typename... Args_>
   struct Along {
     using Args = std::tuple<Args_...>;
     Args args;
@@ -106,13 +95,13 @@ namespace Dune {
     }
 
     template <typename Type>
-    concept isSpatial = std::is_same_v<Type, DerivativeDirections::SpatialPartial> or std::is_same_v<
-        Type, DerivativeDirections::SpatialAll>;
+    concept isSpatial
+        = std::is_same_v<std::remove_reference_t<Type>, DerivativeDirections::SpatialPartial> or std::is_same_v<
+            std::remove_reference_t<Type>, DerivativeDirections::SpatialAll>;
 
     template <typename Type>
-    concept isCoeff
-        = Std::IsSpecializationNonTypes<SingleCoeff, Type>::value or Std::IsSpecializationNonTypes<TwoCoeff,
-                                                                                                   Type>::value;
+    concept isCoeff = Std::IsSpecializationNonTypes<SingleCoeff, std::remove_reference_t<Type>>::value or Std::
+        IsSpecializationNonTypes<TwoCoeff, std::remove_reference_t<Type>>::value;
 
     struct ConstExprCounter {
       int singleCoeffDerivs{};
@@ -172,6 +161,20 @@ namespace Dune {
     concept HasOneSpatial = HasOneSpatialSingle<WrtType> or HasOneSpatialAll<WrtType>;
 
   }  // namespace DerivativeDirections
+
+  template <typename... Args_>
+  struct Wrt {
+    using Args = std::tuple<std::remove_cvref_t<Args_>...>;
+    Args args;
+  };
+
+  template <typename T>
+  concept DerivativeDirection = DerivativeDirections::isSpatial<T> or DerivativeDirections::isCoeff<T>;
+
+  template <DerivativeDirection... Args>
+  auto wrt(Args&&... args) {
+    return Wrt<Args&&...>{std::forward_as_tuple(std::forward<Args>(args)...)};
+  }
 
   template <typename... T_>
   struct On;

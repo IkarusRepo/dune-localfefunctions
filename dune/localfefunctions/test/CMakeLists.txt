@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: 2022 The dune-localfefunction developers
 # mueller@ibb.uni-stuttgart.de SPDX-License-Identifier: LGPL-2.1-or-later
+
 option(DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING OFF)
 if(DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING)
   find_package(autodiff REQUIRED)
@@ -10,6 +11,8 @@ if(DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING)
   file(GLOB programSourceFiles CONFIGURE_DEPENDS *.cc)
   list(REMOVE_ITEM programSourceFiles
        ${CMAKE_CURRENT_SOURCE_DIR}/testFacilities.cc)
+  list(REMOVE_ITEM programSourceFiles
+       ${CMAKE_CURRENT_SOURCE_DIR}/testbadinvokations.cc)
 
   add_library(TestFacilities OBJECT
               ${CMAKE_CURRENT_SOURCE_DIR}/testFacilities.cc)
@@ -34,17 +37,21 @@ if(DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING)
       target_link_options(${programName} PUBLIC -fprofile-arcs -ftest-coverage)
 
     endif()
-    target_compile_options(
-      ${programName}
-      PRIVATE -ftemplate-backtrace-limit=0
-              -fdiagnostics-show-template-tree
-              -fno-elide-type
-              -Wall
-              -Wextra
-              -Wshadow
-              -Wnon-virtual-dtor
-              -pedantic)
+    # target_compile_options( ${programName} PRIVATE
+    # -ftemplate-backtrace-limit=0 -fdiagnostics-show-template-tree
+    # -fno-elide-type -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic)
 
     target_compile_features(${programName} PRIVATE cxx_std_20)
   endforeach()
+
+  dune_add_test(
+    NAME
+    testbadinvokations
+    SOURCES
+    testbadinvokations.cc
+    $<TARGET_OBJECTS:TestFacilities>
+    LINK_LIBRARIES
+    Eigen3::Eigen
+    EXPECT_COMPILE_FAIL)
+  target_compile_features(testbadinvokations PRIVATE cxx_std_20)
 endif()

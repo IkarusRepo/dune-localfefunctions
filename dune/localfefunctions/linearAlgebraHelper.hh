@@ -38,9 +38,7 @@ namespace Dune {
   /** \brief  Multiply with scalar and autodiff types */
   template <typename T1, typename T2, int rows, int cols>
   requires autodiff::detail::isDual<T1> || autodiff::detail::isExpr<T1> || autodiff::detail::isArithmetic<T1>
-  auto operator*(T1&& t, const Dune::FieldMatrix<T2, rows, cols>& A) {
-    return autodiff::detail::eval(t) * A;
-  }
+  auto operator*(T1&& t, const Dune::FieldMatrix<T2, rows, cols>& A) { return autodiff::detail::eval(t) * A; }
 
   /** \brief  Multiply with scalar and autodiff types */
   template <typename T1, typename T2, int rows, int cols>

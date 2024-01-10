@@ -3,16 +3,56 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #pragma once
+#include "fecache.hh"
+#include "testfactories.hh"
+
 #include <functional>
 #include <string>
 
 #include "dune/localfefunctions/linearAlgebraHelper.hh"
 #include <dune/common/float_cmp.hh>
 #include <dune/functions/analyticfunctions/polynomial.hh>
+#include <dune/geometry/multilineargeometry.hh>
+#include <dune/geometry/referenceelements.hh>
+#include <dune/geometry/type.hh>
+#include <dune/localfefunctions/cachedlocalBasis/cachedlocalBasis.hh>
+#include <dune/localfefunctions/impl/projectionBasedLocalFunction.hh>
+#include <dune/localfefunctions/impl/standardLocalFunction.hh>
+#include <dune/localfefunctions/manifolds/realTuple.hh>
+#include <dune/localfefunctions/manifolds/unitVector.hh>
 
 #include <Eigen/Dense>
+template <typename Manifold, int domainDim, int order>
+auto createVectorOfNodalValues(const Dune::GeometryType& geometryType, size_t nNodalTestPointsI);
 
 namespace Testing {
+
+  template <typename Manifold, int domainDim, int worldDim, int order>
+  auto localFunctionTestConstructorNew(const Dune::GeometryType& geometryType, size_t nNodalTestPointsI = 1) {
+    using namespace Dune;
+    using namespace Dune::Indices;
+    const auto& refElement = Dune::ReferenceElements<double, domainDim>::general(geometryType);
+
+    std::vector<Dune::FieldVector<double, worldDim>> corners;
+    CornerFactory<worldDim>::construct(corners, refElement.size(domainDim));
+    auto geometry = std::make_shared<const Dune::MultiLinearGeometry<double, domainDim, worldDim>>(refElement, corners);
+
+    auto feCache    = std::make_shared<FECache<domainDim, order>>();
+    const auto& fe  = feCache->get(geometryType);
+    auto localBasis = Dune::CachedLocalBasis(fe.localBasis());
+
+    auto vBlockedLocal0 = createVectorOfNodalValues<Manifold, domainDim, order>(geometryType, nNodalTestPointsI);
+
+    const auto& rule = Dune::QuadratureRules<double, domainDim>::rule(fe.type(), 2);
+    localBasis.bind(rule, bindDerivatives(0, 1));
+    if constexpr (Dune::Std::IsSpecializationTypeAndNonTypes<Dune::RealTuple, Manifold>::value) {
+      auto f = Dune::StandardLocalFunction(localBasis, vBlockedLocal0, geometry);
+      return std::make_tuple(f, vBlockedLocal0, geometry, corners, feCache);
+    } else if constexpr (Dune::Std::IsSpecializationTypeAndNonTypes<Dune::UnitVector, Manifold>::value) {
+      auto f = Dune::ProjectionBasedLocalFunction(localBasis, vBlockedLocal0, geometry);
+      return std::make_tuple(f, vBlockedLocal0, geometry, corners, feCache);
+    }
+  }
 
   template <typename Fun, typename Arg>
   using ReturnType = std::invoke_result_t<Fun, Arg>;
