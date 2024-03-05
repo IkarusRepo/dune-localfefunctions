@@ -38,7 +38,7 @@ set(DUNE_LOCALFEFUNCTIONS_USE_EIGEN
 # target_compile_options( dune-localfefunctions PRIVATE
 # -ftemplate-backtrace-limit=0 -fdiagnostics-show-template-tree -fno-elide-type
 # -fconcepts-diagnostics-depth=2)
-find_package(Eigen3 3.3.9 REQUIRED)
+find_package(Eigen3 3.4.90 REQUIRED)
 
 dune_register_package_flags(INCLUDE_DIRS ${Eigen3_INCLUDE_DIRS} LIBRARIES
                             Eigen3::Eigen)
