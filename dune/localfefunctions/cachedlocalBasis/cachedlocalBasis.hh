@@ -154,7 +154,7 @@ namespace Dune {
     mutable std::vector<JacobianDuneType> dNdune{};
     mutable std::vector<RangeDuneType> ddNdune{};
     mutable std::vector<RangeDuneType> Ndune{};
-    DuneLocalBasis const* duneLocalBasis;
+    DuneLocalBasis const* duneLocalBasis{nullptr};
     std::optional<std::set<int>> boundDerivatives;
     std::optional<std::vector<AnsatzFunctionType>> Nbound{};
     std::optional<std::vector<JacobianType>> dNbound{};
