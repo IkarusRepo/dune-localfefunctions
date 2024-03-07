@@ -33,6 +33,8 @@ dune_project()
 set(DUNE_LOCALFEFUNCTIONS_USE_EIGEN
     True
     CACHE BOOL "")
+    option(DUNE_PYTHON_ALLOW_GET_PIP "Allow dune-common to install pip into venv" ON)
+
 
 # target_compile_features(dune-localfefunctions PRIVATE cxx_std_20)
 # target_compile_options( dune-localfefunctions PRIVATE
