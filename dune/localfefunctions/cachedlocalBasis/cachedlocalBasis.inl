@@ -6,7 +6,7 @@ namespace Dune {
 
   template <Concepts::LocalBasis DuneLocalBasis>
   void CachedLocalBasis<DuneLocalBasis>::evaluateFunction(const DomainType& local, AnsatzFunctionType& N) const {
-    duneLocalBasis->evaluateFunction(local, Ndune);
+    duneLocalBasis.evaluateFunction(local, Ndune);
     N.resize(Ndune.size());
     for (size_t i = 0; i < Ndune.size(); ++i)
       N[i] = Ndune[i][0];
@@ -14,7 +14,7 @@ namespace Dune {
 
   template <Concepts::LocalBasis DuneLocalBasis>
   void CachedLocalBasis<DuneLocalBasis>::evaluateJacobian(const DomainType& local, JacobianType& dN) const {
-    duneLocalBasis->evaluateJacobian(local, dNdune);
+    duneLocalBasis.evaluateJacobian(local, dNdune);
     resize(dN,dNdune.size());
 
     for (auto i = 0U; i < dNdune.size(); ++i)
@@ -40,11 +40,11 @@ namespace Dune {
   void CachedLocalBasis<DuneLocalBasis>::evaluateSecondDerivatives(const DomainType& local, SecondDerivativeType& ddN) const {
     std::array<unsigned int, gridDim> order;
     std::ranges::fill(order, 0);
-      resize(ddN,duneLocalBasis->size());
+      resize(ddN,duneLocalBasis.size());
 
     for (int i = 0; i < gridDim; ++i) { //Diagonal terms
       order[i] = 2;
-      duneLocalBasis->partial(order,local, ddNdune);
+      duneLocalBasis.partial(order,local, ddNdune);
       for (size_t j = 0; j < ddNdune.size(); ++j)
           coeff(ddN,j,i)=ddNdune[j][0];
 
@@ -55,7 +55,7 @@ namespace Dune {
     for (int i = 0; i < gridDim*(gridDim-1)/2; ++i) { //off-diagonal terms
       if constexpr (gridDim>2)
         order[i] = 0;
-      duneLocalBasis->partial(order,local, ddNdune);
+      duneLocalBasis.partial(order,local, ddNdune);
       for (size_t j = 0; j < ddNdune.size(); ++j)
           coeff(ddN,j,i+gridDim)=ddNdune[j][0];
       order[i] = 1;
