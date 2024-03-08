@@ -29,10 +29,7 @@ namespace Dune {
     using JacobianDuneType = typename DuneLocalBasis::Traits::JacobianType;
 
   public:
-    constexpr explicit CachedLocalBasis(const DuneLocalBasis& p_basis) :  
-    {
-      duneLocalBasis.emplace(p_basis);
-        }
+    constexpr explicit CachedLocalBasis(const DuneLocalBasis& p_basis) : { duneLocalBasis.emplace(p_basis); }
     CachedLocalBasis() = default;
 
     static constexpr int gridDim = DuneLocalBasis::Traits::dimDomain;
