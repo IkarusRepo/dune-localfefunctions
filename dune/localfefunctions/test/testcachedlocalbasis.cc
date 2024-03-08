@@ -35,6 +35,7 @@ auto testLocalBasis(LB& localBasis, const Dune::GeometryType& type) {
   using namespace Testing;
   using namespace Dune;
 
+  auto localBasis2 = localBasis; // check copy constructable
   constexpr int gridDim = LB::gridDim;
   const auto& rule      = Dune::QuadratureRules<double, gridDim>::rule(type, 3);
 
