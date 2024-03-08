@@ -29,7 +29,7 @@ namespace Dune {
     using JacobianDuneType = typename DuneLocalBasis::Traits::JacobianType;
 
   public:
-    constexpr explicit CachedLocalBasis(const DuneLocalBasis& p_basis) { duneLocalBasis.emplace(p_basis); }
+    constexpr explicit CachedLocalBasis(const DuneLocalBasis& p_basis) { duneLocalBasis.emplace(&p_basis); }
     CachedLocalBasis() = default;
 
     static constexpr int gridDim = DuneLocalBasis::Traits::dimDomain;
@@ -70,6 +70,9 @@ namespace Dune {
 
     /* Binds this basis to a given integration rule */
     void bind(const Dune::QuadratureRule<DomainFieldType, gridDim>& p_rule, std::set<int>&& ints);
+
+    /* Binds this basis to a given dune basis */
+    void bind(const DuneLocalBasis& dune_local_basis) {duneLocalBasis.emplace(&dune_local_basis);};
 
     /* Returns a reference to the ansatz functions evaluated at the given integration point index
      * The "requires" statement is needed to circumvent implicit conversion from FieldVector<double,1>
@@ -154,7 +157,7 @@ namespace Dune {
     mutable std::vector<JacobianDuneType> dNdune{};
     mutable std::vector<RangeDuneType> ddNdune{};
     mutable std::vector<RangeDuneType> Ndune{};
-    std::optional<DuneLocalBasis> duneLocalBasis{};
+    std::optional<const DuneLocalBasis*> duneLocalBasis{};
     std::optional<std::set<int>> boundDerivatives;
     std::optional<std::vector<AnsatzFunctionType>> Nbound{};
     std::optional<std::vector<JacobianType>> dNbound{};
