@@ -29,7 +29,10 @@ namespace Dune {
     using JacobianDuneType = typename DuneLocalBasis::Traits::JacobianType;
 
   public:
-    constexpr explicit CachedLocalBasis(const DuneLocalBasis& p_basis) : duneLocalBasis{p_basis} {}
+    constexpr explicit CachedLocalBasis(const DuneLocalBasis& p_basis) :  
+    {
+      duneLocalBasis.emplace(p_basis);
+        }
     CachedLocalBasis() = default;
 
     static constexpr int gridDim = DuneLocalBasis::Traits::dimDomain;
@@ -57,10 +60,10 @@ namespace Dune {
     void evaluateFunctionAndJacobian(const DomainType& local, AnsatzFunctionType& N, JacobianType& dN) const;
 
     /* Returns the number of ansatz functions */
-    unsigned int size() const { return duneLocalBasis.size(); }
+    unsigned int size() const { return duneLocalBasis->size(); }
 
     /* Returns the polynomial order  */
-    unsigned int order() const { return duneLocalBasis.order(); }
+    unsigned int order() const { return duneLocalBasis->order(); }
 
     /* Returns the number of integration points if the basis is bound */
     unsigned int integrationPointSize() const {
@@ -154,7 +157,7 @@ namespace Dune {
     mutable std::vector<JacobianDuneType> dNdune{};
     mutable std::vector<RangeDuneType> ddNdune{};
     mutable std::vector<RangeDuneType> Ndune{};
-    DuneLocalBasis duneLocalBasis{};
+    std::optional<DuneLocalBasis> duneLocalBasis{};
     std::optional<std::set<int>> boundDerivatives;
     std::optional<std::vector<AnsatzFunctionType>> Nbound{};
     std::optional<std::vector<JacobianType>> dNbound{};
