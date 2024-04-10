@@ -6,7 +6,7 @@
 #include <concepts>
 
 #include <dune/localfefunctions/eigenDuneTransformations.hh>
-#include <dune/localfefunctions/linalgconcepts.hh>
+#include <dune/localfefunctions/linearAlgebraHelper.hh>
   
 namespace Dune {
   /**
