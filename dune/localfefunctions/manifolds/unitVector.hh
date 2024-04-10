@@ -21,6 +21,7 @@ namespace Dune {
     /** \brief Type used for coordinates */
     using ctype      = ct;
     using field_type = ct;
+    using block_type = field_type;
 
     /** \brief Size of how much values are needed to store the manifold */
     static constexpr int valueSize = d;
