@@ -6,7 +6,8 @@
 #include <concepts>
 
 #include <dune/localfefunctions/eigenDuneTransformations.hh>
-
+#include <dune/localfefunctions/linalgconcepts.hh>
+  
 namespace Dune {
   /**
    * \brief FunctionReturnType of unit vectors \f$\mathcal{S}^{d-1}\f$ embedded into space \f$\mathbb{R}^d\f$
