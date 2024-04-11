@@ -246,6 +246,31 @@ namespace Dune {
 
     void addInEmbedding(const CoordinateType &correction) { var += correction; }
 
+    template <typename Scalar>
+requires std::is_arithmetic_v<Scalar>
+ UnitVector& operator*=( const Scalar &factor) {
+      DUNE_THROW(MathError,"The += operation does not make sense. It is only here to store unit vectors in Dune::BlockVector");
+      return *this;
+    }
+
+    template < typename Scalar>
+requires std::is_arithmetic_v<Scalar>
+ UnitVector& operator/=( const Scalar &factor) {
+      DUNE_THROW(MathError,"The /= operation does not make sense. It is only here to store unit vectors in Dune::BlockVector");
+      return *this;
+    }
+
+    UnitVector& operator+=(  const UnitVector &other) {
+      DUNE_THROW(MathError,"The += operation does not make sense. It is only here to store unit vectors in Dune::BlockVector");
+
+      return *this;
+    }
+
+     UnitVector& operator-=(  const UnitVector &other) {
+      DUNE_THROW(MathError,"The -= operation does not make sense. It is only here to store unit vectors in Dune::BlockVector");
+      return *this;
+    }
+
   private:
     CoordinateType var{createOnesVector<ctype, valueSize>() / two_norm(createOnesVector<ctype, valueSize>())};
   };
@@ -295,3 +320,14 @@ namespace Dune {
   };
 
 }  // namespace Dune
+
+#include <dune/python/common/fvecmatregistry.hh>
+namespace Dune
+{
+  namespace Python {
+    template<class K, int size>
+    struct registerFieldVecMat<Dune::UnitVector<K, size>> {
+      static void apply() {
+      }
+    };
+  }}

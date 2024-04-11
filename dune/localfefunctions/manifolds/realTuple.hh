@@ -111,6 +111,30 @@ namespace Dune {
     auto begin() const { return var.begin(); }
     auto end() const { return var.end(); }
 
+        template <typename Scalar>
+  requires std::is_arithmetic_v<Scalar>
+   RealTuple& operator*=( const Scalar &factor) {
+     var*= factor;
+     return *this;
+  }
+
+      template < typename Scalar>
+  requires std::is_arithmetic_v<Scalar>
+   RealTuple& operator/=( const Scalar &factor) {
+     var/= factor;
+     return *this;
+  }
+
+   RealTuple& operator+=(  const RealTuple &other) {
+     var+= other.var;
+     return *this;
+  }
+
+  RealTuple& operator-=(  const RealTuple &other) {
+     var-= other.var;
+     return *this;
+  }
+
   private:
     CoordinateType var{createZeroVector<ctype, valueSize>()};
   };
@@ -146,6 +170,7 @@ namespace Dune {
     return rt * factor;
   }
 
+
   template <typename ctype2, int d2>
   bool operator==(const RealTuple<ctype2, d2> &v1, const RealTuple<ctype2, d2> &v2) {
     return v1.getValue() == v2.getValue();
@@ -158,3 +183,16 @@ namespace Dune {
   };
 
 }  // namespace Dune
+
+#include <dune/python/common/fvecmatregistry.hh>
+
+
+namespace Dune
+{
+namespace Python {
+template<class K, int size>
+struct registerFieldVecMat<Dune::RealTuple<K, size>> {
+  static void apply() {
+  }
+};
+}}
