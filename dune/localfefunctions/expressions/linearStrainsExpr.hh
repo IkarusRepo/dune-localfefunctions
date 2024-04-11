@@ -132,7 +132,9 @@ namespace Dune {
   };
 
   template <typename E1>
-  requires IsLocalFunction<E1>
-  constexpr auto linearStrains(E1 &&u) { return LinearStrainExpr<E1>(std::forward<E1>(u)); }
+    requires IsLocalFunction<E1>
+  constexpr auto linearStrains(E1 &&u) {
+    return LinearStrainExpr<E1>(std::forward<E1>(u));
+  }
 
 }  // namespace Dune

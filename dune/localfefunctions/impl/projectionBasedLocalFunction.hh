@@ -13,7 +13,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/Dense>
-//#include <ikarus/utils/linearAlgebraHelper.hh>
+// #include <ikarus/utils/linearAlgebraHelper.hh>
 
 namespace Dune {
 
@@ -30,10 +30,10 @@ namespace Dune {
   public:
     friend Interface;
     friend ClonableLocalFunction<ProjectionBasedLocalFunction>;
-    constexpr ProjectionBasedLocalFunction(
-        const Dune::CachedLocalBasis<DuneBasis>& p_basis, const CoeffContainer& coeffs_,
-        const std::shared_ptr<const Geometry>& geo,
-        Dune::template index_constant<ID> = Dune::template index_constant<std::size_t(0)>{})
+    constexpr ProjectionBasedLocalFunction(const Dune::CachedLocalBasis<DuneBasis>& p_basis,
+                                           const CoeffContainer& coeffs_, const std::shared_ptr<const Geometry>& geo,
+                                           Dune::template index_constant<ID>
+                                           = Dune::template index_constant<std::size_t(0)>{})
         : basis_{p_basis},
           coeffs{coeffs_},
           geometry_{geo}  //          ,coeffsAsMat{Dune::viewAsEigenMatrixFixedDyn(coeffs)}

@@ -39,7 +39,8 @@ namespace Dune {
     /** \brief Return the function value*/
     template <typename DomainTypeOrIntegrationPointIndex, typename Transform = DerivativeDirections::GridElement,
               typename TransformFunctor = Dune::DefaultFirstOrderTransformFunctor>
-    requires Concepts::IsIntegrationPointIndexOrIntegrationPointPosition<DomainTypeOrIntegrationPointIndex, DomainType>
+      requires Concepts::IsIntegrationPointIndexOrIntegrationPointPosition<DomainTypeOrIntegrationPointIndex,
+                                                                           DomainType>
     auto evaluate(const DomainTypeOrIntegrationPointIndex& ipIndexOrPosition,
                   const On<Transform, TransformFunctor>& transform = {}) const {
       checkIfLocalFunctionCanProvideDerivativeTransformation<Transform>();

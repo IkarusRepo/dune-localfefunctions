@@ -14,7 +14,7 @@ if(DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING)
   list(REMOVE_ITEM programSourceFiles
        ${CMAKE_CURRENT_SOURCE_DIR}/testFacilities.cc)
   list(REMOVE_ITEM programSourceFiles
-          ${CMAKE_CURRENT_SOURCE_DIR}/testmanifoldsblockvector.cc)
+       ${CMAKE_CURRENT_SOURCE_DIR}/testmanifoldsblockvector.cc)
   list(REMOVE_ITEM programSourceFiles
        ${CMAKE_CURRENT_SOURCE_DIR}/testbadinvokations.cc)
 
@@ -61,14 +61,14 @@ if(DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING)
   target_compile_features(testbadinvokations PRIVATE cxx_std_20)
 
   dune_add_test(
-          NAME
-          testmanifoldsblockvector
-          SOURCES
-          testmanifoldsblockvector.cc
-          $<TARGET_OBJECTS:TestFacilities>
-          LINK_LIBRARIES
-          Eigen3::Eigen
-          ${PYTHON_LIBRARIES}
-          COMPILE_ONLY)
+    NAME
+    testmanifoldsblockvector
+    SOURCES
+    testmanifoldsblockvector.cc
+    $<TARGET_OBJECTS:TestFacilities>
+    LINK_LIBRARIES
+    Eigen3::Eigen
+    ${PYTHON_LIBRARIES}
+    COMPILE_ONLY)
   target_compile_features(testmanifoldsblockvector PRIVATE cxx_std_20)
 endif()

@@ -19,8 +19,10 @@ namespace Dune {
 
   /* Helper function to pass integers. These indicate which derivatives should be precomputed */
   template <typename... Ints>
-  requires std::conjunction_v<std::is_convertible<int, Ints>...>
-  auto bindDerivatives(Ints... ints) { return std::set<int>({std::forward<Ints>(ints)...}); }
+    requires std::conjunction_v<std::is_convertible<int, Ints>...>
+  auto bindDerivatives(Ints... ints) {
+    return std::set<int>({std::forward<Ints>(ints)...});
+  }
 
   /* Convenient wrapper to store a dune local basis. It is possible to precompute derivatives */
   template <Concepts::LocalBasis DuneLocalBasis>
@@ -75,7 +77,7 @@ namespace Dune {
      * The "requires" statement is needed to circumvent implicit conversion from FieldVector<double,1>
      * */
     template <typename IndexType>
-    requires std::same_as<IndexType, long unsigned> or std::same_as<IndexType, int>
+      requires std::same_as<IndexType, long unsigned> or std::same_as<IndexType, int>
     const auto& evaluateFunction(IndexType ipIndex) const {
       if (not Nbound) throw std::logic_error("You have to bind the basis first");
       return Nbound.value()[ipIndex];

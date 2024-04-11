@@ -3,7 +3,7 @@
 
 #pragma once
 #include <dune/localfefunctions/expressions/unaryExpr.hh>
-//#include <ikarus/utils/linearAlgebraHelper.hh>
+// #include <ikarus/utils/linearAlgebraHelper.hh>
 namespace Dune {
 
   template <typename E1>
@@ -34,7 +34,9 @@ namespace Dune {
   struct LocalFunctionTraits<NegateExpr<E1>> : public LocalFunctionTraits<std::remove_cvref_t<E1>> {};
 
   template <typename E1>
-  requires IsLocalFunction<E1>
-  constexpr auto operator-(E1&& u) { return NegateExpr<E1>(std::forward<E1>(u)); }
+    requires IsLocalFunction<E1>
+  constexpr auto operator-(E1&& u) {
+    return NegateExpr<E1>(std::forward<E1>(u));
+  }
 
 }  // namespace Dune

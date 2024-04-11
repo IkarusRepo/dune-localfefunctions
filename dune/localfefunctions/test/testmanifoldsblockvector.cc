@@ -4,19 +4,17 @@
 #include <config.h>
 
 #include <array>
+
 #include <dune/common/test/testsuite.hh>
-  #include <dune/localfefunctions/manifolds/realTuple.hh>
-  #include <dune/localfefunctions/manifolds/unitVector.hh>
-
-
+#include <dune/localfefunctions/manifolds/realTuple.hh>
+#include <dune/localfefunctions/manifolds/unitVector.hh>
 #include <dune/python/istl/bvector.hh>
 int main(int argc, char** argv) {
+  // check blockvector correctness
+  using RT = Dune::RealTuple<double, 3>;
+  using UV = Dune::UnitVector<double, 3>;
 
-  //check blockvector correctness
-  using RT=Dune::RealTuple<double,3>;
-  using UV=Dune::UnitVector<double,3>;
-
-  auto blockVectorObstacleCourse= []<typename T>(const T&) {
+  auto blockVectorObstacleCourse = []<typename T>(const T&) {
     pybind11::class_<T> cls(pybind11::object{});
     Dune::Python::registerBlockVector(cls);
   };

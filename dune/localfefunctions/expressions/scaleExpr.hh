@@ -38,44 +38,38 @@ namespace Dune {
   struct LocalFunctionTraits<ScaleExpr<E1, E2>> : public LocalFunctionTraits<std::remove_cvref_t<E2>> {};
 
   template <typename E1, typename E2>
-  requires(
-      std::is_arithmetic_v<std::remove_cvref_t<E1>>and IsLocalFunction<
-          E2> and !IsScaleExpr<E2>) constexpr ScaleExpr<ConstantExpr<E1,
-                                                                     typename std::remove_cvref_t<E2>::LinearAlgebra>,
-                                                        E2>
-  operator*(E1&& factor, E2&& u) {
+    requires(std::is_arithmetic_v<std::remove_cvref_t<E1>> and IsLocalFunction<E2> and !IsScaleExpr<E2>)
+  constexpr ScaleExpr<ConstantExpr<E1, typename std::remove_cvref_t<E2>::LinearAlgebra>, E2> operator*(E1&& factor,
+                                                                                                       E2&& u) {
     using LinearAlgebra = typename std::remove_cvref_t<E2>::LinearAlgebra;
     return ScaleExpr<ConstantExpr<E1, LinearAlgebra>, E2>(ConstantExpr<E1, LinearAlgebra>(factor), std::forward<E2>(u));
   }
 
   template <typename E1, typename E2>
-  requires(
-      std::is_arithmetic_v<std::remove_cvref_t<E1>>and IsLocalFunction<
-          E2> and !IsScaleExpr<E2>) constexpr ScaleExpr<ConstantExpr<E1,
-                                                                     typename std::remove_cvref_t<E2>::LinearAlgebra>,
-                                                        E2>
-  operator*(E2&& u, E1&& factor) {
+    requires(std::is_arithmetic_v<std::remove_cvref_t<E1>> and IsLocalFunction<E2> and !IsScaleExpr<E2>)
+  constexpr ScaleExpr<ConstantExpr<E1, typename std::remove_cvref_t<E2>::LinearAlgebra>, E2> operator*(E2&& u,
+                                                                                                       E1&& factor) {
     return factor * u;
   }
 
   // Simplification if nested scale expression occur
   template <typename E1, typename E2>
-  requires(std::is_arithmetic_v<std::remove_cvref_t<E1>>and IsScaleExpr<E2>) constexpr auto operator*(E1&& factor,
-                                                                                                      E2&& u) {
+    requires(std::is_arithmetic_v<std::remove_cvref_t<E1>> and IsScaleExpr<E2>)
+  constexpr auto operator*(E1&& factor, E2&& u) {
     u.l().value() *= factor;
     return u;
   }
 
   template <typename E1, typename E2>
-  requires(std::is_arithmetic_v<std::remove_cvref_t<E1>>and IsScaleExpr<E2>and IsLocalFunction<E2>) constexpr auto
-  operator*(E2&& u, E1&& factor) {
+    requires(std::is_arithmetic_v<std::remove_cvref_t<E1>> and IsScaleExpr<E2> and IsLocalFunction<E2>)
+  constexpr auto operator*(E2&& u, E1&& factor) {
     return operator*(std::forward<E1>(factor), std::forward<E2>(u));
   }
 
   // Division operator
   template <typename E1, typename E2>
-  requires(std::is_arithmetic_v<std::remove_cvref_t<E1>>and IsLocalFunction<E2> and !IsScaleExpr<E2>) constexpr auto
-  operator/(E2&& u, E1&& factor) {
+    requires(std::is_arithmetic_v<std::remove_cvref_t<E1>> and IsLocalFunction<E2> and !IsScaleExpr<E2>)
+  constexpr auto operator/(E2&& u, E1&& factor) {
     static_assert(std::floating_point<std::remove_cvref_t<E1>>,
                   "Operator/ should only called with floating point types.");
 

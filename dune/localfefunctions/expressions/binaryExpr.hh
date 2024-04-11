@@ -39,7 +39,8 @@ namespace Dune {
     template <size_t ID_ = 0>
     static constexpr int orderID = Op<E1, E2>::template orderID<ID_>;
 
-    constexpr BinaryExpr(E1&& u, E2&& v) requires IsLocalFunction<E1, E2>
+    constexpr BinaryExpr(E1&& u, E2&& v)
+      requires IsLocalFunction<E1, E2>
         : expr(std::forward<E1>(u), std::forward<E2>(v)) {}
 
     static constexpr bool isLeaf  = false;

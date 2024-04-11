@@ -159,7 +159,7 @@ namespace Dune {
   }
 
   template <typename ScalarType>
-  requires std::is_arithmetic_v<ScalarType>
+    requires std::is_arithmetic_v<ScalarType>
   auto toEigen(const Dune::BlockVector<ScalarType>& vec) {
     Eigen::Vector<ScalarType, Eigen::Dynamic> vecE;
     vecE.resize(vec.size());

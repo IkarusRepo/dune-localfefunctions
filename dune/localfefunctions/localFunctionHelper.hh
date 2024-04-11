@@ -26,11 +26,10 @@ namespace Dune {
       const typename Basis::AnsatzFunctionType& N = basis.evaluateFunction(localOrIpId);
       return std::make_tuple(std::ref(N), std::ref(dN));
     } else
-      static_assert(
-          std::is_same_v<DomainTypeOrIntegrationPointIndex,
-                         typename Basis::DomainType> or std::is_same_v<DomainTypeOrIntegrationPointIndex, int>,
-          "The argument you passed should be an id for the integration point or the point where the "
-          "derivative should be evaluated");
+      static_assert(std::is_same_v<DomainTypeOrIntegrationPointIndex, typename Basis::DomainType>
+                        or std::is_same_v<DomainTypeOrIntegrationPointIndex, int>,
+                    "The argument you passed should be an id for the integration point or the point where the "
+                    "derivative should be evaluated");
   }
 
   /** Helper to evaluate the local basis ansatz function gradient with an integration point index or coordinate vector*/
@@ -44,11 +43,10 @@ namespace Dune {
       const typename Basis::JacobianType& dN = basis.evaluateJacobian(localOrIpId);
       return dN;
     } else
-      static_assert(
-          std::is_same_v<DomainTypeOrIntegrationPointIndex,
-                         typename Basis::DomainType> or std::is_same_v<DomainTypeOrIntegrationPointIndex, int>,
-          "The argument you passed should be an id for the integration point or the point where the "
-          "derivative should be evaluated");
+      static_assert(std::is_same_v<DomainTypeOrIntegrationPointIndex, typename Basis::DomainType>
+                        or std::is_same_v<DomainTypeOrIntegrationPointIndex, int>,
+                    "The argument you passed should be an id for the integration point or the point where the "
+                    "derivative should be evaluated");
   }
 
   /** Helper to evaluate the local basis ansatz function with an integration point index or coordinate vector*/
@@ -61,11 +59,10 @@ namespace Dune {
     } else if constexpr (std::numeric_limits<DomainTypeOrIntegrationPointIndex>::is_integer) {
       return basis.evaluateFunction(localOrIpId);
     } else
-      static_assert(
-          std::is_same_v<DomainTypeOrIntegrationPointIndex,
-                         typename Basis::DomainType> or std::is_same_v<DomainTypeOrIntegrationPointIndex, int>,
-          "The argument you passed should be an id for the integration point or the point where the "
-          "derivative should be evaluated");
+      static_assert(std::is_same_v<DomainTypeOrIntegrationPointIndex, typename Basis::DomainType>
+                        or std::is_same_v<DomainTypeOrIntegrationPointIndex, int>,
+                    "The argument you passed should be an id for the integration point or the point where the "
+                    "derivative should be evaluated");
   }
 
   /** Helper to transform the derivatives if the transform argument is DerivativeDirections::GridElement

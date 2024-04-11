@@ -79,7 +79,8 @@ namespace Testing {
 
     /* Evaluates the n-th function */
     template <int n>
-    requires(n < 2) void update() {
+      requires(n < 2)
+    void update() {
       if constexpr (n == 0)
         derivativesEvaluated_.first = f(arg);
       else

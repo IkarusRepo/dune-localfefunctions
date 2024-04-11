@@ -15,7 +15,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/Dense>
-//#include <ikarus/utils/linearAlgebraHelper.hh>
+// #include <ikarus/utils/linearAlgebraHelper.hh>
 
 namespace Dune {
 

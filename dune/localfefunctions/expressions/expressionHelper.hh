@@ -12,9 +12,8 @@ namespace Dune {
     } else if constexpr (std::numeric_limits<DomainTypeOrIntegrationPointIndex>::is_integer) {
       return basis.indexToIntegrationPoint(localOrIpId).position();
     } else
-      static_assert(
-          std::is_same_v<DomainTypeOrIntegrationPointIndex,
-                         typename Basis::DomainType> or std::is_same_v<DomainTypeOrIntegrationPointIndex, int>,
-          "The argument you passed should be an id for the integration point or the point coordinates");
+      static_assert(std::is_same_v<DomainTypeOrIntegrationPointIndex, typename Basis::DomainType>
+                        or std::is_same_v<DomainTypeOrIntegrationPointIndex, int>,
+                    "The argument you passed should be an id for the integration point or the point coordinates");
   }
 }  // namespace Dune

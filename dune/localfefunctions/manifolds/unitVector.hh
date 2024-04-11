@@ -7,7 +7,7 @@
 
 #include <dune/localfefunctions/eigenDuneTransformations.hh>
 #include <dune/localfefunctions/linearAlgebraHelper.hh>
-  
+
 namespace Dune {
   /**
    * \brief FunctionReturnType of unit vectors \f$\mathcal{S}^{d-1}\f$ embedded into space \f$\mathbb{R}^d\f$
@@ -227,8 +227,8 @@ namespace Dune {
 
     /** \brief Copy assignment if the other type has different underlying type*/
     template <typename ctype_>
-    requires std::convertible_to<ctype_, ctype> UnitVector<ctype, d>
-    &operator=(const UnitVector<ctype_, d> &other) {
+      requires std::convertible_to<ctype_, ctype>
+    UnitVector<ctype, d> &operator=(const UnitVector<ctype_, d> &other) {
       var = other.var;
       return *this;
     }
@@ -247,27 +247,31 @@ namespace Dune {
     void addInEmbedding(const CoordinateType &correction) { var += correction; }
 
     template <typename Scalar>
-requires std::is_arithmetic_v<Scalar>
- UnitVector& operator*=( const Scalar &factor) {
-      DUNE_THROW(MathError,"The += operation does not make sense. It is only here to store unit vectors in Dune::BlockVector");
+      requires std::is_arithmetic_v<Scalar>
+    UnitVector &operator*=(const Scalar &factor) {
+      DUNE_THROW(MathError,
+                 "The += operation does not make sense. It is only here to store unit vectors in Dune::BlockVector");
       return *this;
     }
 
-    template < typename Scalar>
-requires std::is_arithmetic_v<Scalar>
- UnitVector& operator/=( const Scalar &factor) {
-      DUNE_THROW(MathError,"The /= operation does not make sense. It is only here to store unit vectors in Dune::BlockVector");
+    template <typename Scalar>
+      requires std::is_arithmetic_v<Scalar>
+    UnitVector &operator/=(const Scalar &factor) {
+      DUNE_THROW(MathError,
+                 "The /= operation does not make sense. It is only here to store unit vectors in Dune::BlockVector");
       return *this;
     }
 
-    UnitVector& operator+=(  const UnitVector &other) {
-      DUNE_THROW(MathError,"The += operation does not make sense. It is only here to store unit vectors in Dune::BlockVector");
+    UnitVector &operator+=(const UnitVector &other) {
+      DUNE_THROW(MathError,
+                 "The += operation does not make sense. It is only here to store unit vectors in Dune::BlockVector");
 
       return *this;
     }
 
-     UnitVector& operator-=(  const UnitVector &other) {
-      DUNE_THROW(MathError,"The -= operation does not make sense. It is only here to store unit vectors in Dune::BlockVector");
+    UnitVector &operator-=(const UnitVector &other) {
+      DUNE_THROW(MathError,
+                 "The -= operation does not make sense. It is only here to store unit vectors in Dune::BlockVector");
       return *this;
     }
 
@@ -302,19 +306,19 @@ requires std::is_arithmetic_v<Scalar>
   class RealTuple;
 
   template <typename ctype2, int d2, typename Scalar>
-  requires std::is_arithmetic_v<Scalar>
+    requires std::is_arithmetic_v<Scalar>
   [[nodiscard]] RealTuple<ctype2, d2> operator*(const UnitVector<ctype2, d2> &rt, const Scalar &factor) {
     return RealTuple<ctype2, d2>(rt.getValue() * factor);
   }
 
   template <typename ctype2, int d2, typename Scalar>
-  requires std::is_arithmetic_v<Scalar>
+    requires std::is_arithmetic_v<Scalar>
   [[nodiscard]] RealTuple<ctype2, d2> operator*(const Scalar &factor, const UnitVector<ctype2, d2> &rt) {
     return rt * factor;
   }
 
   template <typename ScalarType, int d>
-  struct FieldTraits<UnitVector<ScalarType, d> > {
+  struct FieldTraits<UnitVector<ScalarType, d>> {
     using field_type = ScalarType;
     using real_type  = ScalarType;
   };
@@ -322,12 +326,11 @@ requires std::is_arithmetic_v<Scalar>
 }  // namespace Dune
 
 #include <dune/python/common/fvecmatregistry.hh>
-namespace Dune
-{
+namespace Dune {
   namespace Python {
-    template<class K, int size>
+    template <class K, int size>
     struct registerFieldVecMat<Dune::UnitVector<K, size>> {
-      static void apply() {
-      }
+      static void apply() {}
     };
-  }}
+  }  // namespace Python
+}  // namespace Dune

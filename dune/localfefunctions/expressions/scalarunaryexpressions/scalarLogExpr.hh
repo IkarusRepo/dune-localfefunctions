@@ -29,7 +29,7 @@ namespace Dune {
     }
   };
   template <typename E1>
-  requires IsLocalFunction<E1>
+    requires IsLocalFunction<E1>
   constexpr auto log(E1&& u) {
     static_assert(std::remove_cvref_t<E1>::valueSize == 1,
                   "Log expression only defined for scalar valued local functions.");

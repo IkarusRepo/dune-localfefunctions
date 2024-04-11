@@ -6,7 +6,7 @@
 
 #include <dune/common/indices.hh>
 
-//#include <ikarus/utils/linearAlgebraHelper.hh>
+// #include <ikarus/utils/linearAlgebraHelper.hh>
 #include <ranges>
 
 #include <dune/localfefunctions/helper.hh>
@@ -17,13 +17,14 @@ namespace Dune {
     class LocalFunctionInterface;
 
     template <typename LF>
-    requires(!std::is_arithmetic_v<LF>) consteval int countNonArithmeticLeafNodesImpl() {
+      requires(!std::is_arithmetic_v<LF>)
+    consteval int countNonArithmeticLeafNodesImpl() {
       constexpr auto predicate = [](auto v) { return v != Dune::arithmetic; };
       return std::ranges::count_if(LF::id, predicate);
     }
 
     template <typename LF>
-    requires LocalFunction<LF>
+      requires LocalFunction<LF>
     auto collectNonArithmeticLeafNodesImpl(LF&& a) {
       using LFRaw = std::remove_cvref_t<LF>;
       //    static_assert(LocalFunction<LF>,"Only passing LocalFunctions allowed");
@@ -58,7 +59,7 @@ namespace Dune {
 
   /** This class contains the collection of leaf nodes of a local function expression */
   template <typename LF>
-  requires LocalFunction<LF>
+    requires LocalFunction<LF>
   struct LocalFunctionLeafNodeCollection {
     using LFRaw = std::remove_cvref_t<LF>;
     /* Since we need to enable perfect forwarding we have to implement this universal constructor. We also constrain it
@@ -67,14 +68,14 @@ namespace Dune {
      * https://eel.is/c++draft/temp.deduct.call#3
      * */
     template <typename LF_>
-    requires LocalFunction<LF_> LocalFunctionLeafNodeCollection(LF_&& lf)
-        : leafNodes{collectNonArithmeticLeafNodes(std::forward<LF_>(lf))} {}
+      requires LocalFunction<LF_>
+    LocalFunctionLeafNodeCollection(LF_&& lf) : leafNodes{collectNonArithmeticLeafNodes(std::forward<LF_>(lf))} {}
 
     /** Return the a const reference of the coefficients if the leaf node with id tag I is unique. Otherwise this
      * function is deactivated */
     template <std::size_t I = 0>
-    requires(std::ranges::count(LFRaw::id, I)
-             == 1) auto& coefficientsRef(Dune::index_constant<I> = Dune::index_constant<I>()) {
+      requires(std::ranges::count(LFRaw::id, I) == 1)
+    auto& coefficientsRef(Dune::index_constant<I> = Dune::index_constant<I>()) {
       static_assert(
           std::ranges::count(LFRaw::id, I) == 1,
           "Non-const coefficientsRef() can only be called, if there is only one node with the given leaf node ID.");
@@ -123,6 +124,8 @@ namespace Dune {
   };
 
   template <typename LF>
-  requires LocalFunction<LF>
-  auto collectLeafNodeLocalFunctions(LF&& lf) { return LocalFunctionLeafNodeCollection<LF>(std::forward<LF>(lf)); }
+    requires LocalFunction<LF>
+  auto collectLeafNodeLocalFunctions(LF&& lf) {
+    return LocalFunctionLeafNodeCollection<LF>(std::forward<LF>(lf));
+  }
 }  // namespace Dune

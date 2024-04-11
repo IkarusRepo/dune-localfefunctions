@@ -173,7 +173,9 @@ namespace Dune {
   };
 
   template <typename E1, typename E2>
-  requires IsLocalFunction<E1, E2>
-  constexpr auto dot(E1 &&u, E2 &&v) { return InnerProductExpr<E1, E2>(std::forward<E1>(u), std::forward<E2>(v)); }
+    requires IsLocalFunction<E1, E2>
+  constexpr auto dot(E1 &&u, E2 &&v) {
+    return InnerProductExpr<E1, E2>(std::forward<E1>(u), std::forward<E2>(v));
+  }
 
 }  // namespace Dune

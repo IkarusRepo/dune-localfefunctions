@@ -42,7 +42,7 @@ namespace Dune {
   };
 
   template <typename E1, typename E2>
-  requires IsLocalFunction<E1, E2>
+    requires IsLocalFunction<E1, E2>
   constexpr auto operator+(E1&& u, E2&& v) {
     static_assert(Concepts::AddAble<typename std::remove_cvref_t<E1>::FunctionReturnType,
                                     typename std::remove_cvref_t<E2>::FunctionReturnType>,

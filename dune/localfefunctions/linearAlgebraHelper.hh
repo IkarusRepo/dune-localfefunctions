@@ -29,25 +29,31 @@ namespace Dune {
 #ifdef DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING
   /** \brief  eval overload for autodiff scalars */
   template <typename T>
-  requires autodiff::detail::isDual<T> || autodiff::detail::isExpr<T> || autodiff::detail::isArithmetic<T>
-  auto eval(T&& t) { return autodiff::detail::eval(t); }
+    requires autodiff::detail::isDual<T> || autodiff::detail::isExpr<T> || autodiff::detail::isArithmetic<T>
+  auto eval(T&& t) {
+    return autodiff::detail::eval(t);
+  }
 
   template <>
   struct IsNumber<autodiff::HigherOrderDual<2, double>> : public std::true_type {};
 
   /** \brief  Multiply with scalar and autodiff types */
   template <typename T1, typename T2, int rows, int cols>
-  requires autodiff::detail::isDual<T1> || autodiff::detail::isExpr<T1> || autodiff::detail::isArithmetic<T1>
-  auto operator*(T1&& t, const Dune::FieldMatrix<T2, rows, cols>& A) { return autodiff::detail::eval(t) * A; }
+    requires autodiff::detail::isDual<T1> || autodiff::detail::isExpr<T1> || autodiff::detail::isArithmetic<T1>
+  auto operator*(T1&& t, const Dune::FieldMatrix<T2, rows, cols>& A) {
+    return autodiff::detail::eval(t) * A;
+  }
 
   /** \brief  Multiply with scalar and autodiff types */
   template <typename T1, typename T2, int rows, int cols>
-  requires autodiff::detail::isDual<T2> || autodiff::detail::isExpr<T2> || autodiff::detail::isArithmetic<T2>
-  auto operator*(const Dune::FieldMatrix<T1, rows, cols>& A, T2&& t) { return autodiff::detail::eval(t) * A; }
+    requires autodiff::detail::isDual<T2> || autodiff::detail::isExpr<T2> || autodiff::detail::isArithmetic<T2>
+  auto operator*(const Dune::FieldMatrix<T1, rows, cols>& A, T2&& t) {
+    return autodiff::detail::eval(t) * A;
+  }
 
   /** \brief Computes norm squared (Frobenius) of the matrix  */
   template <typename T>
-  requires autodiff::detail::isDual<T> || autodiff::detail::isExpr<T> || autodiff::detail::isArithmetic<T>
+    requires autodiff::detail::isDual<T> || autodiff::detail::isExpr<T> || autodiff::detail::isArithmetic<T>
   auto two_norm2(const T& a) {
     using std::abs;
     return abs(a);
@@ -55,36 +61,36 @@ namespace Dune {
 
   /** \brief Specialization for scalar types  */
   template <typename field_type, typename field_type2>
-  requires((autodiff::detail::isDual<field_type> || autodiff::detail::isExpr<field_type> || autodiff::detail::isArithmetic<field_type>)and(
-      autodiff::detail::isDual<
-          field_type2> || autodiff::detail::isExpr<field_type2> || autodiff::detail::isArithmetic<field_type2>)) auto inner(field_type
-                                                                                                                                a,
-                                                                                                                            field_type2
-                                                                                                                                b) {
+    requires((autodiff::detail::isDual<field_type> || autodiff::detail::isExpr<field_type>
+              || autodiff::detail::isArithmetic<field_type>)
+             and (autodiff::detail::isDual<field_type2> || autodiff::detail::isExpr<field_type2>
+                  || autodiff::detail::isArithmetic<field_type2>))
+  auto inner(field_type a, field_type2 b) {
     return a * b;
   }
 
   /** \brief  Transpose for scalars and autodiff types */
   template <typename T>
-  requires autodiff::detail::isDual<T> || autodiff::detail::isExpr<T> || autodiff::detail::isArithmetic<T>
-  auto transpose(T&& t) { return t; }
+    requires autodiff::detail::isDual<T> || autodiff::detail::isExpr<T> || autodiff::detail::isArithmetic<T>
+  auto transpose(T&& t) {
+    return t;
+  }
 
   template <typename T1, typename T2>
-  requires(
-      autodiff::detail::isDual<
-          T1> || autodiff::detail::isExpr<T1> || autodiff::detail::isArithmetic<T1> || autodiff::detail::isDual<T2> || autodiff::detail::isExpr<T2> || autodiff::detail::isArithmetic<T2>) struct
-      PromotionTraits<T1, T2> {
+    requires(autodiff::detail::isDual<T1> || autodiff::detail::isExpr<T1> || autodiff::detail::isArithmetic<T1>
+             || autodiff::detail::isDual<T2> || autodiff::detail::isExpr<T2> || autodiff::detail::isArithmetic<T2>)
+  struct PromotionTraits<T1, T2> {
     using PromotedType = decltype(autodiff::eval(std::declval<T1>() + std::declval<T2>()));
   };
 #endif
 
 #if DUNE_LOCALFEFUNCTIONS_USE_EIGEN == 0
   template <typename T>
-  requires(
-      Std::IsSpecializationTypeAndNonTypes<Dune::FieldVector, T>::value
-      or Std::IsSpecializationTypeAndNonTypes<Dune::FieldMatrix, T>::value
-      or Std::IsSpecializationTypeAndNonTypes<Dune::ScaledIdentityMatrix, T>::value
-      or Std::IsSpecializationTypeAndNonTypes<Dune::DiagonalMatrix, T>::value) auto transposeEvaluated(const T& A) {
+    requires(Std::IsSpecializationTypeAndNonTypes<Dune::FieldVector, T>::value
+             or Std::IsSpecializationTypeAndNonTypes<Dune::FieldMatrix, T>::value
+             or Std::IsSpecializationTypeAndNonTypes<Dune::ScaledIdentityMatrix, T>::value
+             or Std::IsSpecializationTypeAndNonTypes<Dune::DiagonalMatrix, T>::value)
+  auto transposeEvaluated(const T& A) {
     if constexpr (Std::IsSpecializationTypeAndNonTypes<Dune::FieldVector, T>::value) {
       Dune::FieldMatrix<typename T::value_type, 1, T::dimension> aT;
       for (int i = 0; i < T::dimension; ++i)
@@ -182,8 +188,8 @@ namespace Dune {
 #ifndef DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING
   /** \brief Specialization for scalar types  */
   template <typename field_type, typename field_type2>
-  requires(std::is_arithmetic_v<field_type>and std::is_arithmetic_v<field_type2>) auto inner(field_type a,
-                                                                                             field_type2 b) {
+    requires(std::is_arithmetic_v<field_type> and std::is_arithmetic_v<field_type2>)
+  auto inner(field_type a, field_type2 b) {
     return a * b;
   }
 #endif
@@ -247,7 +253,7 @@ namespace Dune {
 #ifndef DUNE_LOCALFEFUNCTIONS_ENABLE_TESTING
   /** \brief Computes norm squared (Frobenius) of the matrix  */
   template <typename Scalar>
-  requires std::is_arithmetic_v<Scalar>
+    requires std::is_arithmetic_v<Scalar>
   auto two_norm2(const Scalar& a) {
     using std::abs;
     return abs(a);
@@ -313,8 +319,8 @@ namespace Dune {
   }
 
   template <typename field_type, typename field_type2, int rows1>
-  requires(std::is_arithmetic_v<field_type>and std::is_arithmetic_v<field_type2>) auto operator*(
-      field_type a, const Dune::ScaledIdentityMatrix<field_type2, rows1>& b) {
+    requires(std::is_arithmetic_v<field_type> and std::is_arithmetic_v<field_type2>)
+  auto operator*(field_type a, const Dune::ScaledIdentityMatrix<field_type2, rows1>& b) {
     using ScalarResultType = typename Dune::PromotionTraits<field_type, field_type2>::PromotedType;
     Dune::ScaledIdentityMatrix<ScalarResultType, rows1> c = b;
     c.scalar() *= a;
@@ -322,13 +328,13 @@ namespace Dune {
   }
 
   template <typename field_type, typename field_type2, int rows1>
-  requires(std::is_arithmetic_v<field_type>and std::is_arithmetic_v<field_type2>) auto operator*(
-      const Dune::ScaledIdentityMatrix<field_type2, rows1>& b, field_type a) {
+    requires(std::is_arithmetic_v<field_type> and std::is_arithmetic_v<field_type2>)
+  auto operator*(const Dune::ScaledIdentityMatrix<field_type2, rows1>& b, field_type a) {
     return a * b;
   }
 
   template <typename field_type, typename field_type2, int rows1>
-  requires std::is_arithmetic_v<field_type>
+    requires std::is_arithmetic_v<field_type>
   auto operator*(field_type a, const Dune::DiagonalMatrix<field_type2, rows1>& b) {
     using ScalarResultType = typename Dune::PromotionTraits<field_type, field_type2>::PromotedType;
 
@@ -705,8 +711,8 @@ namespace Dune {
   }
 
   template <typename ST, int size>
-  requires(size > 0
-           and size <= 3) auto toVoigt(const DefaultLinearAlgebra::template FixedSizedMatrix<ST, size, size>& E) {
+    requires(size > 0 and size <= 3)
+  auto toVoigt(const DefaultLinearAlgebra::template FixedSizedMatrix<ST, size, size>& E) {
     typename DefaultLinearAlgebra::template FixedSizedVector<ST, (size * (size + 1)) / 2> EVoigt;
     for (int i = 0; i < size; ++i)
       EVoigt[i] = coeff(E, i, i);
@@ -883,7 +889,10 @@ namespace Dune {
 
   /** \brief Adding free norm function to Eigen types */
   template <typename Derived>
-  requires(!std::floating_point<Derived>) auto norm(const Eigen::MatrixBase<Derived>& v) { return v.norm(); }
+    requires(!std::floating_point<Derived>)
+  auto norm(const Eigen::MatrixBase<Derived>& v) {
+    return v.norm();
+  }
 
   /** \brief Helper Free Function to have the same interface as for Eigen Vector Types */
   auto norm(const std::floating_point auto& v) { return std::abs(v); }
@@ -1229,8 +1238,10 @@ namespace Dune {
 
   /** \brief Does nothing if type is not an Eigen type but our manifolds type or floatingin point instead*/
   template <typename Type>
-  requires Dune::Concepts::Manifold<Type> or std::floating_point<Type>
-  auto eval(const Type& A) { return A; }
+    requires Dune::Concepts::Manifold<Type> or std::floating_point<Type>
+  auto eval(const Type& A) {
+    return A;
+  }
 
   /** \brief  eval overload for std::array  */
   template <typename Type, std::size_t d>
@@ -1242,7 +1253,7 @@ namespace Dune {
   inline Dune::DerivativeDirections::ZeroMatrix eval(const Dune::DerivativeDirections::ZeroMatrix&) { return {}; }
 
   template <typename To, typename From>
-  requires std::convertible_to<typename From::ctype, To>
+    requires std::convertible_to<typename From::ctype, To>
   auto convertUnderlying(const Dune::BlockVector<From>& from) {
     Dune::BlockVector<typename From::template rebind<To>::other> to;
     to.resize(from.size());
@@ -1254,8 +1265,9 @@ namespace Dune {
 
   /* Enables the += operator for std::array if the underlying objects are addable  */
   template <typename Type, typename Type2, std::size_t d>
-  std::array<Type, d> operator+(const std::array<Type, d>& a,
-                                const std::array<Type2, d>& b) requires Concepts::AddAble<Type, Type2> {
+  std::array<Type, d> operator+(const std::array<Type, d>& a, const std::array<Type2, d>& b)
+    requires Concepts::AddAble<Type, Type2>
+  {
     std::array<Type, d> res;
     for (size_t i = 0U; i < d; ++i)
       res[i] = a[i] + b[i];
@@ -1286,7 +1298,9 @@ namespace Dune {
 
   /* Enables the transposition for std::array if the underlying objects are transposable able  */
   template <std::size_t d, typename Type>
-  auto transpose(const std::array<Type, d>& a) requires Concepts::TransposeAble<Type> {
+  auto transpose(const std::array<Type, d>& a)
+    requires Concepts::TransposeAble<Type>
+  {
     std::array<decltype(transpose(a[0])), d> res;
     for (size_t i = 0U; i < d; ++i)
       res[i] = transpose(a[i]);
@@ -1294,7 +1308,7 @@ namespace Dune {
   }
 
   template <std::size_t d, typename Scalar, typename Type>
-  requires Concepts::MultiplyAble<Scalar, Type>
+    requires Concepts::MultiplyAble<Scalar, Type>
   auto operator*(Scalar b, const std::array<Type, d>& a) {
     std::array<std::remove_cvref_t<decltype(eval(b * a[0]))>, d> res;
     for (size_t i = 0U; i < d; ++i)
@@ -1303,7 +1317,7 @@ namespace Dune {
   }
 
   template <std::size_t d, typename Scalar, typename Type>
-  requires Concepts::MultiplyAble<Scalar, Type>
+    requires Concepts::MultiplyAble<Scalar, Type>
   auto operator*=(std::array<Type, d>& a, Scalar b) {
     for (size_t i = 0U; i < d; ++i)
       a[i] *= b;

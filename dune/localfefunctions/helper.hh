@@ -49,7 +49,8 @@ namespace Dune {
     struct is_tuple<std::tuple<T...>> : std::true_type {};
 
     template <class Tuple, class Type>
-    requires is_tuple<Tuple>::value consteval int countType() {
+      requires is_tuple<Tuple>::value
+    consteval int countType() {
       int count = 0;
       Dune::Hybrid::forEach(Dune::Hybrid::integralRange(Dune::index_constant<std::tuple_size_v<Tuple>>()), [&](auto i) {
         using currentType = std::remove_cvref_t<std::tuple_element_t<i, Tuple>>;

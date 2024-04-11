@@ -34,7 +34,9 @@ namespace Dune {
       return rebind<Op, E1, OtherType, ID, Args...>(m(), Dune::index_constant<ID>());
     }
 
-    constexpr explicit UnaryExpr(E1&& u) requires IsLocalFunction<E1> : expr(std::forward<E1>(u)) {}
+    constexpr explicit UnaryExpr(E1&& u)
+      requires IsLocalFunction<E1>
+        : expr(std::forward<E1>(u)) {}
 
     static constexpr bool isLeaf  = false;
     static constexpr int children = 1;

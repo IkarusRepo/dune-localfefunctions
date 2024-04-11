@@ -30,7 +30,7 @@ namespace Dune {
     }
   };
   template <int exponent, typename E1>
-  requires IsLocalFunction<E1>
+    requires IsLocalFunction<E1>
   constexpr auto pow(E1&& u) {
     static_assert(std::remove_cvref_t<E1>::valueSize == 1,
                   "Pow expression only defined for scalar valued local functions.");

@@ -7,7 +7,7 @@
 namespace Dune {
 
   template <typename Type, typename LinAlg>
-  requires std::is_arithmetic_v<Type>
+    requires std::is_arithmetic_v<Type>
   class ConstantExpr : public LocalFunctionInterface<ConstantExpr<Type, LinAlg>> {
   public:
     using LinearAlgebra = LinAlg;

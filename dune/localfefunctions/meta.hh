@@ -95,13 +95,12 @@ namespace Dune {
     }
 
     template <typename Type>
-    concept isSpatial
-        = std::is_same_v<std::remove_reference_t<Type>, DerivativeDirections::SpatialPartial> or std::is_same_v<
-            std::remove_reference_t<Type>, DerivativeDirections::SpatialAll>;
+    concept isSpatial = std::is_same_v<std::remove_reference_t<Type>, DerivativeDirections::SpatialPartial>
+                        or std::is_same_v<std::remove_reference_t<Type>, DerivativeDirections::SpatialAll>;
 
     template <typename Type>
-    concept isCoeff = Std::IsSpecializationNonTypes<SingleCoeff, std::remove_reference_t<Type>>::value or Std::
-        IsSpecializationNonTypes<TwoCoeff, std::remove_reference_t<Type>>::value;
+    concept isCoeff = Std::IsSpecializationNonTypes<SingleCoeff, std::remove_reference_t<Type>>::value
+                      or Std::IsSpecializationNonTypes<TwoCoeff, std::remove_reference_t<Type>>::value;
 
     struct ConstExprCounter {
       int singleCoeffDerivs{};
@@ -150,12 +149,10 @@ namespace Dune {
                             and countDerivativesType<WrtType>().spatialAllCounter == 0);
 
     template <typename WrtType>
-    concept HasOneSpatialAll = countDerivativesType<WrtType>()
-    .spatialAllCounter == 1;
+    concept HasOneSpatialAll = countDerivativesType<WrtType>().spatialAllCounter == 1;
 
     template <typename WrtType>
-    concept HasOneSpatialSingle = countDerivativesType<WrtType>()
-    .spatialDerivs == 1;
+    concept HasOneSpatialSingle = countDerivativesType<WrtType>().spatialDerivs == 1;
 
     template <typename WrtType>
     concept HasOneSpatial = HasOneSpatialSingle<WrtType> or HasOneSpatialAll<WrtType>;
