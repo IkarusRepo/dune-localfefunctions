@@ -332,5 +332,18 @@ namespace Dune {
     struct registerFieldVecMat<Dune::UnitVector<K, size>> {
       static void apply() {}
     };
-  }  // namespace Python
+
+    namespace detail {
+      template <class K, int n>
+      inline static void copy(const char *ptr, const ssize_t *shape, const ssize_t *strides,
+                              Dune::UnitVector<K, n> &v) {
+        if (*shape != static_cast<ssize_t>(n))
+          throw pybind11::value_error("Invalid buffer size: " + std::to_string(*shape)
+                                      + " (should be: " + std::to_string(n) + ").");
+
+        for (ssize_t i = 0; i < static_cast<ssize_t>(n); ++i)
+          v[i] = *reinterpret_cast<const K *>(ptr + i * (*strides));
+      }
+    }  // namespace detail
+  }    // namespace Python
 }  // namespace Dune
